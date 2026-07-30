@@ -1,0 +1,105 @@
+import {
+  AuthDivider,
+  AuthHeader,
+  AuthInput,
+  AuthLayout,
+  AuthSelect,
+  GoogleButton,
+} from "../components";
+
+export default function RegisterPage() {
+  return (
+    <AuthLayout>
+      <AuthHeader
+        badge="Register"
+        title="Start for free Today"
+        subtitle="Access to all features. No credit card required."
+      />
+
+      <GoogleButton text="Sign up with Google" />
+
+      <AuthDivider />
+
+      <form className="mt-8">
+        <AuthInput
+          label="Full Name"
+          placeholder="Steven Job"
+          required
+        />
+
+        <AuthInput
+          label="Email"
+          type="email"
+          placeholder="stevenjob@gmail.com"
+          required
+        />
+
+        <AuthInput
+          label="Password"
+          type="password"
+          placeholder="********"
+          required
+        />
+
+        <AuthInput
+          label="Confirm Password"
+          type="password"
+          placeholder="********"
+          required
+        />
+
+        <AuthSelect
+          label="Register As"
+          required
+          options={[
+            {
+              label: "Candidate",
+              value: "candidate",
+            },
+            {
+              label: "Recruiter",
+              value: "recruiter",
+            },
+          ]}
+        />
+
+        {/* Terms */}
+        <div className="mb-7 flex items-center justify-between">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-[#66789C]">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 accent-[#3C65F5]"
+            />
+            <span>Agree our terms and policy</span>
+          </label>
+
+          <button
+            type="button"
+            className="text-sm font-medium text-[#3C65F5] hover:underline"
+          >
+            Learn more
+          </button>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="h-14 w-full rounded-xl bg-[#05264E] text-base font-semibold text-white transition-all duration-200 hover:bg-[#031C3B]"
+        >
+          Submit & Register
+        </button>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-sm text-[#66789C]">
+          Already have an account?{" "}
+          <button
+            type="button"
+            className="font-semibold text-[#3C65F5] hover:underline"
+          >
+            Sign In
+          </button>
+        </p>
+      </form>
+    </AuthLayout>
+  );
+}
