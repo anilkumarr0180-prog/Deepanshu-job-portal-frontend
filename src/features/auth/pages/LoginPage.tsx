@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import heroTop from "@/assets/images/hero/hero-top.png";
+import { loginUser } from "../api/auth.api";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,13 +16,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await loginUser({ email, password });
 
       const result = await response.json();
 

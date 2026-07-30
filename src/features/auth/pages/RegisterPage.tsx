@@ -9,6 +9,7 @@ import {
   AuthSelect,
   GoogleButton,
 } from "../components";
+import { registerUser } from "../api/auth.api";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -36,17 +37,11 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role,
-        }),
+      const response = await registerUser({
+        name,
+        email,
+        password,
+        role,
       });
 
       const result = await response.json();
