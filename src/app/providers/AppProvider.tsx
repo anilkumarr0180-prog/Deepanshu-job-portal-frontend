@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Toaster } from "react-hot-toast";
 
+import { AuthProvider } from "@/features/auth/context/AuthProvider";
 import ReduxProvider from "./ReduxProvider";
 import QueryProvider from "./QueryProvider";
 
@@ -12,8 +13,10 @@ export default function AppProvider({ children }: AppProviderProps) {
   return (
     <ReduxProvider>
       <QueryProvider>
-        {children}
-        <Toaster position="top-right" />
+        <AuthProvider>
+          {children}
+          <Toaster position="top-right" />
+        </AuthProvider>
       </QueryProvider>
     </ReduxProvider>
   );
