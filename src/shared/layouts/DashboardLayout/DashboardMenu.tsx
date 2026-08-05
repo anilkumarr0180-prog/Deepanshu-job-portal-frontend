@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 
-import { getDashboardConfig } from "./dashboardConfig";
+import { getDashboardConfig } from "./dashboardConfig.ts";
 
 interface DashboardMenuProps {
   role?: string | null;
@@ -17,14 +17,14 @@ export default function DashboardMenu({ role }: DashboardMenuProps) {
           key={to}
           to={to}
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 ${
+            `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3C65F5] focus:ring-offset-2 focus:ring-offset-[#05264E] ${
               isActive
-                ? "bg-slate-900 text-white"
-                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                ? "bg-[#3C65F5] text-white shadow-sm"
+                : "text-blue-100 hover:bg-white/10 hover:text-white"
             }`
           }
         >
-          <Icon className="h-4 w-4" />
+          <Icon className="h-4 w-4 shrink-0" />
           <span>{label}</span>
         </NavLink>
       ))}

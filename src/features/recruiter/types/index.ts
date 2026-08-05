@@ -4,11 +4,19 @@ export interface RecruiterStat {
   id: string;
   title: string;
   value: string;
-  trend: string;
+  trend?: string;
   icon: ComponentType<{ className?: string }>;
 }
 
-export type RecruiterJobStatus = "Active" | "Draft" | "Closed" | "Paused";
+export interface RecruiterDashboardResponse {
+  totalJobs: number;
+  activeJobs: number;
+  draftJobs: number;
+  closedJobs: number;
+  totalApplications: number;
+}
+
+export type RecruiterJobStatus = "Active" | "Draft" | "Closed";
 
 export interface RecruiterJob {
   id: string;
@@ -24,7 +32,7 @@ export interface RecruiterApplicant {
   id: string;
   candidate: string;
   job: string;
-  status: "Shortlisted" | "Interview" | "Pending";
+  status: RecruiterApplicantStatus;
   appliedDate: string;
 }
 
@@ -135,16 +143,11 @@ export interface RecruiterJobDetails {
   status: RecruiterJobStatus;
   postedDate: string;
   lastUpdated: string;
-  category: string;
   employmentType: string;
   experienceLevel: string;
   salary: string;
   location: string;
-  remote: boolean;
-  vacancies: number;
-  deadline: string;
   description: string[];
-  requirements: string[];
   skills: string[];
   stats: RecruiterJobDetailsStat[];
   applicants: RecruiterApplicantPreview[];

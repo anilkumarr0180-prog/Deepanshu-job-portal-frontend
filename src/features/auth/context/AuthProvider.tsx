@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from "react";
 
+import FullPageLoader from "@/shared/components/FullPageLoader";
+import { clearAuth } from "@/lib/auth";
 import { getCurrentUser } from "../api/auth.api";
 import {
   AuthContext,
@@ -56,8 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setToken(null);
 
     if (typeof window !== "undefined") {
-      localStorage.removeItem(STORAGE_TOKEN_KEY);
-      localStorage.removeItem(STORAGE_USER_KEY);
+      clearAuth();
     }
   }, []);
 
@@ -69,7 +70,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_TOKEN_KEY, nextToken);
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(nextUser));
+      localStorage.setItem(
+        STORAGE_USER_KEY,
+        JSON.stringify(nextUser)
+      );
     }
   }, []);
 
@@ -88,35 +92,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const response = await getCurrentUser(currentToken);
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          logout();
-          return;
-        }
+      /**
+       * Backend response:
+       * {
+       *   success: true,
+       *   data: {
+       *     _id,
+       *     name,
+       *     email,
+       *     role
+       *   }
+       * }
+       */
 
-        throw new Error("Failed to fetch user");
+      const result = response.data;
+
+      const nextUser = (result?.data ?? null) as AuthUser | null;
+
+      if (!nextUser) {
+        logout();
+        return;
       }
 
-      const result = await response.json();
-
-      const nextUser =
-        (result?.data?.user ?? result?.user ?? null) as AuthUser | null;
-
-      if (nextUser) {
-        setUser(nextUser);
-
-        if (typeof window !== "undefined") {
-          localStorage.setItem(
-            STORAGE_USER_KEY,
-            JSON.stringify(nextUser)
-          );
-        }
-      } else {
-        setUser(null);
-      }
-
+      setUser(nextUser);
       setToken(currentToken);
-    } catch {
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          STORAGE_USER_KEY,
+          JSON.stringify(nextUser)
+        );
+      }
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
       logout();
     } finally {
       setLoading(false);
@@ -142,13 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading && token ? (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
-        </div>
-      ) : (
-        children
-      )}
+      {loading && token ? <FullPageLoader /> : children}
     </AuthContext.Provider>
   );
 }

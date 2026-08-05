@@ -5,7 +5,7 @@ import heroTop from "@/assets/images/hero/hero-top.png";
 import { loginUser, normalizeAuthPayload } from "../api/auth.api";
 import { type AuthUser } from "../context/auth-context";
 import useAuth from "../hooks/useAuth";
-import { getPostLoginPath } from "../utils/roleNavigation";
+import { getDashboardRoute } from "../utils/roleNavigation";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -26,13 +26,7 @@ export default function LoginPage() {
         password,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Login failed.");
-      }
-
-      const { token: nextToken, user: nextUser } = normalizeAuthPayload(result);
+      const { token: nextToken, user: nextUser } = normalizeAuthPayload(response.data);
 
       if (!nextToken) {
         throw new Error("Authentication token missing from server response.");
@@ -43,7 +37,7 @@ export default function LoginPage() {
 
       toast.success("User logged in successfully.");
 
-      navigate(getPostLoginPath(normalizedUser.role));
+      navigate(getDashboardRoute(normalizedUser.role));
     } catch (error) {
       toast.error(
         error instanceof Error

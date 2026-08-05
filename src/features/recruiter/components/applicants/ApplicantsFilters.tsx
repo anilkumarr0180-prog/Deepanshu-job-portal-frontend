@@ -1,9 +1,14 @@
 interface ApplicantsFiltersProps {
   statusFilter: string;
   onStatusChange: (value: string) => void;
+  totalApplicants: number;
 }
 
-export default function ApplicantsFilters({ statusFilter, onStatusChange }: ApplicantsFiltersProps) {
+export default function ApplicantsFilters({
+  statusFilter,
+  onStatusChange,
+  totalApplicants,
+}: ApplicantsFiltersProps) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-wrap gap-2">
@@ -23,7 +28,7 @@ export default function ApplicantsFilters({ statusFilter, onStatusChange }: Appl
         ))}
       </div>
 
-      <div className="text-sm text-slate-500">Showing 4 applicants</div>
+      <div className="text-sm text-slate-500">Showing {totalApplicants} applicants</div>
     </div>
   );
 }

@@ -3,22 +3,22 @@ const inputClassName =
 
 interface JobBasicInformationProps {
   title: string;
-  category: string;
+  company: string;
   employmentType: string;
   experienceLevel: string;
   onTitleChange: (value: string) => void;
-  onCategoryChange: (value: string) => void;
+  onCompanyChange: (value: string) => void;
   onEmploymentTypeChange: (value: string) => void;
   onExperienceLevelChange: (value: string) => void;
 }
 
 export default function JobBasicInformation({
   title,
-  category,
+  company,
   employmentType,
   experienceLevel,
   onTitleChange,
-  onCategoryChange,
+  onCompanyChange,
   onEmploymentTypeChange,
   onExperienceLevelChange,
 }: JobBasicInformationProps) {
@@ -43,19 +43,17 @@ export default function JobBasicInformation({
           />
         </label>
 
-        <label htmlFor="job-category" className="text-sm text-slate-600">
-          <span className="mb-2 block font-medium text-slate-700">Job Category</span>
-          <select
-            id="job-category"
-            value={category}
-            onChange={(event) => onCategoryChange(event.target.value)}
+        <label htmlFor="company" className="text-sm text-slate-600">
+          <span className="mb-2 flex items-center gap-1 font-medium text-slate-700">
+            Company <span className="text-rose-500">*</span>
+          </span>
+          <input
+            id="company"
+            value={company}
+            onChange={(event) => onCompanyChange(event.target.value)}
+            placeholder="Acme Inc."
             className={inputClassName}
-          >
-            <option value="Engineering">Engineering</option>
-            <option value="Design">Design</option>
-            <option value="Product">Product</option>
-            <option value="Marketing">Marketing</option>
-          </select>
+          />
         </label>
 
         <label htmlFor="employment-type" className="text-sm text-slate-600">
@@ -66,10 +64,11 @@ export default function JobBasicInformation({
             onChange={(event) => onEmploymentTypeChange(event.target.value)}
             className={inputClassName}
           >
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
+            <option value="Full Time">Full Time</option>
+            <option value="Part Time">Part Time</option>
             <option value="Contract">Contract</option>
             <option value="Internship">Internship</option>
+            <option value="Remote">Remote</option>
           </select>
         </label>
 
@@ -81,10 +80,10 @@ export default function JobBasicInformation({
             onChange={(event) => onExperienceLevelChange(event.target.value)}
             className={inputClassName}
           >
-            <option value="Entry">Entry</option>
-            <option value="Mid">Mid</option>
-            <option value="Senior">Senior</option>
-            <option value="Lead">Lead</option>
+            <option value="Fresher">Fresher</option>
+            <option value="1-2 Years">1-2 Years</option>
+            <option value="3-5 Years">3-5 Years</option>
+            <option value="5+ Years">5+ Years</option>
           </select>
         </label>
       </div>

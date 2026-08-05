@@ -4,7 +4,7 @@ export interface CandidateStat {
   id: string;
   title: string;
   value: string;
-  trend: string;
+  trend?: string;
   icon: LucideIcon;
 }
 
@@ -23,7 +23,6 @@ export interface CandidateJob {
   location: string;
   type: string;
   postedAt: string;
-  matchScore: number;
 }
 
 export interface CandidateApplication {

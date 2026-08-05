@@ -5,27 +5,19 @@ interface JobOverviewCardProps {
 }
 
 const overviewItems = [
-  { label: "Category", value: "category" },
   { label: "Employment Type", value: "employmentType" },
   { label: "Experience Level", value: "experienceLevel" },
   { label: "Salary", value: "salary" },
   { label: "Location", value: "location" },
-  { label: "Work Mode", value: "workMode" },
-  { label: "Vacancies", value: "vacancies" },
-  { label: "Deadline", value: "deadline" },
   { label: "Status", value: "status" },
 ] as const;
 
 export default function JobOverviewCard({ job }: JobOverviewCardProps) {
   const values = {
-    category: job.category,
     employmentType: job.employmentType,
     experienceLevel: job.experienceLevel,
     salary: job.salary,
     location: job.location,
-    workMode: job.remote ? "Remote" : "Onsite",
-    vacancies: `${job.vacancies}`,
-    deadline: job.deadline,
     status: job.status,
   };
 
@@ -40,7 +32,7 @@ export default function JobOverviewCard({ job }: JobOverviewCardProps) {
         {overviewItems.map((item) => (
           <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <dt className="text-sm font-medium text-slate-500">{item.label}</dt>
-            <dd className="mt-1 text-sm font-semibold text-slate-900">{values[item.value]}</dd>
+            <dd className="mt-1 text-sm font-semibold text-slate-900">{values[item.value as keyof typeof values]}</dd>
           </div>
         ))}
       </dl>

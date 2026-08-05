@@ -6,9 +6,10 @@ import type { RecruiterJob, RecruiterJobAction } from "../types";
 
 interface JobsTableProps {
   jobs: RecruiterJob[];
+  onDelete?: (jobId: string) => void;
 }
 
-export default function JobsTable({ jobs }: JobsTableProps) {
+export default function JobsTable({ jobs, onDelete }: JobsTableProps) {
   const navigate = useNavigate();
 
   const handleAction = (action: RecruiterJobAction, jobId: string) => {
@@ -17,7 +18,15 @@ export default function JobsTable({ jobs }: JobsTableProps) {
       return;
     }
 
-    window.alert(`Action: ${action}`);
+    if (action === "edit") {
+      navigate(`/recruiter/jobs/${jobId}/edit`);
+      return;
+    }
+
+    if (action === "delete" && onDelete) {
+      onDelete(jobId);
+      return;
+    }
   };
 
   return (

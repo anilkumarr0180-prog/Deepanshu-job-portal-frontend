@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 
+import type { CreateJobPayload } from "@/features/jobs/api/jobs.api";
+
 import FormActions from "./FormActions";
 import JobBasicInformation from "./JobBasicInformation";
 import JobDescriptionSection from "./JobDescriptionSection";
 import JobLocationSection from "./JobLocationSection";
-import JobRequirementsSection from "./JobRequirementsSection";
 import JobSalarySection from "./JobSalarySection";
 import JobSettingsSection from "./JobSettingsSection";
 
@@ -14,50 +15,34 @@ interface CreateJobFormProps {
   cancelLabel?: string;
   draftLabel?: string;
   submitLabel?: string;
-  onSubmit?: () => void;
+  onSubmit?: (values: CreateJobPayload) => void;
   onSaveDraft?: () => void;
 }
 
 export interface CreateJobFormState {
   title: string;
-  category: string;
+  company: string;
+  location: string;
   employmentType: string;
   experienceLevel: string;
-  country: string;
-  state: string;
-  city: string;
-  remote: boolean;
-  currency: string;
+  description: string;
+  skills: string[];
+  status: string;
   minSalary: string;
   maxSalary: string;
-  salaryType: string;
-  description: string;
-  requirements: string;
-  skills: string[];
-  deadline: string;
-  vacancies: string;
-  status: string;
 }
 
 const initialState: CreateJobFormState = {
   title: "",
-  category: "Engineering",
-  employmentType: "Full-time",
-  experienceLevel: "Mid",
-  country: "",
-  state: "",
-  city: "",
-  remote: false,
-  currency: "USD",
+  company: "",
+  location: "",
+  employmentType: "Full Time",
+  experienceLevel: "3-5 Years",
+  description: "",
+  skills: [],
+  status: "ACTIVE",
   minSalary: "",
   maxSalary: "",
-  salaryType: "Yearly",
-  description: "",
-  requirements: "",
-  skills: ["React", "TypeScript"],
-  deadline: "",
-  vacancies: "1",
-  status: "Active",
 };
 
 export default function CreateJobForm({
@@ -76,49 +61,74 @@ export default function CreateJobForm({
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  const handleAddSkill = () => {
+    const input = document.querySelector<HTMLInputElement>('input[aria-label="Add skill"]');
+    if (input && input.value.trim()) {
+      updateField("skills", [...form.skills, input.value.trim()]);
+      input.value = "";
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    updateField("skills", form.skills.filter((skill) => skill !== skillToRemove));
+  };
+
+  const mapFormToPayload = (values: CreateJobFormState): CreateJobPayload => {
+    const payload: CreateJobPayload = {
+      title: values.title,
+      description: values.description,
+      company: values.company,
+      location: values.location,
+      salaryMin: Number(values.minSalary) || 0,
+      salaryMax: Number(values.maxSalary) || 0,
+      employmentType: values.employmentType,
+      experienceLevel: values.experienceLevel,
+      skills: values.skills,
+    };
+
+    if (values.status) {
+      payload.status = values.status;
+    }
+
+    return payload;
+  };
+
+  const handlePublish = () => {
+    onSubmit?.(mapFormToPayload(form));
+  };
+
+  const handleSaveDraft = () => {
+    onSaveDraft?.();
+  };
+
   return (
     <div className="space-y-6">
       <JobBasicInformation
         title={form.title}
-        category={form.category}
+        company={form.company}
         employmentType={form.employmentType}
         experienceLevel={form.experienceLevel}
         onTitleChange={(value) => updateField("title", value)}
-        onCategoryChange={(value) => updateField("category", value)}
+        onCompanyChange={(value) => updateField("company", value)}
         onEmploymentTypeChange={(value) => updateField("employmentType", value)}
         onExperienceLevelChange={(value) => updateField("experienceLevel", value)}
       />
 
       <JobLocationSection
-        country={form.country}
-        state={form.state}
-        city={form.city}
-        remote={form.remote}
-        onCountryChange={(value) => updateField("country", value)}
-        onStateChange={(value) => updateField("state", value)}
-        onCityChange={(value) => updateField("city", value)}
-        onRemoteChange={(value) => updateField("remote", value)}
+        location={form.location}
+        onLocationChange={(value) => updateField("location", value)}
       />
 
       <JobSalarySection
-        currency={form.currency}
         minSalary={form.minSalary}
         maxSalary={form.maxSalary}
-        salaryType={form.salaryType}
-        onCurrencyChange={(value) => updateField("currency", value)}
         onMinSalaryChange={(value) => updateField("minSalary", value)}
         onMaxSalaryChange={(value) => updateField("maxSalary", value)}
-        onSalaryTypeChange={(value) => updateField("salaryType", value)}
       />
 
       <JobDescriptionSection
         description={form.description}
         onDescriptionChange={(value) => updateField("description", value)}
-      />
-
-      <JobRequirementsSection
-        requirements={form.requirements}
-        onRequirementsChange={(value) => updateField("requirements", value)}
       />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -131,6 +141,13 @@ export default function CreateJobForm({
           {form.skills.map((skill) => (
             <span key={skill} className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-700">
               {skill}
+              <button
+                type="button"
+                onClick={() => handleRemoveSkill(skill)}
+                className="ml-1.5 text-slate-500 hover:text-slate-700"
+              >
+                ×
+              </button>
             </span>
           ))}
         </div>
@@ -143,6 +160,7 @@ export default function CreateJobForm({
           />
           <button
             type="button"
+            onClick={handleAddSkill}
             className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             + Add Skill
@@ -151,18 +169,14 @@ export default function CreateJobForm({
       </section>
 
       <JobSettingsSection
-        deadline={form.deadline}
-        vacancies={form.vacancies}
         status={form.status}
-        onDeadlineChange={(value) => updateField("deadline", value)}
-        onVacanciesChange={(value) => updateField("vacancies", value)}
         onStatusChange={(value) => updateField("status", value)}
       />
 
       <FormActions
         onCancel={onCancel ?? (() => undefined)}
-        onSaveDraft={onSaveDraft ?? (() => undefined)}
-        onPublish={onSubmit ?? (() => undefined)}
+        onSaveDraft={handleSaveDraft}
+        onPublish={handlePublish}
         cancelLabel={cancelLabel}
         draftLabel={draftLabel}
         submitLabel={submitLabel}

@@ -2,9 +2,11 @@ interface DeleteJobModalProps {
   open: boolean;
   title: string;
   onClose: () => void;
+  onConfirm: () => void;
+  isLoading?: boolean;
 }
 
-export default function DeleteJobModal({ open, title, onClose }: DeleteJobModalProps) {
+export default function DeleteJobModal({ open, title, onClose, onConfirm, isLoading }: DeleteJobModalProps) {
   if (!open) {
     return null;
   }
@@ -28,9 +30,11 @@ export default function DeleteJobModal({ open, title, onClose }: DeleteJobModalP
           </button>
           <button
             type="button"
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-50"
           >
-            Delete
+            {isLoading ? "Deleting..." : "Delete"}
           </button>
         </div>
       </div>

@@ -1,0 +1,84 @@
+import { Link } from "react-router-dom";
+import type { BackendCandidateApplication } from "../api/applications.api";
+import { formatRelativeDate } from "../utils/jobMapper";
+
+interface ApplicationRowProps {
+  application: BackendCandidateApplication;
+  onWithdraw: (applicationId: string) => void;
+  isWithdrawing: boolean;
+}
+
+const statusStyles: Record<string, { bg: string; text: string }> = {
+  Applied: { bg: "bg-amber-50", text: "text-amber-700" },
+  Shortlisted: { bg: "bg-blue-50", text: "text-blue-700" },
+  Interview: { bg: "bg-purple-50", text: "text-purple-700" },
+  Rejected: { bg: "bg-rose-50", text: "text-rose-700" },
+  Hired: { bg: "bg-emerald-50", text: "text-emerald-700" },
+};
+
+export default function ApplicationRow({
+  application,
+  onWithdraw,
+  isWithdrawing,
+}: ApplicationRowProps) {
+  const job = application.jobId;
+  const statusStyle =
+    statusStyles[application.status] ?? {
+      bg: "bg-slate-100",
+      text: "text-slate-700",
+    };
+
+  return (
+    <tr className="border-b border-slate-200 transition hover:bg-slate-50">
+      <td className="px-4 py-4">
+        <div>
+          <div className="font-medium text-slate-900">
+            {job.title}
+          </div>
+          <div className="mt-1 text-sm text-slate-600">
+            {job.company}
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-4 text-sm text-slate-600 hidden sm:table-cell">
+        {job.employmentType}
+      </td>
+
+      <td className="px-4 py-4 text-sm text-slate-600 hidden sm:table-cell">
+        ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}
+      </td>
+
+      <td className="px-4 py-4">
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}
+        >
+          {application.status}
+        </span>
+      </td>
+
+      <td className="px-4 py-4 text-sm text-slate-600">
+        {formatRelativeDate(application.createdAt)}
+      </td>
+
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/candidate/jobs/${job._id}`}
+            className="text-sm font-medium text-[#3C65F5] hover:underline"
+          >
+            View Details
+          </Link>
+          <button
+            type="button"
+            onClick={() => onWithdraw(application._id)}
+            disabled={isWithdrawing}
+            className="text-sm font-medium text-rose-600 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isWithdrawing ? "Withdrawing..." : "Withdraw"}
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}

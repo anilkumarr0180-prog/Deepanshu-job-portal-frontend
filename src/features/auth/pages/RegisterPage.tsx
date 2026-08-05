@@ -37,18 +37,12 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await registerUser({
+      await registerUser({
         name,
         email,
         password,
         role,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Registration failed.");
-      }
 
       toast.success("User registered successfully.");
       navigate("/login");

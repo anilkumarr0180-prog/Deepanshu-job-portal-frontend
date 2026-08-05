@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { ArrowLeft, Edit3, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import JobApplicantsPreview from "../components/JobApplicantsPreview";
 import JobDescriptionCard from "../components/JobDescriptionCard";
@@ -8,10 +9,55 @@ import JobRequirementsCard from "../components/JobRequirementsCard";
 import JobSidebarCard from "../components/JobSidebarCard";
 import JobSkillsCard from "../components/JobSkillsCard";
 import JobStatisticsCard from "../components/JobStatisticsCard";
-import { recruiterJobDetails } from "../constants/recruiterJobDetails";
+import DeleteJobModal from "../components/DeleteJobModal";
+import { useJobDetails } from "@/features/jobs/hooks/useJobDetails";
+import { useDeleteJob } from "@/features/jobs/hooks/useDeleteJob";
+import { mapRecruiterJobDetails } from "@/features/jobs/utils/jobMapper";
 
 export default function RecruiterJobDetailsPage() {
-  const job = recruiterJobDetails;
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data, isLoading, isError } = useJobDetails(id ?? "");
+  const deleteMutation = useDeleteJob();
+
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const job = data ? mapRecruiterJobDetails(data) : null;
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+        Loading job details...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center text-red-600">
+        Failed to load job details.
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+        Job not found.
+      </div>
+    );
+  }
+
+  const handleDeleteConfirm = () => {
+    if (deleteTarget) {
+      deleteMutation.mutate(deleteTarget, {
+        onSuccess: () => {
+          setDeleteTarget(null);
+          navigate("/recruiter/jobs");
+        },
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -53,6 +99,7 @@ export default function RecruiterJobDetailsPage() {
             </Link>
             <button
               type="button"
+              onClick={() => setDeleteTarget(job.id)}
               className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
             >
               <Trash2 className="h-4 w-4" />
@@ -66,7 +113,7 @@ export default function RecruiterJobDetailsPage() {
         <div className="space-y-6">
           <JobOverviewCard job={job} />
           <JobDescriptionCard description={job.description} />
-          <JobRequirementsCard requirements={job.requirements} />
+          <JobRequirementsCard requirements={[]} />
           <JobSkillsCard skills={job.skills} />
           <JobStatisticsCard stats={job.stats} />
           <JobApplicantsPreview applicants={job.applicants} />
@@ -76,11 +123,18 @@ export default function RecruiterJobDetailsPage() {
           <JobSidebarCard
             status={job.status}
             postedDate={job.postedDate}
-            expiryDate={job.deadline}
             recruiter={job.company}
           />
         </div>
       </div>
+
+      <DeleteJobModal
+        open={deleteTarget !== null}
+        title={job.title}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }

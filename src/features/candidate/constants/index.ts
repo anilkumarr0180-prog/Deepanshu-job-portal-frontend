@@ -1,45 +1,12 @@
 import {
   Bookmark,
-  Clock3,
+  BriefcaseBusiness,
   FileText,
   Search,
-  Send,
-  TrendingUp,
   UserRound,
 } from "lucide-react";
 
-import type { CandidateApplication, CandidateJob, CandidateProfileCompletion, CandidateQuickAction, CandidateStat } from "../types";
-
-export const candidateStats: CandidateStat[] = [
-  {
-    id: "applications",
-    title: "Applications",
-    value: "14",
-    trend: "+3 this month",
-    icon: Send,
-  },
-  {
-    id: "saved-jobs",
-    title: "Saved Jobs",
-    value: "8",
-    trend: "2 new matches",
-    icon: Bookmark,
-  },
-  {
-    id: "interviews",
-    title: "Interviews",
-    value: "2",
-    trend: "Next week",
-    icon: Clock3,
-  },
-  {
-    id: "profile-score",
-    title: "Profile Score",
-    value: "87%",
-    trend: "+5% this week",
-    icon: TrendingUp,
-  },
-];
+import type { CandidateQuickAction } from "../types";
 
 export const quickActions: CandidateQuickAction[] = [
   {
@@ -57,6 +24,13 @@ export const quickActions: CandidateQuickAction[] = [
     to: "/candidate/saved",
   },
   {
+    id: "applied-jobs",
+    label: "Applied Jobs",
+    description: "Track your application status",
+    icon: BriefcaseBusiness,
+    to: "/candidate/applied",
+  },
+  {
     id: "resume",
     label: "Resume",
     description: "Update your experience and skills",
@@ -72,65 +46,43 @@ export const quickActions: CandidateQuickAction[] = [
   },
 ];
 
-export const recommendedJobs: CandidateJob[] = [
-  {
-    id: "job-1",
-    title: "Senior Product Designer",
-    company: "Northstar Studio",
-    location: "Remote · US",
-    type: "Full-time",
-    postedAt: "Posted 2h ago",
-    matchScore: 94,
-  },
-  {
-    id: "job-2",
-    title: "Frontend Engineer",
-    company: "Lumen Labs",
-    location: "New York, NY",
-    type: "Hybrid",
-    postedAt: "Posted today",
-    matchScore: 89,
-  },
-  {
-    id: "job-3",
-    title: "Customer Success Lead",
-    company: "Brightlane",
-    location: "Austin, TX",
-    type: "Full-time",
-    postedAt: "Posted 1d ago",
-    matchScore: 85,
-  },
+export interface FilterOption {
+  value: string;
+  label: string;
+}
+
+export const EMPLOYMENT_TYPE_OPTIONS: FilterOption[] = [
+  { value: "", label: "All Types" },
+  { value: "Full Time", label: "Full Time" },
+  { value: "Part Time", label: "Part Time" },
+  { value: "Contract", label: "Contract" },
+  { value: "Internship", label: "Internship" },
+  { value: "Remote", label: "Remote" },
 ];
 
-export const recentApplications: CandidateApplication[] = [
-  {
-    id: "app-1",
-    role: "Lead UX Engineer",
-    company: "Northstar Studio",
-    status: "Interviewing",
-    appliedAt: "Aug 1",
-    location: "Remote",
-  },
-  {
-    id: "app-2",
-    role: "Product Designer",
-    company: "Lumen Labs",
-    status: "Under Review",
-    appliedAt: "Jul 28",
-    location: "New York",
-  },
-  {
-    id: "app-3",
-    role: "Operations Analyst",
-    company: "Brightlane",
-    status: "Applied",
-    appliedAt: "Jul 22",
-    location: "Austin",
-  },
+export const EXPERIENCE_LEVEL_OPTIONS: FilterOption[] = [
+  { value: "", label: "All Levels" },
+  { value: "Fresher", label: "Fresher" },
+  { value: "1-2 Years", label: "1-2 Years" },
+  { value: "3-5 Years", label: "3-5 Years" },
+  { value: "5+ Years", label: "5+ Years" },
 ];
 
-export const profileCompletion: CandidateProfileCompletion = {
-  percentage: 82,
-  completed: ["Personal details", "Work experience", "Skills"],
-  remaining: ["Add portfolio", "Upload resume", "Set availability"],
-};
+export const APPLICATION_STATUS_OPTIONS: FilterOption[] = [
+  { value: "", label: "All Statuses" },
+  { value: "Applied", label: "Applied" },
+  { value: "Shortlisted", label: "Shortlisted" },
+  { value: "Interview", label: "Interview" },
+  { value: "Rejected", label: "Rejected" },
+  { value: "Hired", label: "Hired" },
+];
+
+export const SORT_OPTIONS: FilterOption[] = [
+  { value: "", label: "Newest First" },
+  { value: "oldest", label: "Oldest First" },
+  { value: "salary-high", label: "Highest Salary" },
+  { value: "salary-low", label: "Lowest Salary" },
+];
+
+export const JOBS_PER_PAGE = 12;
+export const APPLIED_JOBS_PER_PAGE = 10;

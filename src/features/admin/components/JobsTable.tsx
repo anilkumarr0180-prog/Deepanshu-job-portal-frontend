@@ -6,9 +6,10 @@ import type { AdminJob } from "../types";
 interface JobsTableProps {
   jobs: AdminJob[];
   onDelete: (job: AdminJob) => void;
+  canDelete?: boolean;
 }
 
-export default function JobsTable({ jobs, onDelete }: JobsTableProps) {
+export default function JobsTable({ jobs, onDelete, canDelete = true }: JobsTableProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -38,7 +39,13 @@ export default function JobsTable({ jobs, onDelete }: JobsTableProps) {
                   <button type="button" className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50" aria-label={`View ${job.title}`}>
                     <Eye className="h-4 w-4" />
                   </button>
-                  <button type="button" onClick={() => onDelete(job)} className="rounded-lg border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50" aria-label={`Delete ${job.title}`}>
+                  <button
+                    type="button"
+                    onClick={() => canDelete && onDelete(job)}
+                    disabled={!canDelete}
+                    className="rounded-lg border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={`Delete ${job.title}`}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

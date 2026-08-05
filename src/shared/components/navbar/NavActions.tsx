@@ -6,10 +6,14 @@ export default function NavActions() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   if (isAuthenticated && user) {
     return (
@@ -18,6 +22,7 @@ export default function NavActions() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3C65F5] text-sm font-semibold text-white">
             {user.name?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
+
           <span className="text-sm font-medium text-slate-700">
             {user.name ?? user.email ?? "User"}
           </span>
@@ -35,17 +40,17 @@ export default function NavActions() {
   }
 
   return (
-    <div className="flex items-center gap-10">
+    <div className="flex items-center gap-8">
       <Link
         to="/register"
-        className="text-[15px] font-medium text-slate-800 transition hover:text-[#3C65F5]"
+        className="text-[15px] font-medium text-slate-800 transition-colors duration-200 hover:text-[#3C65F5] hover:underline"
       >
         Register
       </Link>
 
       <Link
         to="/login"
-        className="rounded-xl bg-[#3C65F5] px-[25px] py-[10px] text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2956F2]"
+        className="rounded-xl bg-[#3C65F5] px-[25px] py-[10px] text-sm font-medium text-white shadow-md transition-colors duration-200 hover:bg-[#2956F2]"
       >
         Sign In
       </Link>

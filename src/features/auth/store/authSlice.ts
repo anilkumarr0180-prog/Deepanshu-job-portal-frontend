@@ -1,10 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+import type { UserRole } from "@/shared/types/role";
+
 interface UserPayload {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
 }
 
 interface AuthState {

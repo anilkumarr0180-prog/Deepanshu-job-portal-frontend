@@ -1,10 +1,56 @@
 import { ArrowLeft, Download, MessageSquareMore, UserRoundCheck, XCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
-import { recruiterApplicantDetails } from "../constants/applicants";
+import { useAllApplications } from "../hooks/useAllApplications";
+import { useUpdateApplicationStatus } from "../hooks/useUpdateApplicationStatus";
+import { mapApplicantDetails } from "../utils/applicationMapper";
 
 export default function RecruiterApplicantDetailsPage() {
-  const applicant = recruiterApplicantDetails;
+  const { id } = useParams<{ id: string }>();
+
+  const {
+    data: applications,
+    isLoading,
+    isError,
+  } = useAllApplications();
+
+  const updateMutation = useUpdateApplicationStatus();
+
+  const application = applications?.find((app) => app._id === id);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+        Loading applicant details...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center text-red-600">
+        Failed to load applicant details.
+      </div>
+    );
+  }
+
+  if (!application) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+        Applicant not found.
+      </div>
+    );
+  }
+
+  const applicant = mapApplicantDetails(application);
+
+  const handleStatusUpdate = (status: string) => {
+    if (!id || updateMutation.isPending) return;
+    updateMutation.mutate({ id, status });
+  };
+
+  const resumeUrl =
+    application.resume || application.applicantId.resumeUrl || "";
 
   return (
     <div className="space-y-6">
@@ -23,30 +69,50 @@ export default function RecruiterApplicantDetailsPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <button type="button" className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+            <button
+              type="button"
+              onClick={() => handleStatusUpdate("Shortlisted")}
+              disabled={updateMutation.isPending}
+              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
               <span className="inline-flex items-center gap-2">
                 <UserRoundCheck className="h-4 w-4" />
                 Shortlist
               </span>
             </button>
-            <button type="button" className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+            <button
+              type="button"
+              onClick={() => handleStatusUpdate("Rejected")}
+              disabled={updateMutation.isPending}
+              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
               <span className="inline-flex items-center gap-2">
                 <XCircle className="h-4 w-4" />
                 Reject
               </span>
             </button>
-            <button type="button" className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+            <button
+              type="button"
+              onClick={() => handleStatusUpdate("Interview")}
+              disabled={updateMutation.isPending}
+              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
               <span className="inline-flex items-center gap-2">
                 <MessageSquareMore className="h-4 w-4" />
                 Schedule Interview
               </span>
             </button>
-            <button type="button" className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
-              <span className="inline-flex items-center gap-2">
+            {resumeUrl && (
+              <a
+                href={resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+              >
                 <Download className="h-4 w-4" />
                 Download Resume
-              </span>
-            </button>
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -132,7 +198,7 @@ export default function RecruiterApplicantDetailsPage() {
             <div className="mt-6 space-y-4 text-sm text-slate-600">
               <div>
                 <p className="font-semibold text-slate-900">Portfolio</p>
-                <a href={applicant.portfolio} className="mt-1 block text-slate-700 underline">{applicant.portfolio}</a>
+                <p className="mt-1 text-slate-700">{applicant.portfolio}</p>
               </div>
               <div>
                 <p className="font-semibold text-slate-900">Cover Letter</p>
@@ -174,11 +240,28 @@ export default function RecruiterApplicantDetailsPage() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-900">Application Status</h3>
             <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
-              Pending review
+              {normalizeStatusLabel(application.status)}
             </div>
           </section>
         </div>
       </div>
     </div>
   );
+}
+
+function normalizeStatusLabel(status: string): string {
+  switch (status) {
+    case "Applied":
+      return "Pending review";
+    case "Shortlisted":
+      return "Shortlisted";
+    case "Interview":
+      return "Interview scheduled";
+    case "Rejected":
+      return "Rejected";
+    case "Hired":
+      return "Hired";
+    default:
+      return "Pending review";
+  }
 }

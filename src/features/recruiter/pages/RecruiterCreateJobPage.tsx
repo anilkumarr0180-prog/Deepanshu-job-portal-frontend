@@ -1,8 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import CreateJobForm from "../components/CreateJobForm";
+import type { CreateJobPayload } from "@/features/jobs/api/jobs.api";
+import { useCreateJob } from "@/features/jobs/hooks/useCreateJob";
 
 export default function RecruiterCreateJobPage() {
+  const navigate = useNavigate();
+  const createMutation = useCreateJob();
+
+  const handleSubmit = (values: CreateJobPayload) => {
+    createMutation.mutate(values, {
+      onSuccess: () => {
+        navigate("/recruiter/jobs");
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -21,18 +34,15 @@ export default function RecruiterCreateJobPage() {
             >
               Cancel
             </Link>
-            <button
-              type="button"
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-            >
-              Publish Job
-            </button>
           </div>
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <CreateJobForm onCancel={() => undefined} />
+        <CreateJobForm
+          onCancel={() => navigate("/recruiter/jobs")}
+          onSubmit={handleSubmit}
+        />
       </div>
     </div>
   );

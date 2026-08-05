@@ -1,7 +1,4 @@
 import {
-  BriefcaseBusiness,
-  CircleCheckBig,
-  MessagesSquare,
   FilePlus2,
   FolderKanban,
   Users,
@@ -10,38 +7,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import type { RecruiterApplicant, RecruiterJob, RecruiterStat } from "../types";
-
-export const recruiterStats: RecruiterStat[] = [
-  {
-    id: "active-jobs",
-    title: "Active Jobs",
-    value: "12",
-    trend: "+3 this week",
-    icon: BriefcaseBusiness,
-  },
-  {
-    id: "total-applicants",
-    title: "Total Applicants",
-    value: "284",
-    trend: "+24 new",
-    icon: Users,
-  },
-  {
-    id: "interviews",
-    title: "Interviews Scheduled",
-    value: "18",
-    trend: "6 today",
-    icon: MessagesSquare,
-  },
-  {
-    id: "jobs-closed",
-    title: "Jobs Closed",
-    value: "7",
-    trend: "2 this month",
-    icon: CircleCheckBig,
-  },
-];
+import type { RecruiterJob } from "../types";
 
 export const quickActions = [
   {
@@ -115,29 +81,5 @@ export const recentJobs: RecruiterJob[] = [
     status: "Closed",
     applicants: 31,
     postedDate: "Jul 10",
-  },
-];
-
-export const recentApplicants: RecruiterApplicant[] = [
-  {
-    id: "applicant-1",
-    candidate: "Ava Thompson",
-    job: "Senior Frontend Engineer",
-    status: "Shortlisted",
-    appliedDate: "2h ago",
-  },
-  {
-    id: "applicant-2",
-    candidate: "Noah Chen",
-    job: "Product Designer",
-    status: "Interview",
-    appliedDate: "5h ago",
-  },
-  {
-    id: "applicant-3",
-    candidate: "Mia Patel",
-    job: "DevOps Engineer",
-    status: "Pending",
-    appliedDate: "Yesterday",
   },
 ];

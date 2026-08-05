@@ -1,10 +1,12 @@
 import { createContext } from "react";
 
+import type { UserRole } from "@/shared/types/role";
+
 export interface AuthUser {
   id?: string;
   name?: string;
   email?: string;
-  role?: string;
+  role?: UserRole;
   [key: string]: unknown;
 }
 

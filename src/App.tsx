@@ -1,13 +1,5 @@
-import { test } from "@/utils/test";
-
-console.log(test);
 function App() {
-  return (
-    <div>
-      JobBox Clone
-    </div>
-  );
+  return null;
 }
 
 export default App;
-
