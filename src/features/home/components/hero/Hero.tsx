@@ -3,8 +3,8 @@ import HeroImages from "./HeroImages";
 
 export default function Hero() {
   return (
-    <section className="overflow-hidden bg-[#F2F6FD]">
-      <div className="mx-auto flex min-h-[540px] max-w-[1320px] items-center justify-between px-8 pt-[65px] pb-[15px]">
+    <section className="relative overflow-hidden bg-[#F2F6FD] py-12 lg:py-16">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left Content */}
         <HeroContent />
 

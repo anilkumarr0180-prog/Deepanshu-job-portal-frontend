@@ -6,10 +6,10 @@ export default function NavActions() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
-      await logout();
-      navigate("/login");
+      logout();
+      void navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     }

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+
+import leftTreesBg from "@/assets/images/auth/img-2regist.svg";
+import rightSaucerBg from "@/assets/images/auth/imgregis-1.svg";
+
 import {
   AuthDivider,
   AuthHeader,
@@ -45,7 +49,7 @@ export default function RegisterPage() {
       });
 
       toast.success("User registered successfully.");
-      navigate("/login");
+      void navigate("/login");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Registration failed.");
     } finally {
@@ -54,7 +58,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout
+      leftIllustration={leftTreesBg}
+      rightIllustration={rightSaucerBg}
+    >
       <AuthHeader
         badge="Register"
         title="Start for free Today"
@@ -65,7 +72,12 @@ export default function RegisterPage() {
 
       <AuthDivider />
 
-      <form onSubmit={handleSubmit} className="mt-8">
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(e);
+        }}
+        className="mt-8"
+      >
         <AuthInput
           label="Full Name"
           placeholder="Steven Job"
@@ -152,7 +164,7 @@ export default function RegisterPage() {
           Already have an account?{" "}
           <button
             type="button"
-            onClick={() => navigate("/login")}
+            onClick={() => void navigate("/login")}
             className="font-semibold text-[#3C65F5] hover:underline"
           >
             Sign In

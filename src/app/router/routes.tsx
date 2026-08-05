@@ -5,6 +5,10 @@ import { DashboardLayout, PublicLayout } from "@/shared/layouts";
 import HomePage from "@/features/home/pages/HomePage";
 import JobsPage from "@/features/jobs/pages/JobsPage";
 import JobDetailsPage from "@/features/jobs/pages/JobDetailsPage";
+import RecruitersPage from "@/features/recruiter/pages/RecruitersPage";
+import RecruiterDetailsPage from "@/features/recruiter/pages/RecruiterDetailsPage";
+import CandidatesPage from "@/features/candidate/pages/CandidatesPage";
+import CandidatePublicDetailsPage from "@/features/candidate/pages/CandidatePublicDetailsPage";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import AdminDashboardPage from "@/features/admin/pages/AdminDashboardPage";
@@ -54,6 +58,22 @@ export const routes: RouteObject[] = [
       {
         path: "jobs/:id",
         element: <JobDetailsPage />,
+      },
+      {
+        path: "recruiters",
+        element: <RecruitersPage />,
+      },
+      {
+        path: "recruiters/:id",
+        element: <RecruiterDetailsPage />,
+      },
+      {
+        path: "candidates",
+        element: <CandidatesPage />,
+      },
+      {
+        path: "candidates/:id",
+        element: <CandidatePublicDetailsPage />,
       },
       {
         path: "login",

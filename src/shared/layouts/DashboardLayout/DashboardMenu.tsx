@@ -17,10 +17,10 @@ export default function DashboardMenu({ role }: DashboardMenuProps) {
           key={to}
           to={to}
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3C65F5] focus:ring-offset-2 focus:ring-offset-[#05264E] ${
+            `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3C65F5] ${
               isActive
-                ? "bg-[#3C65F5] text-white shadow-sm"
-                : "text-blue-100 hover:bg-white/10 hover:text-white"
+                ? "bg-[#3C65F5] text-white shadow-md shadow-blue-500/20 font-bold"
+                : "text-slate-600 hover:bg-slate-50 hover:text-[#05264E]"
             }`
           }
         >
