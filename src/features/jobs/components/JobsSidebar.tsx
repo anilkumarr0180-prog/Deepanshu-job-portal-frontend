@@ -1,4 +1,4 @@
-import { Filter, X } from "lucide-react";
+import { Check, Filter, MapPin, RotateCcw } from "lucide-react";
 
 import type { JobsFilterParams } from "../api/jobs.api";
 
@@ -10,14 +10,81 @@ interface JobsSidebarProps {
   onReset: () => void;
 }
 
-const selectClassName =
-  "h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200";
+const EMPLOYMENT_TYPES = [
+  "Full Time",
+  "Part Time",
+  "Contract",
+  "Internship",
+  "Remote",
+];
+
+const EXPERIENCE_LEVELS = ["Fresher", "1-2 Years", "3-5 Years", "5+ Years"];
+
+const STATUSES = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "CLOSED", label: "Closed" },
+];
 
 const inputClassName =
-  "h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200";
+  "h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-700 outline-none transition focus:border-[#3C65F5] focus:bg-white focus:ring-2 focus:ring-[#3C65F5]/10";
 
-const disabledClassName =
-  "h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-400";
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h4 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-slate-800">
+      {children}
+    </h4>
+  );
+}
+
+interface FilterCheckboxProps {
+  label: string;
+  checked: boolean;
+  onClick: () => void;
+}
+
+function FilterCheckbox({ label, checked, onClick }: FilterCheckboxProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center gap-2.5 rounded-md py-1 text-left text-sm text-slate-700 transition hover:text-[#3C65F5]"
+    >
+      <span
+        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border transition ${
+          checked
+            ? "border-[#3C65F5] bg-[#3C65F5] text-white"
+            : "border-slate-300 bg-white text-transparent group-hover:border-[#3C65F5]"
+        }`}
+      >
+        <Check className="h-3.5 w-3.5" />
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function CheckboxGroup({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: string[];
+  selected: string;
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      {options.map((option) => (
+        <FilterCheckbox
+          key={option}
+          label={option}
+          checked={selected === option}
+          onClick={() => onSelect(selected === option ? "" : option)}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function JobsSidebar({
   filters,
@@ -31,118 +98,121 @@ export default function JobsSidebar({
     filters.employmentType,
     filters.experienceLevel,
     filters.status,
+    filters.minSalary,
+    filters.maxSalary,
   ].filter(Boolean).length;
 
   return (
-    <aside className="w-full shrink-0 lg:w-72">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-slate-500" />
-            <h3 className="text-sm font-semibold text-slate-700">Filters</h3>
-            {activeCount > 0 && (
-              <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-100 px-1.5 text-xs font-medium text-slate-600">
-                {activeCount}
-              </span>
-            )}
-          </div>
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-100 p-5">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-[#3C65F5]" />
+          <h3 className="text-[15px] font-bold text-[#05264E]">
+            Advance Filter
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={onReset}
+          disabled={activeCount === 0}
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:text-[#3C65F5] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Reset
+        </button>
+      </div>
 
-          <button
-            type="button"
-            onClick={onReset}
-            disabled={activeCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <X className="h-4 w-4" />
-            Reset
-          </button>
+      {/* Sections */}
+      <div className="divide-y divide-slate-100">
+        <div className="p-5">
+          <SectionTitle>Keyword</SectionTitle>
+          <input
+            type="text"
+            placeholder="Search by keyword..."
+            value={searchInput}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className={inputClassName}
+          />
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-500">
-              Keyword
-            </label>
+        <div className="p-5">
+          <SectionTitle>Location</SectionTitle>
+          <div className="relative">
+            <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by keyword..."
-              value={searchInput}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className={inputClassName}
+              placeholder="City or country"
+              value={filters.location ?? ""}
+              onChange={(e) => onFilterChange("location", e.target.value)}
+              className={`${inputClassName} pl-10`}
             />
           </div>
+        </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-500">
-              Employment Type
-            </label>
-            <select
-              value={filters.employmentType ?? ""}
-              onChange={(e) => onFilterChange("employmentType", e.target.value)}
-              className={selectClassName}
-            >
-              <option value="">All Types</option>
-              <option value="Full Time">Full Time</option>
-              <option value="Part Time">Part Time</option>
-              <option value="Contract">Contract</option>
-              <option value="Internship">Internship</option>
-              <option value="Remote">Remote</option>
-            </select>
-          </div>
+        <div className="p-5">
+          <SectionTitle>Employment Type</SectionTitle>
+          <CheckboxGroup
+            options={EMPLOYMENT_TYPES}
+            selected={filters.employmentType ?? ""}
+            onSelect={(value) => onFilterChange("employmentType", value)}
+          />
+        </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-500">
-              Experience Level
-            </label>
-            <select
-              value={filters.experienceLevel ?? ""}
-              onChange={(e) => onFilterChange("experienceLevel", e.target.value)}
-              className={selectClassName}
-            >
-              <option value="">All Levels</option>
-              <option value="Fresher">Fresher</option>
-              <option value="1-2 Years">1-2 Years</option>
-              <option value="3-5 Years">3-5 Years</option>
-              <option value="5+ Years">5+ Years</option>
-            </select>
-          </div>
+        <div className="p-5">
+          <SectionTitle>Experience Level</SectionTitle>
+          <CheckboxGroup
+            options={EXPERIENCE_LEVELS}
+            selected={filters.experienceLevel ?? ""}
+            onSelect={(value) => onFilterChange("experienceLevel", value)}
+          />
+        </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-500">
-              Status
-            </label>
-            <select
-              value={filters.status ?? ""}
-              onChange={(e) => onFilterChange("status", e.target.value)}
-              className={selectClassName}
-            >
-              <option value="">All Statuses</option>
-              <option value="ACTIVE">Active</option>
-              <option value="CLOSED">Closed</option>
-            </select>
+        <div className="p-5">
+          <SectionTitle>Salary Range</SectionTitle>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                $
+              </span>
+              <input
+                type="number"
+                placeholder="Min"
+                value={filters.minSalary ?? ""}
+                onChange={(e) => onFilterChange("minSalary", e.target.value)}
+                className={`${inputClassName} pl-7`}
+              />
+            </div>
+            <span className="text-slate-400">–</span>
+            <div className="relative flex-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                $
+              </span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={filters.maxSalary ?? ""}
+                onChange={(e) => onFilterChange("maxSalary", e.target.value)}
+                className={`${inputClassName} pl-7`}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="mt-6 space-y-4">
-        <DisabledFilter label="Salary Range" />
-        <DisabledFilter label="Company Size" />
-        <DisabledFilter label="Benefits" />
-        <DisabledFilter label="Remote" />
-        <DisabledFilter label="Hybrid" />
-        <DisabledFilter label="Job Posted" />
+        <div className="p-5">
+          <SectionTitle>Job Status</SectionTitle>
+          <CheckboxGroup
+            options={STATUSES.map((s) => s.label)}
+            selected={
+              STATUSES.find((s) => s.value === filters.status)?.label ?? ""
+            }
+            onSelect={(label) => {
+              const status = STATUSES.find((s) => s.label === label);
+              onFilterChange("status", status ? status.value : "");
+            }}
+          />
+        </div>
       </div>
-    </aside>
-  );
-}
-
-function DisabledFilter({ label }: { label: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <label className="mb-1.5 block text-xs font-medium text-slate-500">
-        {label}
-      </label>
-      <div className={disabledClassName}>Coming Soon</div>
     </div>
   );
 }

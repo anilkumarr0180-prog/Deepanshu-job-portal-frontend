@@ -1,8 +1,11 @@
-import { MapPin, Clock, UserRound } from "lucide-react";
+import { ArrowRight, Clock, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { BackendJobDetails } from "@/features/jobs/utils/jobMapper";
-import { formatSalary, formatRelativeDate } from "@/features/jobs/utils/jobMapper";
+import {
+  formatSalary,
+  formatRelativeDate,
+} from "@/features/jobs/utils/jobMapper";
 
 interface PublicJobCardProps {
   job: BackendJobDetails;
@@ -17,87 +20,98 @@ export default function PublicJobCard({ job }: PublicJobCardProps) {
     .toUpperCase();
 
   const descriptionPreview = job.description
-    ? job.description.split("\n\n")[0].slice(0, 120)
+    ? job.description.split("\n\n")[0]
     : "";
 
-  const recruiterName = job.recruiterId?.name ?? "Not specified";
   const salaryText =
     job.salaryMin > 0 || job.salaryMax > 0
       ? formatSalary(job.salaryMin, job.salaryMax)
       : "Not specified";
 
+  const visibleSkills = job.skills?.slice(0, 3) ?? [];
+  const extraSkills = (job.skills?.length ?? 0) - visibleSkills.length;
+
   return (
-    <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md">
+    <Link
+      to={`/jobs/${job._id}`}
+      className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5]/30 hover:shadow-xl"
+    >
+      {/* Logo + Title + Company + Location */}
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-600">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#EEF3FF] text-sm font-bold text-[#3C65F5]">
           {initials}
         </div>
 
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-slate-900 line-clamp-1">
+        <div className="min-w-0 flex-1">
+          <h3 className="line-clamp-1 text-lg font-semibold text-[#05264E] transition-colors group-hover:text-[#3C65F5]">
             {job.title}
           </h3>
-          <p className="mt-1 text-sm text-slate-600 line-clamp-1">
+          <p className="mt-1 line-clamp-1 text-sm font-medium text-slate-600">
             {job.company}
+          </p>
+          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span className="line-clamp-1">{job.location}</span>
           </p>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-        <span className="inline-flex items-center gap-1.5">
-          <MapPin className="h-4 w-4" />
-          {job.location}
+      {/* Badges + Posted time */}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="rounded-md bg-[#EEF3FF] px-2.5 py-1 text-xs font-semibold text-[#3C65F5]">
+          {job.employmentType}
         </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Clock className="h-4 w-4" />
+        <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+          {job.experienceLevel}
+        </span>
+        <span className="ml-auto flex items-center gap-1 text-xs text-slate-400">
+          <Clock className="h-3.5 w-3.5" />
           {formatRelativeDate(job.createdAt)}
         </span>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-          {job.employmentType}
-        </span>
-        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-          {job.experienceLevel}
-        </span>
+      {/* Salary */}
+      <div className="mt-4">
+        <p className="text-lg font-bold text-[#05264E]">{salaryText}</p>
       </div>
 
-      <div className="mt-3 text-sm">
-        <span className="font-medium text-slate-700">Salary:</span>
-        <span className="text-slate-600">
-          {" "}
-          {salaryText}
-        </span>
-      </div>
-
+      {/* Description */}
       {descriptionPreview && (
-        <p className="mt-2 line-clamp-2 text-sm text-slate-500">
+        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">
           {descriptionPreview}
-          {job.description && job.description.length > 120 && "..."}
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
-        <UserRound className="h-4 w-4" />
-        <span className="line-clamp-1">{recruiterName}</span>
-      </div>
+      {/* Skill tags */}
+      {visibleSkills.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {visibleSkills.map((skill) => (
+            <span
+              key={skill}
+              className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 transition-colors hover:border-[#3C65F5] hover:text-[#3C65F5]"
+            >
+              {skill}
+            </span>
+          ))}
+          {extraSkills > 0 && (
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-400">
+              +{extraSkills}
+            </span>
+          )}
+        </div>
+      )}
 
-      <footer className="mt-5 flex gap-3 border-t border-slate-200 pt-4">
-        <Link
-          to={`/jobs/${job._id}`}
-          className="flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-center text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
-        >
+      {/* Footer CTA */}
+      <footer className="mt-5 flex items-stretch gap-3 border-t border-slate-100 pt-4">
+        <span className="flex flex-1 items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition-colors group-hover:bg-slate-50">
           View Details
-        </Link>
-        <button
-          type="button"
-          disabled
-          className="flex-1 rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-medium text-slate-500"
-        >
-          Coming Soon
-        </button>
+        </span>
+        <span className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#3C65F5] px-4 py-2.5 text-sm font-medium text-white transition-colors group-hover:bg-[#2956F2]">
+          Apply Now
+          <ArrowRight className="h-4 w-4" />
+        </span>
       </footer>
-    </article>
+    </Link>
   );
 }
+
