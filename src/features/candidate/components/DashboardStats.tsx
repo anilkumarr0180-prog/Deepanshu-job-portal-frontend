@@ -21,7 +21,9 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
                 <Icon className="h-5 w-5" />
               </div>
             </div>
-            <p className="mt-4 text-sm text-emerald-600">{stat.trend}</p>
+            {stat.trend && (
+              <p className="mt-4 text-sm text-emerald-600">{stat.trend}</p>
+            )}
           </article>
         );
       })}

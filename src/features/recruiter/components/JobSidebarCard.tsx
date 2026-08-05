@@ -8,15 +8,13 @@ interface SidebarItem {
 interface JobSidebarCardProps {
   status: string;
   postedDate: string;
-  expiryDate: string;
   recruiter: string;
   items?: SidebarItem[];
 }
 
-export default function JobSidebarCard({ status, postedDate, expiryDate, recruiter, items }: JobSidebarCardProps) {
+export default function JobSidebarCard({ status, postedDate, recruiter, items }: JobSidebarCardProps) {
   const detailItems = items ?? [
     { label: "Posting Date", value: postedDate },
-    { label: "Expiry Date", value: expiryDate },
     { label: "Recruiter", value: recruiter },
   ];
 

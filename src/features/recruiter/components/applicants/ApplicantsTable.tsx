@@ -4,9 +4,25 @@ import type { RecruiterApplicantRecord } from "../../types";
 
 interface ApplicantsTableProps {
   applicants: RecruiterApplicantRecord[];
+  onView?: (id: string) => void;
+  onUpdateStatus?: (id: string, status: string) => void;
+  isUpdating?: boolean;
 }
 
-export default function ApplicantsTable({ applicants }: ApplicantsTableProps) {
+export default function ApplicantsTable({
+  applicants,
+  onView,
+  onUpdateStatus,
+  isUpdating,
+}: ApplicantsTableProps) {
+  const handleStatusUpdate = (
+    id: string,
+    status: string
+  ) => {
+    if (isUpdating || !onUpdateStatus) return;
+    onUpdateStatus(id, status);
+  };
+
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -45,16 +61,35 @@ export default function ApplicantsTable({ applicants }: ApplicantsTableProps) {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50">
+                    <button
+                      type="button"
+                      onClick={() => onView?.(applicant.id)}
+                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
+                    >
                       <Eye className="h-4 w-4" />
                     </button>
-                    <button type="button" className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(applicant.id, "Interview")}
+                      disabled={isUpdating}
+                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    >
                       <CalendarDays className="h-4 w-4" />
                     </button>
-                    <button type="button" className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(applicant.id, "Shortlisted")}
+                      disabled={isUpdating}
+                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    >
                       <BadgeCheck className="h-4 w-4" />
                     </button>
-                    <button type="button" className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(applicant.id, "Rejected")}
+                      disabled={isUpdating}
+                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    >
                       <XCircle className="h-4 w-4" />
                     </button>
                   </div>

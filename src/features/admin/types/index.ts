@@ -39,7 +39,7 @@ export interface AdminJob {
   title: string;
   company: string;
   recruiter: string;
-  applicants: number;
+  applicants: number | string;
   status: "Published" | "Draft" | "Archived";
   postedAt: string;
 }

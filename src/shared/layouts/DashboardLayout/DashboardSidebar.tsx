@@ -1,30 +1,26 @@
-import { PanelLeftClose } from "lucide-react";
-
 import useAuth from "@/features/auth/hooks/useAuth";
+import logo from "@/assets/images/logo/logo.svg";
 
-import DashboardMenu from "./DashboardMenu";
-import { getDashboardConfig } from "./dashboardConfig";
+import DashboardMenu from "./DashboardMenu.tsx";
+import { getDashboardConfig } from "./dashboardConfig.ts";
 
 export default function DashboardSidebar() {
   const { user } = useAuth();
   const config = getDashboardConfig(user?.role);
 
   return (
-    <aside className="w-full border-b border-slate-200 bg-white p-4 lg:min-h-screen lg:w-72 lg:border-b-0 lg:border-r">
-      <div className="flex items-center justify-between lg:justify-start">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-            {config.logo}
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-900">{config.title}</h2>
+    <aside className="fixed inset-y-0 left-0 z-40 hidden h-screen w-[260px] flex-col border-r border-white/10 bg-[#05264E] lg:flex">
+      <div className="flex items-center gap-3 px-6 py-3">
+        <img src={logo} alt="JobBox" className="h-9 w-auto object-contain" />
+        <div className="leading-tight">
+          <h2 className="text-lg font-bold text-white">JobBox</h2>
+          <p className="text-xs text-blue-200 mt-[2px] whitespace-nowrap">{config.title}</p>
         </div>
-
-        <button className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:hidden" type="button" aria-label="Toggle sidebar">
-          <PanelLeftClose className="h-5 w-5" />
-        </button>
       </div>
 
-      <div className="mt-8">
+      <div className="border-b border-white/10 mx-6" />
+
+      <div className="mt-2 flex-1 overflow-y-auto px-4">
         <DashboardMenu role={user?.role} />
       </div>
     </aside>

@@ -34,7 +34,7 @@ export const recruiterJobs: RecruiterJob[] = [
     location: "London, UK",
     type: "Part-time",
     applicants: 15,
-    status: "Paused",
+    status: "Closed",
     postedDate: "Jun 28",
   },
 ];

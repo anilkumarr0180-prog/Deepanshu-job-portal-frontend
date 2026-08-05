@@ -34,6 +34,8 @@ import RecruiterProfilePage from "@/features/recruiter/pages/RecruiterProfilePag
 import RecruiterSettingsPage from "@/features/recruiter/pages/RecruiterSettingsPage";
 import RecruiterNotificationsPage from "@/features/recruiter/pages/RecruiterNotificationsPage";
 import RecruiterInterviewsPage from "@/features/recruiter/pages/RecruiterInterviewsPage";
+import NotFoundPage from "@/pages/NotFoundPage";
+import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import { ProtectedRoute } from "@/features/auth/components";
 
 export const routes: RouteObject[] = [
@@ -66,7 +68,7 @@ export const routes: RouteObject[] = [
   {
     path: "/admin",
     element: (
-      <ProtectedRoute allowedRoles={["admin"]}>
+      <ProtectedRoute allowedRoles={["admin"] as const}>
         <DashboardLayout />
       </ProtectedRoute>
     ),
@@ -96,7 +98,7 @@ export const routes: RouteObject[] = [
   {
     path: "/candidate",
     element: (
-      <ProtectedRoute allowedRoles={["candidate"]}>
+      <ProtectedRoute allowedRoles={["candidate"] as const}>
         <DashboardLayout />
       </ProtectedRoute>
     ),
@@ -142,7 +144,7 @@ export const routes: RouteObject[] = [
   {
     path: "/recruiter",
     element: (
-      <ProtectedRoute allowedRoles={["recruiter"]}>
+      <ProtectedRoute allowedRoles={["recruiter"] as const}>
         <DashboardLayout />
       </ProtectedRoute>
     ),
@@ -200,5 +202,13 @@ export const routes: RouteObject[] = [
         element: <RecruiterInterviewsPage />,
       },
     ],
+  },
+  {
+    path: "/unauthorized",
+    element: <UnauthorizedPage />,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ];

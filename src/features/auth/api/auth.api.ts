@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/$/, "");
+import { axiosInstance } from "@/lib/axios";
 
 interface AuthApiResponse {
   data?: {
@@ -33,13 +33,7 @@ export function normalizeAuthPayload(payload: unknown) {
 }
 
 export async function loginUser(payload: { email: string; password: string }) {
-  return fetch(`${API_BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  return axiosInstance.post("/auth/login", payload);
 }
 
 export async function registerUser(payload: {
@@ -48,18 +42,11 @@ export async function registerUser(payload: {
   password: string;
   role: string;
 }) {
-  return fetch(`${API_BASE_URL}/auth/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  return axiosInstance.post("/auth/register", payload);
 }
 
 export async function getCurrentUser(token: string) {
-  return fetch(`${API_BASE_URL}/auth/me`, {
-    method: "GET",
+  return axiosInstance.get("/auth/me", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
