@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from "react";
-import { Users, Building2, BriefcaseBusiness } from "lucide-react";
+import { Users, Building2, BriefcaseBusiness, UserCheck } from "lucide-react";
 import toast from "react-hot-toast";
 
 import useAuth from "@/features/auth/hooks/useAuth";
@@ -8,7 +8,9 @@ import { formatDashboardDate, getGreetingByTime } from "@/shared/utils/dashboard
 import AdminQuickActions from "../components/AdminQuickActions";
 import AdminStats from "../components/AdminStats";
 import AdminWelcome from "../components/AdminWelcome";
-import EmptyState from "../components/EmptyState";
+import AdminDashboardInsights from "../components/AdminDashboardInsights";
+import AdminRecentUsersTable from "../components/AdminRecentUsersTable";
+import AdminRecentJobsTable from "../components/AdminRecentJobsTable";
 
 import { useAdminDashboard } from "../hooks/useAdminDashboard";
 import { quickActions } from "../constants";
@@ -52,8 +54,8 @@ function mapJob(j: {
     id: j._id,
     title: j.title,
     company: j.company,
-    recruiter: j.recruiterId?.name ?? "--",
-    applicants: "--",
+    recruiter: j.recruiterId?.name ?? "—",
+    applicants: "—",
     status: normalizedStatus,
     postedAt: new Date(j.createdAt).toLocaleDateString(),
   };
@@ -92,15 +94,15 @@ export default function AdminDashboardPage() {
           id: "recruiters",
           title: "Recruiters",
           value: "0",
-          trend: "—",
+          trend: "Registered accounts",
           icon: Building2,
         },
         {
           id: "candidates",
           title: "Candidates",
           value: "0",
-          trend: "—",
-          icon: Users,
+          trend: "Registered accounts",
+          icon: UserCheck,
         },
         {
           id: "jobs",
@@ -132,7 +134,7 @@ export default function AdminDashboardPage() {
         title: "Candidates",
         value: String(d.totalCandidates),
         trend: "Registered accounts",
-        icon: Users,
+        icon: UserCheck,
       },
       {
         id: "jobs",
@@ -155,168 +157,58 @@ export default function AdminDashboardPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
+      {/* Welcome Banner */}
       <AdminWelcome
         name={displayName}
         greeting={getGreetingByTime()}
         currentDate={formatDashboardDate()}
-        description="Monitor growth, review moderation tasks, and keep the platform healthy from a single view."
+        description="Monitor platform growth, review moderation tasks, and keep Jobs Box healthy from a single command centre."
       />
 
+      {/* Dynamic Stats Cards */}
       {isError ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm font-semibold text-red-600">
           <p className="mb-3">Failed to load dashboard stats.</p>
-            <button
-              type="button"
-              onClick={() => {
-                void refetch();
-              }}
-              className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-            >
-              Retry
-            </button>
-        </div>
-      ) : isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
-              <div className="mt-3 h-8 w-1/3 animate-pulse rounded bg-slate-200" />
-            </div>
-          ))}
+          <button
+            type="button"
+            onClick={() => {
+              void refetch();
+            }}
+            className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+          >
+            Retry
+          </button>
         </div>
       ) : (
-        <AdminStats stats={stats} />
+        <AdminStats stats={stats} isLoading={isLoading} />
       )}
 
+      {/* Quick Priority Actions */}
       <AdminQuickActions actions={quickActions} />
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900">Recent users</h3>
-              <p className="mt-1 text-sm text-slate-500">Latest account activity and statuses</p>
-            </div>
+      {/* Platform Insights */}
+      {!isError && (
+        <AdminDashboardInsights
+          totalUsers={dashboard?.data?.totalUsers ?? 0}
+          totalRecruiters={dashboard?.data?.totalRecruiters ?? 0}
+          totalCandidates={dashboard?.data?.totalCandidates ?? 0}
+          totalJobs={dashboard?.data?.totalJobs ?? 0}
+          totalApplications={dashboard?.data?.totalApplications ?? 0}
+        />
+      )}
+
+      {/* Recent Activity Tables */}
+      <div className="grid gap-7 xl:grid-cols-2">
+        <AdminRecentUsersTable users={recentUsers} isLoading={isLoading} />
+
+        {isError ? (
+          <div className="flex items-center justify-center rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-sm font-semibold text-red-600">
+            Failed to load recent jobs.
           </div>
-
-          {isError ? (
-            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
-              <p className="mb-3">Failed to load recent users.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  void refetch();
-                }}
-                className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-              >
-                Retry
-              </button>
-            </div>
-          ) : isLoading ? (
-            <div className="mt-5 space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-12 animate-pulse rounded-xl bg-slate-100"
-                />
-              ))}
-            </div>
-          ) : recentUsers.length > 0 ? (
-            <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Name</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Role</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
-                  {recentUsers.slice(0, 3).map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900">{user.name}</div>
-                        <div className="mt-1 text-xs text-slate-500">{user.email}</div>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">{user.role}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                          {user.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="mt-5">
-              <EmptyState
-                title="No users yet"
-                description="New user accounts will appear here once registered."
-              />
-            </div>
-          )}
-        </section>
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900">Recent jobs</h3>
-          <p className="mt-1 text-sm text-slate-500">Latest job postings</p>
-
-          {isError ? (
-            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
-              <p className="mb-3">Failed to load recent jobs.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  void refetch();
-                }}
-                className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-              >
-                Retry
-              </button>
-            </div>
-          ) : isLoading ? (
-            <div className="mt-5 space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-16 animate-pulse rounded-xl bg-slate-100"
-                />
-              ))}
-            </div>
-          ) : recentJobs.length > 0 ? (
-            <div className="mt-5 space-y-3">
-              {recentJobs.slice(0, 3).map((job) => (
-                <div
-                  key={job.id}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-slate-900">{job.title}</p>
-                      <p className="mt-1 text-sm text-slate-500">{job.company}</p>
-                    </div>
-                    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                      {job.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-5">
-              <EmptyState
-                title="No jobs yet"
-                description="New job postings will appear here once created."
-              />
-            </div>
-          )}
-        </section>
+        ) : (
+          <AdminRecentJobsTable jobs={recentJobs} isLoading={isLoading} />
+        )}
       </div>
     </div>
   );

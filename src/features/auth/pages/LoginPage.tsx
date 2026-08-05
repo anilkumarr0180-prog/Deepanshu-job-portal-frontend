@@ -1,7 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import heroTop from "@/assets/images/hero/hero-top.png";
+
+import leftCityBg from "@/assets/images/auth/img-3.svg";
+import rightBalloonBg from "@/assets/images/auth/img-4.svg";
+
+import {
+  AuthDivider,
+  AuthHeader,
+  AuthInput,
+  AuthLayout,
+  GoogleButton,
+} from "../components";
 import { loginUser, normalizeAuthPayload } from "../api/auth.api";
 import { type AuthUser } from "../context/auth-context";
 import useAuth from "../hooks/useAuth";
@@ -26,7 +36,9 @@ export default function LoginPage() {
         password,
       });
 
-      const { token: nextToken, user: nextUser } = normalizeAuthPayload(response.data);
+      const { token: nextToken, user: nextUser } = normalizeAuthPayload(
+        response.data
+      );
 
       if (!nextToken) {
         throw new Error("Authentication token missing from server response.");
@@ -37,12 +49,10 @@ export default function LoginPage() {
 
       toast.success("User logged in successfully.");
 
-      navigate(getDashboardRoute(normalizedUser.role));
+      void navigate(getDashboardRoute(normalizedUser.role));
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Login failed."
+        error instanceof Error ? error.message : "Login failed."
       );
     } finally {
       setIsLoading(false);
@@ -50,131 +60,84 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[80vh] py-12">
-      <div className="container mx-auto flex flex-col-reverse gap-8 lg:flex-row lg:items-center">
-        {/* Left */}
-        <div className="w-full lg:w-1/2">
-          <div className="mx-auto max-w-md">
-            <p className="text-center text-sm text-slate-500">
-              Welcome back!
-            </p>
+    <AuthLayout
+      leftIllustration={leftCityBg}
+      rightIllustration={rightBalloonBg}
+    >
+      <AuthHeader
+        badge="Welcome back!"
+        title="Member Login"
+        subtitle="Access to all features. No credit card required."
+      />
 
-            <h2 className="mt-2 text-center text-3xl font-semibold text-slate-900">
-              Member Login
-            </h2>
+      <GoogleButton text="Sign in with Google" />
 
-            <p className="mt-2 text-center text-sm text-slate-500">
-              Access to all features. No credit card required.
-            </p>
+      <AuthDivider />
 
-            <form
-              onSubmit={handleSubmit}
-              className="mt-8 space-y-4"
-            >
-              <button
-                type="button"
-                className="flex w-full items-center justify-center gap-3 rounded border px-4 py-3 text-sm text-slate-700 hover:shadow"
-              >
-                <span className="inline-block h-4 w-4">G</span>
-                Sign in with Google
-              </button>
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(e);
+        }}
+        className="mt-8"
+      >
+        <AuthInput
+          label="Username or Email address"
+          type="email"
+          placeholder="Steven Job"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-slate-200" />
-                <div className="text-xs text-slate-400">
-                  Or continue with
-                </div>
-                <div className="h-px flex-1 bg-slate-200" />
-              </div>
+        <AuthInput
+          label="Password"
+          type="password"
+          placeholder="************"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-700">
-                  Username or Email address *
-                </label>
-
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  placeholder="Enter your email"
-                  className="w-full rounded border border-slate-200 bg-white px-3 py-3 text-sm placeholder:text-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-700">
-                  Password *
-                </label>
-
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  placeholder="************"
-                  className="w-full rounded border border-slate-200 bg-white px-3 py-3 text-sm placeholder:text-slate-300"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 text-slate-600">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) =>
-                      setRemember(e.target.checked)
-                    }
-                  />
-                  Remember me
-                </label>
-
-                <button
-                  type="button"
-                  className="text-slate-500 hover:text-slate-700"
-                >
-                  Forgot Password
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full rounded bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isLoading
-                  ? "Signing in..."
-                  : "Login"}
-              </button>
-
-              <p className="text-center text-xs text-slate-400">
-                Don't have an account?{" "}
-                <a
-                  href="/register"
-                  className="font-medium text-slate-900"
-                >
-                  Sign up
-                </a>
-              </p>
-            </form>
-          </div>
-        </div>
-
-        {/* Right */}
-        <div className="flex w-full justify-center lg:w-1/2 lg:justify-end">
-          <div className="hidden max-w-[420px] lg:block">
-            <img
-              src={heroTop}
-              alt="Login Illustration"
-              className="w-full rounded-lg shadow-lg"
+        {/* Remember me & Forgot password */}
+        <div className="mb-7 flex items-center justify-between text-sm">
+          <label className="flex cursor-pointer items-center gap-2 text-slate-600">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 accent-[#3C65F5]"
             />
-          </div>
+            <span>Remember me</span>
+          </label>
+
+          <button
+            type="button"
+            className="text-sm font-medium text-slate-500 hover:text-slate-700"
+          >
+            Forgot Password
+          </button>
         </div>
-      </div>
-    </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="h-14 w-full rounded-xl bg-[#05264E] text-base font-semibold text-white transition-all duration-200 hover:bg-[#031C3B] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoading ? "Signing in..." : "Login"}
+        </button>
+
+        {/* Footer Link */}
+        <p className="mt-6 text-center text-sm text-[#66789C]">
+          Don't have an Account?{" "}
+          <Link
+            to="/register"
+            className="font-semibold text-[#3C65F5] hover:underline"
+          >
+            Sign up
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }
