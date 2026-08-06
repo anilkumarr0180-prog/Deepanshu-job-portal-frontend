@@ -15,11 +15,15 @@ export function useUpdateApplicationStatus() {
       status: string;
     }) => updateApplicationStatus(id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications", "all"] });
+      void queryClient.invalidateQueries({ queryKey: ["applications", "all"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard", "recruiter"] });
       toast.success("Application status updated successfully.");
     },
-    onError: () => {
-      toast.error("Failed to update application status.");
+    onError: (error: unknown) => {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      toast.error(
+        axiosError.response?.data?.message || "Failed to update application status."
+      );
     },
   });
 }

@@ -15,6 +15,7 @@ interface CreateJobFormProps {
   cancelLabel?: string;
   draftLabel?: string;
   submitLabel?: string;
+  isSubmitting?: boolean;
   onSubmit?: (values: CreateJobPayload) => void;
   onSaveDraft?: () => void;
 }
@@ -51,6 +52,7 @@ export default function CreateJobForm({
   cancelLabel,
   draftLabel,
   submitLabel,
+  isSubmitting = false,
   onSubmit,
   onSaveDraft,
 }: CreateJobFormProps) {
@@ -180,6 +182,7 @@ export default function CreateJobForm({
         cancelLabel={cancelLabel}
         draftLabel={draftLabel}
         submitLabel={submitLabel}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

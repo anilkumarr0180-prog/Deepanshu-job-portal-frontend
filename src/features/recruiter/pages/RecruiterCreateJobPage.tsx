@@ -42,6 +42,7 @@ export default function RecruiterCreateJobPage() {
         <CreateJobForm
           onCancel={() => navigate("/recruiter/jobs")}
           onSubmit={handleSubmit}
+          isSubmitting={createMutation.isPending}
         />
       </div>
     </div>

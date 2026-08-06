@@ -21,7 +21,8 @@ export interface AdminUser {
   name: string;
   email: string;
   role: string;
-  status: "Active" | "Pending" | "Suspended";
+  isBlocked: boolean;
+  status: "Active" | "Blocked" | "Pending" | "Suspended";
   joinedAt: string;
 }
 

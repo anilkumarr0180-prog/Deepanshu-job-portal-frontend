@@ -30,17 +30,15 @@ export interface BackendJobDetails extends BackendJob {
   };
 }
 
-function normalizeStatus(status: string): RecruiterJobStatus {
+function normalizeStatus(status?: string): RecruiterJobStatus {
+  if (!status) return "Draft";
   switch (status.toUpperCase()) {
     case "ACTIVE":
       return "Active";
-
     case "DRAFT":
       return "Draft";
-
     case "CLOSED":
       return "Closed";
-
     default:
       return "Draft";
   }
@@ -49,31 +47,31 @@ function normalizeStatus(status: string): RecruiterJobStatus {
 export function mapRecruiterJob(job: BackendJob): RecruiterJob {
   return {
     id: job._id,
-    title: job.title,
-    location: job.location,
-    type: job.employmentType,
+    title: job.title || "Untitled Job",
+    location: job.location || "Remote",
+    type: job.employmentType || "Full-time",
     applicants: 0,
     status: normalizeStatus(job.status),
-    postedDate: new Date(job.createdAt).toLocaleDateString(),
+    postedDate: formatRelativeDate(job.createdAt),
   };
 }
 
 export function mapRecruiterJobDetails(
   job: BackendJobDetails
 ): RecruiterJobDetails {
-  const salary = `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`;
+  const salary = formatSalary(job.salaryMin, job.salaryMax);
 
   return {
     id: job._id,
-    title: job.title,
-    company: job.company,
+    title: job.title || "Untitled Job",
+    company: job.company || "Company",
     status: normalizeStatus(job.status),
-    postedDate: new Date(job.createdAt).toLocaleDateString(),
-    lastUpdated: new Date(job.updatedAt).toLocaleDateString(),
-    employmentType: job.employmentType,
-    experienceLevel: job.experienceLevel,
+    postedDate: formatRelativeDate(job.createdAt),
+    lastUpdated: formatRelativeDate(job.updatedAt),
+    employmentType: job.employmentType || "Full-time",
+    experienceLevel: job.experienceLevel || "Mid Level",
     salary,
-    location: job.location,
+    location: job.location || "Remote",
     description: job.description
       ? job.description.split("\n\n")
       : [],
@@ -83,19 +81,26 @@ export function mapRecruiterJobDetails(
   };
 }
 
-export function formatSalary(min: number, max: number): string {
-  return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+export function formatSalary(min?: number, max?: number): string {
+  const safeMin = typeof min === "number" ? min : 0;
+  const safeMax = typeof max === "number" ? max : 0;
+
+  if (safeMin === 0 && safeMax === 0) return "Not specified";
+  return `$${safeMin.toLocaleString()} - $${safeMax.toLocaleString()}`;
 }
 
-export function formatRelativeDate(dateString: string): string {
+export function formatRelativeDate(dateString?: string): string {
+  if (!dateString) return "Recently";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "Recently";
+
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Today";
+  if (diffDays <= 0) return "Today";
   if (diffDays === 1) return "1 day ago";
   if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week\u00a0ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
   return date.toLocaleDateString();
 }

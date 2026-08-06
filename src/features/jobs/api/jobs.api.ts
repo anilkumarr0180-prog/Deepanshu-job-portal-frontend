@@ -1,4 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
+import { removeEmptyFields } from "@/shared/utils/removeEmptyFields";
 import type { BackendJob, BackendJobDetails } from "../utils/jobMapper";
 
 export interface JobsFilterParams {
@@ -43,8 +44,9 @@ export interface CreateJobPayload {
 }
 
 export async function getJobs(params?: Record<string, unknown>) {
+  const cleanedParams = params ? removeEmptyFields(params) : undefined;
   const response = await axiosInstance.get("/jobs", {
-    params,
+    params: cleanedParams,
   });
 
   return response.data;
@@ -53,12 +55,13 @@ export async function getJobs(params?: Record<string, unknown>) {
 export async function getJobsWithFilters(
   params: JobsFilterParams
 ): Promise<JobsResponse> {
+  const cleanedParams = removeEmptyFields(params);
   const response = await axiosInstance.get<{
     success: boolean;
     message: string;
     data: JobsResponse;
   }>("/jobs", {
-    params,
+    params: cleanedParams,
   });
 
   return response.data.data;

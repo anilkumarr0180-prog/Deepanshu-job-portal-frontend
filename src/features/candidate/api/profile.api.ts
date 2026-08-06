@@ -1,5 +1,34 @@
 import { axiosInstance } from "@/lib/axios";
 
+export interface CandidateExperience {
+  _id?: string;
+  title: string;
+  company: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  current?: boolean;
+  description?: string;
+}
+
+export interface CandidateEducation {
+  _id?: string;
+  institution: string;
+  degree: string;
+  fieldOfStudy?: string;
+  startDate?: string;
+  endDate?: string;
+  current?: boolean;
+}
+
+export interface SocialLinks {
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  twitter?: string;
+  website?: string;
+}
+
 export interface BackendProfile {
   _id: string;
   name: string;
@@ -8,18 +37,51 @@ export interface BackendProfile {
   phone?: string;
   profilePicture?: string;
   resumeUrl?: string;
-  isBlocked: boolean;
-  createdAt: string;
-  updatedAt: string;
+  headline?: string;
+  bio?: string;
+  skills?: string[];
+  experience?: CandidateExperience[];
+  education?: CandidateEducation[];
+  city?: string;
+  state?: string;
+  country?: string;
+  socialLinks?: SocialLinks;
+  designation?: string;
+  department?: string;
+  companyId?: string | { _id: string; name?: string; logo?: string };
+  isBlocked?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateProfilePayload {
   name?: string;
-  email?: string;
   phone?: string;
   profilePicture?: string;
   resumeUrl?: string;
-  role?: string;
+  headline?: string;
+  bio?: string;
+  skills?: string[];
+  experience?: CandidateExperience[];
+  education?: CandidateEducation[];
+  city?: string;
+  state?: string;
+  country?: string;
+  socialLinks?: SocialLinks;
+  designation?: string;
+  department?: string;
+  companyId?: string;
+}
+
+interface ProfileApiResponse {
+  success: boolean;
+  message?: string;
+  data: BackendProfile;
+}
+
+export async function getProfile(): Promise<BackendProfile> {
+  const response = await axiosInstance.get<ProfileApiResponse>("/profile");
+  return response.data.data;
 }
 
 export async function updateProfile(
@@ -29,17 +91,6 @@ export async function updateProfile(
     "/profile",
     payload
   );
-
   return response.data.data;
 }
 
-interface ProfileApiResponse {
-  success: boolean;
-  data: BackendProfile;
-}
-
-export async function getProfile(): Promise<BackendProfile> {
-  const response = await axiosInstance.get<ProfileApiResponse>("/profile");
-
-  return response.data.data;
-}
