@@ -32,6 +32,7 @@ export interface CompanyPayload {
 export interface CompanyResponse extends CompanyPayload {
   _id: string;
   recruiterId?: string;
+  isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

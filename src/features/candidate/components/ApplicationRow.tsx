@@ -10,7 +10,8 @@ interface ApplicationRowProps {
 
 const statusStyles: Record<string, { bg: string; text: string }> = {
   Applied: { bg: "bg-amber-50", text: "text-amber-700" },
-  Shortlisted: { bg: "bg-blue-50", text: "text-blue-700" },
+  "Under Review": { bg: "bg-blue-50", text: "text-blue-700" },
+  Shortlisted: { bg: "bg-emerald-50", text: "text-emerald-700" },
   Interview: { bg: "bg-purple-50", text: "text-purple-700" },
   Rejected: { bg: "bg-rose-50", text: "text-rose-700" },
   Hired: { bg: "bg-emerald-50", text: "text-emerald-700" },
@@ -21,7 +22,14 @@ export default function ApplicationRow({
   onWithdraw,
   isWithdrawing,
 }: ApplicationRowProps) {
-  const job = application.jobId;
+  const job = application.jobId || {
+    _id: "",
+    title: "Position Unavailable",
+    company: "N/A",
+    employmentType: "N/A",
+    salaryMin: 0,
+    salaryMax: 0,
+  };
   const statusStyle =
     statusStyles[application.status] ?? {
       bg: "bg-slate-100",
@@ -62,10 +70,16 @@ export default function ApplicationRow({
       </td>
 
       <td className="px-4 py-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/candidate/messages?jobId=${job._id}`}
+            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#3C65F5] hover:bg-blue-100 transition"
+          >
+            Chat
+          </Link>
           <Link
             to={`/candidate/jobs/${job._id}`}
-            className="text-sm font-medium text-[#3C65F5] hover:underline"
+            className="text-sm font-medium text-slate-700 hover:text-slate-900 hover:underline"
           >
             View Details
           </Link>
@@ -78,6 +92,7 @@ export default function ApplicationRow({
             {isWithdrawing ? "Withdrawing..." : "Withdraw"}
           </button>
         </div>
+
       </td>
     </tr>
   );

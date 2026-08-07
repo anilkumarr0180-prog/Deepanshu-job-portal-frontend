@@ -1,4 +1,4 @@
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { BackendJobDetails } from "@/features/jobs/utils/jobMapper";
@@ -6,13 +6,19 @@ import { formatSalary, formatRelativeDate } from "../utils/jobMapper";
 
 interface JobCardProps {
   job: BackendJobDetails;
-  onApply: (jobId: string) => void;
-  isApplying: boolean;
+  onApply: (job: BackendJobDetails) => void;
+  isApplying?: boolean;
+  isApplied?: boolean;
 }
 
 const SKILLS_LIMIT = 5;
 
-export default function JobCard({ job, onApply, isApplying }: JobCardProps) {
+export default function JobCard({
+  job,
+  onApply,
+  isApplying = false,
+  isApplied = false,
+}: JobCardProps) {
   const fullSkills = job.skills ?? [];
   const displayedSkills = fullSkills.slice(0, SKILLS_LIMIT);
   const remainingSkills = fullSkills.length - SKILLS_LIMIT;
@@ -34,6 +40,11 @@ export default function JobCard({ job, onApply, isApplying }: JobCardProps) {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {isApplied && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                <CheckCircle2 className="h-3 w-3" /> Applied
+              </span>
+            )}
             <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
               Active
             </span>
@@ -96,17 +107,21 @@ export default function JobCard({ job, onApply, isApplying }: JobCardProps) {
       <footer className="mt-5 flex gap-3 border-t border-slate-200 pt-4">
         <Link
           to={`/candidate/jobs/${job._id}`}
-          className="flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+          className="flex-1 justify-center text-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
         >
           View Details
         </Link>
         <button
           type="button"
-          onClick={() => onApply(job._id)}
+          onClick={() => onApply(job)}
           disabled={isApplying}
-          className="flex-1 rounded-xl bg-[#3C65F5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+            isApplied
+              ? "bg-amber-500 text-white hover:bg-amber-600"
+              : "bg-[#3C65F5] text-white hover:bg-blue-600"
+          } disabled:cursor-not-allowed disabled:opacity-50`}
         >
-          {isApplying ? "Applying..." : "Apply Now"}
+          {isApplying ? "Applying..." : isApplied ? "Applied" : "Apply Now"}
         </button>
       </footer>
     </article>

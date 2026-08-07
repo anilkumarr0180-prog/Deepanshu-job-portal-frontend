@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -6,17 +6,20 @@ import {
   Calendar,
   Clock,
   MapPin,
+  CheckCircle2,
+  Send,
 } from "lucide-react";
 
 import { useJobDetails } from "@/features/jobs/hooks/useJobDetails";
-import { useApplyJob } from "../hooks/useApplyJob";
+import { useMyApplications } from "../hooks/useMyApplications";
 import { formatSalary, formatRelativeDate } from "../utils/jobMapper";
 import JobDetailsSkeleton from "../components/JobDetailsSkeleton";
+import ApplyJobModal from "../components/ApplyJobModal";
 
 export default function CandidateJobDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [coverLetter, setCoverLetter] = useState("");
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
   const {
     data: job,
@@ -25,7 +28,17 @@ export default function CandidateJobDetailsPage() {
     refetch,
   } = useJobDetails(id ?? "");
 
-  const applyJob = useApplyJob();
+  const { data: myApplications } = useMyApplications();
+
+  const isAlreadyApplied = useMemo(() => {
+    if (!job || !myApplications) return false;
+    return myApplications.some((app) => {
+      if (typeof app.jobId === "string") {
+        return app.jobId === job._id;
+      }
+      return app.jobId?._id === job._id;
+    });
+  }, [job, myApplications]);
 
   if (isLoading) {
     return (
@@ -70,10 +83,6 @@ export default function CandidateJobDetailsPage() {
     );
   }
 
-  const handleApply = () => {
-    applyJob.mutate({ jobId: job._id, coverLetter });
-  };
-
   const paragraphs = job.description
     ? job.description.split("\n\n").filter((p) => p.trim().length > 0)
     : [];
@@ -98,6 +107,11 @@ export default function CandidateJobDetailsPage() {
               <p className="mt-1 text-lg text-slate-600">{job.company}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              {isAlreadyApplied && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Already Applied
+                </span>
+              )}
               <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
                 Active
               </span>
@@ -167,40 +181,58 @@ export default function CandidateJobDetailsPage() {
           </div>
 
           <div>
-            <div className="sticky top-24 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-              <div className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-700">
-                <Clock className="h-4 w-4" />
-                <span>Apply now</span>
+            <div className="sticky top-24 rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Send className="h-4 w-4 text-[#3C65F5]" />
+                  <span>{isAlreadyApplied ? "Application Submitted" : "Apply now"}</span>
+                </div>
               </div>
 
-              <p className="mb-3 text-xs text-slate-500">
-                You can optionally include a cover letter. You must have a
-                resume on file to apply.
-              </p>
-
-              <textarea
-                value={coverLetter}
-                onChange={(e) => setCoverLetter(e.target.value)}
-                placeholder="Write a cover letter (optional)..."
-                rows={5}
-                className="mb-4 w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-                aria-label="Cover letter"
-              />
+              {isAlreadyApplied ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800 flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    You have already applied for this job. Click below to review your candidate application details.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Review your candidate profile details and optionally write a cover letter before submitting your application.
+                </p>
+              )}
 
               <button
                 type="button"
-                onClick={handleApply}
-                disabled={applyJob.isPending}
-                className="w-full rounded-xl bg-[#3C65F5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => setIsApplyModalOpen(true)}
+                className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
+                  isAlreadyApplied
+                    ? "bg-[#3C65F5] hover:bg-blue-600"
+                    : "bg-[#3C65F5] hover:bg-blue-600"
+                } shadow-sm`}
               >
-                {applyJob.isPending
-                  ? "Applying..."
-                  : "Apply for this position"}
+                {isAlreadyApplied ? "View Application Details" : "Apply for this position"}
               </button>
+
+              {isAlreadyApplied && (
+                <Link
+                  to="/candidate/applied"
+                  className="block text-center text-xs font-semibold text-[#3C65F5] hover:underline pt-1"
+                >
+                  Track in Applied Jobs &rarr;
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </article>
+
+      {/* Unified Apply Job Modal */}
+      <ApplyJobModal
+        job={job}
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+      />
     </div>
   );
 }

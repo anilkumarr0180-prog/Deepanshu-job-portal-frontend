@@ -52,3 +52,11 @@ export async function getCurrentUser(token: string) {
     },
   });
 }
+
+export async function googleAuthApi(payload: {
+  credential?: string;
+  token?: string;
+  role?: string;
+}) {
+  return axiosInstance.post("/auth/google", payload);
+}

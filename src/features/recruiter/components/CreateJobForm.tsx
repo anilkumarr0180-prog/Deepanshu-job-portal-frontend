@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 
 import type { CreateJobPayload } from "@/features/jobs/api/jobs.api";
 
@@ -96,6 +97,16 @@ export default function CreateJobForm({
   };
 
   const handlePublish = () => {
+    if (!form.title.trim()) {
+      toast.error("Please enter a Job Title for this position.");
+      return;
+    }
+    const minVal = Number(form.minSalary);
+    const maxVal = Number(form.maxSalary);
+    if (form.minSalary && form.maxSalary && !isNaN(minVal) && !isNaN(maxVal) && maxVal > 0 && minVal > maxVal) {
+      toast.error("Maximum salary must be greater than or equal to minimum salary.");
+      return;
+    }
     onSubmit?.(mapFormToPayload(form));
   };
 

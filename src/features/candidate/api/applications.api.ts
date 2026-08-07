@@ -37,12 +37,19 @@ interface WithdrawApplicationApiResponse {
 }
 
 export async function getMyApplications(): Promise<BackendCandidateApplication[]> {
-  const response =
-    await axiosInstance.get<MyApplicationsApiResponse>(
-      "/applications/my"
-    );
+  const response = await axiosInstance.get<any>("/applications/my");
 
-  return response.data.data;
+  const rawData = response.data?.data;
+
+  if (Array.isArray(rawData)) {
+    return rawData;
+  }
+
+  if (rawData && typeof rawData === "object" && Array.isArray(rawData.items)) {
+    return rawData.items;
+  }
+
+  return [];
 }
 
 export async function withdrawApplication(

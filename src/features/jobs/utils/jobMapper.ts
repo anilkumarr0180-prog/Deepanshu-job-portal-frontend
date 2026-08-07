@@ -82,11 +82,17 @@ export function mapRecruiterJobDetails(
 }
 
 export function formatSalary(min?: number, max?: number): string {
-  const safeMin = typeof min === "number" ? min : 0;
-  const safeMax = typeof max === "number" ? max : 0;
+  const safeMin = typeof min === "number" && !isNaN(min) ? min : 0;
+  const safeMax = typeof max === "number" && !isNaN(max) ? max : 0;
 
-  if (safeMin === 0 && safeMax === 0) return "Not specified";
-  return `$${safeMin.toLocaleString()} - $${safeMax.toLocaleString()}`;
+  if (safeMin === 0 && safeMax === 0) return "Competitive / Negotiable";
+  if (safeMin > 0 && safeMax > 0) {
+    if (safeMin === safeMax) return `$${safeMin.toLocaleString()}`;
+    return `$${safeMin.toLocaleString()} - $${safeMax.toLocaleString()}`;
+  }
+  if (safeMin > 0 && safeMax === 0) return `From $${safeMin.toLocaleString()}`;
+  if (safeMin === 0 && safeMax > 0) return `Up to $${safeMax.toLocaleString()}`;
+  return "Competitive / Negotiable";
 }
 
 export function formatRelativeDate(dateString?: string): string {

@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 
+import type { BackendJobDetails } from "@/features/jobs/utils/jobMapper";
 import type { JobsFilterParams } from "../api/jobs.api";
 import { JOBS_PER_PAGE } from "../constants";
 import { useJobs } from "../hooks/useJobs";
-import { useApplyJob } from "../hooks/useApplyJob";
+import { useMyApplications } from "../hooks/useMyApplications";
 import JobCard from "../components/JobCard";
 import JobCardSkeleton from "../components/JobCardSkeleton";
 import EmptyJobs from "../components/EmptyJobs";
 import JobFilters from "../components/JobFilters";
 import JobsToolbar from "../components/JobsToolbar";
 import JobsPagination from "../components/JobsPagination";
+import ApplyJobModal from "../components/ApplyJobModal";
 
 const initialFilters: JobsFilterParams = {
   page: "1",
@@ -36,9 +38,25 @@ function hasActiveFilters(filters: JobsFilterParams): boolean {
 export default function CandidateJobsPage() {
   const [filters, setFilters] = useState<JobsFilterParams>(initialFilters);
   const [searchInput, setSearchInput] = useState("");
+  const [selectedJobForApply, setSelectedJobForApply] =
+    useState<BackendJobDetails | null>(null);
 
   const { data, isLoading, isError, refetch } = useJobs(filters);
-  const applyJob = useApplyJob();
+  const { data: myApplications } = useMyApplications();
+
+  const appliedJobIds = useMemo(() => {
+    const set = new Set<string>();
+    if (myApplications) {
+      myApplications.forEach((app) => {
+        if (typeof app.jobId === "string") {
+          set.add(app.jobId);
+        } else if (app.jobId?._id) {
+          set.add(app.jobId._id);
+        }
+      });
+    }
+    return set;
+  }, [myApplications]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -97,25 +115,12 @@ export default function CandidateJobsPage() {
         onSearchChange={setSearchInput}
       />
 
-      {/* Filters — skeleton while loading */}
-      {isLoading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-11 animate-pulse rounded-xl bg-slate-200"
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <JobFilters
-          filters={filters}
-          onChange={handleFilterChange}
-          onReset={handleReset}
-        />
-      )}
+      {/* Filters */}
+      <JobFilters
+        filters={filters}
+        onChange={handleFilterChange}
+        onReset={handleReset}
+      />
 
       {/* Main Content */}
       {isError ? (
@@ -152,8 +157,8 @@ export default function CandidateJobsPage() {
               <JobCard
                 key={job._id}
                 job={job}
-                onApply={(jobId) => applyJob.mutate({ jobId })}
-                isApplying={applyJob.isPending}
+                isApplied={appliedJobIds.has(job._id)}
+                onApply={(selectedJob) => setSelectedJobForApply(selectedJob)}
               />
             ))}
           </div>
@@ -166,6 +171,13 @@ export default function CandidateJobsPage() {
           )}
         </>
       )}
+
+      {/* Unified Apply Job Modal */}
+      <ApplyJobModal
+        job={selectedJobForApply}
+        isOpen={Boolean(selectedJobForApply)}
+        onClose={() => setSelectedJobForApply(null)}
+      />
     </div>
   );
 }

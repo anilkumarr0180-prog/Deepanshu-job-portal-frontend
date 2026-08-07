@@ -10,6 +10,7 @@ export function mapCandidateApplication(
 ): CandidateApplication {
   return {
     id: application._id,
+    jobId: application.jobId._id,
     role: application.jobId.title,
     company: application.jobId.company,
     location: application.jobId.location,

@@ -50,10 +50,11 @@ export default function LoginPage() {
       toast.success("User logged in successfully.");
 
       void navigate(getDashboardRoute(normalizedUser.role));
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Login failed."
-      );
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        (error instanceof Error ? error.message : "Login failed.");
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

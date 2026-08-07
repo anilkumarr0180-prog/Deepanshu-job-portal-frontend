@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { ArrowLeft, Download, MessageSquareMore, UserRoundCheck, XCircle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import { useAllApplications } from "../hooks/useAllApplications";
 import { useUpdateApplicationStatus } from "../hooks/useUpdateApplicationStatus";
 import { mapApplicantDetails } from "../utils/applicationMapper";
+import { downloadFile } from "@/shared/utils/fileUtils";
 
 export default function RecruiterApplicantDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +51,16 @@ export default function RecruiterApplicantDetailsPage() {
     updateMutation.mutate({ id, status });
   };
 
+  useEffect(() => {
+    if (
+      id &&
+      application &&
+      (application.status === "Applied" || application.status === "Submitted")
+    ) {
+      updateMutation.mutate({ id, status: "Under Review" });
+    }
+  }, [id, application?.status]);
+
   const resumeUrl =
     application.resume || application.applicantId.resumeUrl || "";
 
@@ -69,7 +81,25 @@ export default function RecruiterApplicantDetailsPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <Link
+              to={`/recruiter/messages?jobId=${
+                typeof application.jobId === "object" && application.jobId !== null
+                  ? (application.jobId as any)._id
+                  : String(application.jobId)
+              }&applicantId=${
+                typeof application.applicantId === "object" && application.applicantId !== null
+                  ? (application.applicantId as any)._id
+                  : String(application.applicantId)
+              }`}
+              className="rounded-xl bg-[#3C65F5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2956F2] shadow-sm inline-flex items-center gap-2"
+            >
+              <MessageSquareMore className="h-4 w-4" />
+              <span>Message Candidate</span>
+            </Link>
+
+
             <button
+
               type="button"
               onClick={() => handleStatusUpdate("Shortlisted")}
               disabled={updateMutation.isPending}
@@ -102,17 +132,16 @@ export default function RecruiterApplicantDetailsPage() {
                 Schedule Interview
               </span>
             </button>
-            {resumeUrl && (
-              <a
-                href={resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+            {resumeUrl ? (
+              <button
+                type="button"
+                onClick={() => downloadFile(resumeUrl, `${applicant.candidate}-Resume.pdf`)}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90 cursor-pointer"
               >
                 <Download className="h-4 w-4" />
                 Download Resume
-              </a>
-            )}
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

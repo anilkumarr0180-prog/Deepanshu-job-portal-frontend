@@ -37,8 +37,11 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       clearAuth();
-      toast.error("Session expired. Please login again.");
-      window.location.href = "/login";
+      const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+      if (!currentPath.includes("/login") && !currentPath.includes("/register")) {
+        toast.error("Session expired. Please login again.");
+        window.location.href = "/login";
+      }
     }
 
     return Promise.reject(error);

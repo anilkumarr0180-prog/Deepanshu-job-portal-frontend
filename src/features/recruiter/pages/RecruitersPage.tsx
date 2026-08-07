@@ -2,9 +2,6 @@ import { useMemo, useState } from "react";
 import { AlertCircle, RefreshCw, SearchX } from "lucide-react";
 
 import { useJobs } from "@/features/jobs/hooks/useJobs";
-import type { JobsFilterParams } from "@/features/jobs/api/jobs.api";
-import JobsPagination from "@/features/jobs/components/JobsPagination";
-
 import RecruiterCard, { type DerivedCompany } from "../components/public/RecruiterCard";
 import RecruiterCardSkeleton from "../components/public/RecruiterCardSkeleton";
 import RecruitersHero from "../components/public/RecruitersHero";
@@ -12,36 +9,21 @@ import RecruitersHero from "../components/public/RecruitersHero";
 export default function RecruitersPage() {
   const [searchInput, setSearchInput] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
-  const [activeFilters, setActiveFilters] = useState<JobsFilterParams>({
-    page: "1",
-    limit: "30",
-    search: "",
-    location: "",
+
+  const { data, isLoading, isError, refetch } = useJobs({
+    limit: "100",
   });
 
-  const { data, isLoading, isError, refetch } = useJobs(activeFilters);
-
   const handleSearch = () => {
-    setActiveFilters((prev) => ({
-      ...prev,
-      search: searchInput.trim(),
-      location: searchLocation.trim(),
-      page: "1",
-    }));
+    // Real-time filtering handled by useMemo
   };
 
   const handleReset = () => {
     setSearchInput("");
     setSearchLocation("");
-    setActiveFilters({
-      page: "1",
-      limit: "30",
-      search: "",
-      location: "",
-    });
   };
 
-  /* Group backend jobs into distinct hiring companies */
+  /* Group backend jobs into distinct hiring companies & filter by searchInput/searchLocation */
   const companies = useMemo(() => {
     const map = new Map<string, DerivedCompany>();
 
@@ -75,12 +57,27 @@ export default function RecruitersPage() {
       }
     });
 
-    return Array.from(map.values());
-  }, [data]);
+    let list = Array.from(map.values());
 
-  const handlePageChange = (page: number) => {
-    setActiveFilters((prev) => ({ ...prev, page: String(page) }));
-  };
+    // Apply real-time search & location filters
+    const query = searchInput.trim().toLowerCase();
+    const loc = searchLocation.trim().toLowerCase();
+
+    if (query) {
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(query) ||
+          c.recruiterName?.toLowerCase().includes(query) ||
+          c.description.toLowerCase().includes(query)
+      );
+    }
+
+    if (loc) {
+      list = list.filter((c) => c.location.toLowerCase().includes(loc));
+    }
+
+    return list;
+  }, [data, searchInput, searchLocation]);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-16 text-slate-900">
@@ -108,7 +105,7 @@ export default function RecruitersPage() {
             </p>
           </div>
 
-          {(activeFilters.search || activeFilters.location) && (
+          {(searchInput || searchLocation) && (
             <button
               type="button"
               onClick={handleReset}
@@ -166,22 +163,11 @@ export default function RecruitersPage() {
             </button>
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {companies.map((comp) => (
-                <RecruiterCard key={comp.id} company={comp} />
-              ))}
-            </div>
-
-            {data?.pagination && data.pagination.totalPages > 1 && (
-              <div className="mt-8">
-                <JobsPagination
-                  pagination={data.pagination}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
-          </>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {companies.map((comp) => (
+              <RecruiterCard key={comp.id} company={comp} />
+            ))}
+          </div>
         )}
       </main>
     </div>

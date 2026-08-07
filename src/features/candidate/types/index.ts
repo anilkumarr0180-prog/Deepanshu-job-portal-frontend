@@ -27,6 +27,7 @@ export interface CandidateJob {
 
 export interface CandidateApplication {
   id: string;
+  jobId?: string;
   role: string;
   company: string;
   status: string;
