@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 
 import useAuth from "@/features/auth/hooks/useAuth";
+import { getDashboardRoute } from "@/features/auth/utils/roleNavigation";
 import { NotificationDropdown } from "@/shared/components/NotificationDropdown";
 
 export default function NavActions() {
@@ -20,6 +21,13 @@ export default function NavActions() {
     return (
       <div className="flex items-center gap-3">
         <NotificationDropdown />
+
+        <Link
+          to={getDashboardRoute(user.role)}
+          className="rounded-xl bg-[#3C65F5] px-4 py-2 text-sm font-semibold text-white shadow-xs transition-colors duration-200 hover:bg-[#2956F2]"
+        >
+          Dashboard
+        </Link>
 
         <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3C65F5] text-sm font-semibold text-white">
@@ -41,6 +49,7 @@ export default function NavActions() {
       </div>
     );
   }
+
 
   return (
     <div className="flex items-center gap-8">

@@ -3,7 +3,7 @@ import type { RouteObject } from "react-router-dom";
 
 import { DashboardLayout, PublicLayout } from "@/shared/layouts";
 import FullPageLoader from "@/shared/components/FullPageLoader";
-import { ProtectedRoute } from "@/features/auth/components";
+import { GuestRoute, ProtectedRoute, RootRedirector } from "@/features/auth/components";
 
 // Helper to wrap lazy-loaded components with Suspense
 function withSuspense<T extends object>(Component: ComponentType<T>) {
@@ -76,7 +76,11 @@ export const routes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: (
+          <RootRedirector>
+            <HomePage />
+          </RootRedirector>
+        ),
       },
       {
         path: "jobs",
@@ -104,11 +108,19 @@ export const routes: RouteObject[] = [
       },
       {
         path: "login",
-        element: <LoginPage />,
+        element: (
+          <GuestRoute>
+            <LoginPage />
+          </GuestRoute>
+        ),
       },
       {
         path: "register",
-        element: <RegisterPage />,
+        element: (
+          <GuestRoute>
+            <RegisterPage />
+          </GuestRoute>
+        ),
       },
     ],
   },
