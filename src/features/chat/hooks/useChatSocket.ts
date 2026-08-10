@@ -38,7 +38,7 @@ export const useChatSocket = (activeConversationId?: string | null) => {
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      console.log("⚡ Chat Socket connected:", socket.id);
+      console.log("Chat Socket connected:", socket.id);
       if (activeConversationId) {
         socket.emit("join_conversation", { conversationId: activeConversationId });
       }
