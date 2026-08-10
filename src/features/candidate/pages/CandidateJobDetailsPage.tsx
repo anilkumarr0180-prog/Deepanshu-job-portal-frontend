@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Send,
   Bookmark,
+  MessageSquare,
 } from "lucide-react";
 
 import { useJobDetails } from "@/features/jobs/hooks/useJobDetails";
@@ -239,12 +240,21 @@ export default function CandidateJobDetailsPage() {
               </button>
 
               {isAlreadyApplied && (
-                <Link
-                  to="/candidate/applied"
-                  className="block text-center text-xs font-semibold text-[#3C65F5] hover:underline pt-1"
-                >
-                  Track in Applied Jobs &rarr;
-                </Link>
+                <>
+                  <Link
+                    to="/candidate/applied"
+                    className="block text-center text-xs font-semibold text-[#3C65F5] hover:underline pt-1"
+                  >
+                    Track in Applied Jobs &rarr;
+                  </Link>
+                  <Link
+                    to={`/candidate/messages?jobId=${id}`}
+                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-[#3C65F5] bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#3C65F5] hover:bg-blue-100 transition shadow-sm"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Message Recruiter
+                  </Link>
+                </>
               )}
             </div>
           </div>

@@ -2,8 +2,16 @@ import { Outlet } from "react-router-dom";
 
 import DashboardHeader from "./DashboardHeader.tsx";
 import DashboardSidebar from "./DashboardSidebar.tsx";
+import { useUnreadChatCount } from "@/features/chat/hooks/useChat";
+import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 
 export default function DashboardLayout() {
+  // Fetch unread chat count globally so the badge is active anywhere in the dashboard
+  useUnreadChatCount();
+  
+  // Establish socket connection globally to listen for real-time unread count updates
+  useChatSocket();
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
       <DashboardSidebar />

@@ -97,7 +97,7 @@ export default function RecruiterNotificationsPage() {
             {unreadCount > 0 && (
               <button
                 type="button"
-                onClick={markAllAsRead}
+                onClick={() => { void markAllAsRead(); }}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs transition"
               >
                 <CheckCheck className="w-4 h-4 text-blue-600" />
@@ -107,7 +107,7 @@ export default function RecruiterNotificationsPage() {
             {notifications.some((n) => n.is_read || n.isRead) && (
               <button
                 type="button"
-                onClick={clearAllRead}
+                onClick={() => { void clearAllRead(); }}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 shadow-xs transition"
               >
                 <Trash2 className="w-4 h-4 text-red-500" />
@@ -160,9 +160,9 @@ export default function RecruiterNotificationsPage() {
             return (
               <div
                 key={itemId}
-                onClick={() =>
-                  handleItemClick(itemId, notification.link, isRead)
-                }
+                onClick={() => {
+                  void handleItemClick(itemId, notification.link, isRead);
+                }}
                 className={`group flex items-start gap-4 rounded-2xl border p-5 shadow-xs transition-all cursor-pointer ${
                   !isRead
                     ? "border-blue-200 bg-blue-50/40 hover:bg-blue-50"
@@ -207,7 +207,7 @@ export default function RecruiterNotificationsPage() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteNotification(itemId);
+                        void deleteNotification(itemId);
                       }}
                       className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all"
                       title="Delete notification"
