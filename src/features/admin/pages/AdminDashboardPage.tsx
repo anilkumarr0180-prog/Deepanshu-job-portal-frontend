@@ -1,6 +1,5 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { Users, Building2, BriefcaseBusiness, UserCheck } from "lucide-react";
-import toast from "react-hot-toast";
 
 import useAuth from "@/features/auth/hooks/useAuth";
 import { formatDashboardDate, getGreetingByTime } from "@/shared/utils/dashboardUtils";
@@ -21,6 +20,7 @@ function mapUser(u: {
   name: string;
   email: string;
   role: string;
+  isBlocked?: boolean;
   createdAt: string;
 }): AdminUser {
   return {
@@ -28,7 +28,8 @@ function mapUser(u: {
     name: u.name,
     email: u.email,
     role: u.role,
-    status: "Active",
+    isBlocked: u.isBlocked ?? false,
+    status: u.isBlocked ? "Blocked" : "Active",
     joinedAt: new Date(u.createdAt).toLocaleDateString(),
   };
 }
@@ -72,14 +73,10 @@ export default function AdminDashboardPage() {
     refetch,
   } = useAdminDashboard();
 
-  useEffect(() => {
-    if (isError) {
-      toast.error("Failed to load dashboard stats.");
-    }
-  }, [isError]);
+
 
   const stats = useMemo<AdminStat[]>(() => {
-    const d = dashboard?.data;
+    const d = dashboard?.data as any;
 
     if (!d) {
       return [
@@ -114,47 +111,61 @@ export default function AdminDashboardPage() {
       ];
     }
 
+    const totalUsers = d.users?.totalUsers ?? d.totalUsers ?? 0;
+    const totalRecruiters = d.users?.totalRecruiters ?? d.totalRecruiters ?? 0;
+    const totalCandidates = d.users?.totalCandidates ?? d.totalCandidates ?? 0;
+    const activeJobs = d.jobs?.activeJobs ?? d.totalJobs ?? 0;
+    const totalApplications = d.applications?.totalApplications ?? d.totalApplications ?? 0;
+    const blockedUsers = d.users?.blockedUsers ?? 0;
+
     return [
       {
         id: "total-users",
         title: "Total Users",
-        value: String(d.totalUsers),
-        trend: `${d.totalRecruiters} recruiters, ${d.totalCandidates} candidates`,
+        value: String(totalUsers),
+        trend: `${totalRecruiters} recruiters, ${totalCandidates} candidates (${blockedUsers} blocked)`,
         icon: Users,
       },
       {
         id: "recruiters",
         title: "Recruiters",
-        value: String(d.totalRecruiters),
-        trend: "Registered accounts",
+        value: String(totalRecruiters),
+        trend: `${d.users?.activeRecruiters ?? totalRecruiters} active`,
         icon: Building2,
       },
       {
         id: "candidates",
         title: "Candidates",
-        value: String(d.totalCandidates),
-        trend: "Registered accounts",
+        value: String(totalCandidates),
+        trend: `${d.users?.activeCandidates ?? totalCandidates} active`,
         icon: UserCheck,
       },
       {
         id: "jobs",
         title: "Live Jobs",
-        value: String(d.totalJobs),
-        trend: `${d.totalApplications} total applications`,
+        value: String(activeJobs),
+        trend: `${totalApplications} total applications`,
         icon: BriefcaseBusiness,
       },
     ];
   }, [dashboard]);
 
   const recentUsers = useMemo(
-    () => (dashboard?.data?.recentUsers ?? []).map(mapUser),
+    () => ((dashboard?.data as any)?.recentUsers ?? []).map(mapUser),
     [dashboard]
   );
 
   const recentJobs = useMemo(
-    () => (dashboard?.data?.recentJobs ?? []).map(mapJob),
+    () => ((dashboard?.data as any)?.recentJobs ?? []).map(mapJob),
     [dashboard]
   );
+
+  const d = dashboard?.data as any;
+  const totalUsersVal = d?.users?.totalUsers ?? d?.totalUsers ?? 0;
+  const totalRecruitersVal = d?.users?.totalRecruiters ?? d?.totalRecruiters ?? 0;
+  const totalCandidatesVal = d?.users?.totalCandidates ?? d?.totalCandidates ?? 0;
+  const totalJobsVal = d?.jobs?.totalJobs ?? d?.totalJobs ?? 0;
+  const totalAppsVal = d?.applications?.totalApplications ?? d?.totalApplications ?? 0;
 
   return (
     <div className="space-y-7">
@@ -190,11 +201,11 @@ export default function AdminDashboardPage() {
       {/* Platform Insights */}
       {!isError && (
         <AdminDashboardInsights
-          totalUsers={dashboard?.data?.totalUsers ?? 0}
-          totalRecruiters={dashboard?.data?.totalRecruiters ?? 0}
-          totalCandidates={dashboard?.data?.totalCandidates ?? 0}
-          totalJobs={dashboard?.data?.totalJobs ?? 0}
-          totalApplications={dashboard?.data?.totalApplications ?? 0}
+          totalUsers={totalUsersVal}
+          totalRecruiters={totalRecruitersVal}
+          totalCandidates={totalCandidatesVal}
+          totalJobs={totalJobsVal}
+          totalApplications={totalAppsVal}
         />
       )}
 

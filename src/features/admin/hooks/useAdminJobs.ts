@@ -1,30 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-
-import { getJobs } from "@/features/jobs/api/jobs.api";
-
-export interface AdminJobItem {
-  _id: string;
-  title: string;
-  company: string;
-  status: string;
-  createdAt: string;
-  recruiterId: {
-    name: string;
-    email: string;
-  } | null;
-}
-
-export interface AdminJobsResponse {
-  jobs: AdminJobItem[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalJobs: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
-}
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import {
+  getAdminJobs,
+  deleteAdminJob,
+  type AdminJobItem,
+} from "../api/admin.api";
 
 function normalizeJobStatus(status: string): "Published" | "Draft" | "Archived" {
   switch (status.toUpperCase()) {
@@ -47,18 +27,45 @@ export function useAdminJobs(params?: Record<string, unknown>) {
   return useQuery({
     queryKey: ["admin-jobs", params],
     queryFn: async () => {
-      const response = (await getJobs(params)) as { data?: AdminJobsResponse };
-      const data = response.data ?? ({} as AdminJobsResponse);
+      const response = await getAdminJobs(params);
+      const data = response.data;
 
-      const normalizedJobs: AdminJobFromBackend[] = (data.jobs ?? []).map((job) => ({
-        ...job,
-        status: normalizeJobStatus(job.status),
-      }));
+      const normalizedJobs: AdminJobFromBackend[] = (data.items ?? []).map(
+        (job) => ({
+          ...job,
+          status: normalizeJobStatus(job.status),
+        })
+      );
 
       return {
-        ...data,
         jobs: normalizedJobs,
+        pagination: data.pagination ?? {
+          page: 1,
+          limit: 10,
+          totalItems: 0,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
       };
+    },
+  });
+}
+
+export function useDeleteAdminJob() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (jobId: string) => deleteAdminJob(jobId),
+    onSuccess: (data) => {
+      toast.success(data.message || "Job deleted successfully.");
+      void queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message || "Failed to delete job.";
+      toast.error(message);
     },
   });
 }

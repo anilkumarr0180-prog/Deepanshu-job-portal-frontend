@@ -1,26 +1,49 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import axios from "axios";
 
-import { updateProfile } from "../api/profile.api";
+import {
+  updateProfile,
+  type BackendProfile,
+  type UpdateProfilePayload,
+} from "../api/profile.api";
+import { removeEmptyFields } from "@/shared/utils/removeEmptyFields";
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: updateProfile,
-    onSuccess: () => {
-      toast.success("Profile updated successfully.");
+    mutationFn: (payload: UpdateProfilePayload) => {
+      const cleanedPayload = removeEmptyFields(payload);
+      return updateProfile(cleanedPayload);
+    },
+    onSuccess: (data: BackendProfile) => {
+      toast.success("Profile updated successfully.", {
+        id: "profile-update-success",
+      });
+      queryClient.setQueryData(["profile"], data);
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (error: unknown) => {
-      const axiosError = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        axiosError?.response?.data?.message ||
-        "Failed to update profile. Please try again.";
+      let message = "Failed to update profile. Please try again.";
 
-      toast.error(message);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          message = error.response.data.message;
+        } else if (error.response?.status === 401) {
+          message = "Session expired. Please log in again.";
+        } else if (error.response?.status === 403) {
+          message = "Access denied. You do not have permission to update profile.";
+        } else if (error.response?.status === 404) {
+          message = "Profile not found.";
+        } else if (error.response?.status === 500) {
+          message = "Internal server error. Please try again later.";
+        }
+      }
+
+      toast.error(message, {
+        id: "profile-update-error",
+      });
     },
   });
 }

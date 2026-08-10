@@ -34,9 +34,12 @@ export default function CandidateAppliedJobsPage() {
 
     const searchLower = searchTerm.toLowerCase();
     return applications.filter((app) => {
+      if (!app.jobId) return false;
+      const title = app.jobId.title || "";
+      const company = app.jobId.company || "";
       const matchesSearch =
-        app.jobId.title.toLowerCase().includes(searchLower) ||
-        app.jobId.company.toLowerCase().includes(searchLower);
+        title.toLowerCase().includes(searchLower) ||
+        company.toLowerCase().includes(searchLower);
       const matchesStatus =
         statusFilter === "" || app.status === statusFilter;
       return matchesSearch && matchesStatus;

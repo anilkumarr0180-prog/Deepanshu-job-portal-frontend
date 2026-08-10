@@ -15,7 +15,7 @@ export default function DashboardSidebar() {
       : "/recruiter/dashboard";
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden h-screen w-[260px] flex-col border-r border-slate-200/80 bg-white lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden h-screen w-[260px] flex-col overflow-y-auto border-r border-slate-200/80 bg-white lg:flex">
       {/* Brand Header */}
       <Link
         to={homeRoute}

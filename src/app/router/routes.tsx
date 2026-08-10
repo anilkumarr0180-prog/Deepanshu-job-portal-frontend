@@ -1,46 +1,73 @@
+import { lazy, Suspense, type ComponentType } from "react";
 import type { RouteObject } from "react-router-dom";
 
 import { DashboardLayout, PublicLayout } from "@/shared/layouts";
-
-import HomePage from "@/features/home/pages/HomePage";
-import JobsPage from "@/features/jobs/pages/JobsPage";
-import JobDetailsPage from "@/features/jobs/pages/JobDetailsPage";
-import RecruitersPage from "@/features/recruiter/pages/RecruitersPage";
-import RecruiterDetailsPage from "@/features/recruiter/pages/RecruiterDetailsPage";
-import CandidatesPage from "@/features/candidate/pages/CandidatesPage";
-import CandidatePublicDetailsPage from "@/features/candidate/pages/CandidatePublicDetailsPage";
-import LoginPage from "@/features/auth/pages/LoginPage";
-import RegisterPage from "@/features/auth/pages/RegisterPage";
-import AdminDashboardPage from "@/features/admin/pages/AdminDashboardPage";
-import AdminJobsPage from "@/features/admin/pages/AdminJobsPage";
-import AdminRecruitersPage from "@/features/admin/pages/AdminRecruitersPage";
-import AdminSettingsPage from "@/features/admin/pages/AdminSettingsPage";
-import AdminUsersPage from "@/features/admin/pages/AdminUsersPage";
-import CandidateDashboardPage from "@/features/candidate/pages/CandidateDashboardPage";
-import CandidateJobsPage from "@/features/candidate/pages/CandidateJobsPage";
-import CandidateJobDetailsPage from "@/features/candidate/pages/CandidateJobDetailsPage";
-import CandidateSavedJobsPage from "@/features/candidate/pages/CandidateSavedJobsPage";
-import CandidateAppliedJobsPage from "@/features/candidate/pages/CandidateAppliedJobsPage";
-import CandidateProfilePage from "@/features/candidate/pages/CandidateProfilePage";
-import CandidateEditProfilePage from "@/features/candidate/pages/CandidateEditProfilePage";
-import CandidateResumePage from "@/features/candidate/pages/CandidateResumePage";
-import CandidateSettingsPage from "@/features/candidate/pages/CandidateSettingsPage";
-import RecruiterDashboardPage from "@/features/recruiter/pages/RecruiterDashboardPage";
-import RecruiterJobsPage from "@/features/recruiter/pages/RecruiterJobsPage";
-import RecruiterCreateJobPage from "@/features/recruiter/pages/RecruiterCreateJobPage";
-import RecruiterJobDetailsPage from "@/features/recruiter/pages/RecruiterJobDetailsPage";
-import RecruiterEditJobPage from "@/features/recruiter/pages/RecruiterEditJobPage";
-import RecruiterApplicantsPage from "@/features/recruiter/pages/RecruiterApplicantsPage";
-import RecruiterApplicantDetailsPage from "@/features/recruiter/pages/RecruiterApplicantDetailsPage";
-import RecruiterCompanyPage from "@/features/recruiter/pages/RecruiterCompanyPage";
-import RecruiterCompanyEditPage from "@/features/recruiter/pages/RecruiterCompanyEditPage";
-import RecruiterProfilePage from "@/features/recruiter/pages/RecruiterProfilePage";
-import RecruiterSettingsPage from "@/features/recruiter/pages/RecruiterSettingsPage";
-import RecruiterNotificationsPage from "@/features/recruiter/pages/RecruiterNotificationsPage";
-import RecruiterInterviewsPage from "@/features/recruiter/pages/RecruiterInterviewsPage";
-import NotFoundPage from "@/pages/NotFoundPage";
-import UnauthorizedPage from "@/pages/UnauthorizedPage";
+import FullPageLoader from "@/shared/components/FullPageLoader";
 import { ProtectedRoute } from "@/features/auth/components";
+
+// Helper to wrap lazy-loaded components with Suspense
+function withSuspense<T extends object>(Component: ComponentType<T>) {
+  return function SuspenseWrapper(props: T) {
+    return (
+      <Suspense fallback={<FullPageLoader />}>
+        <Component {...props} />
+      </Suspense>
+    );
+  };
+}
+
+// Public Pages
+const HomePage = withSuspense(lazy(() => import("@/features/home/pages/HomePage")));
+const JobsPage = withSuspense(lazy(() => import("@/features/jobs/pages/JobsPage")));
+const JobDetailsPage = withSuspense(lazy(() => import("@/features/jobs/pages/JobDetailsPage")));
+const RecruitersPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruitersPage")));
+const RecruiterDetailsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterDetailsPage")));
+const CandidatesPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidatesPage")));
+const CandidatePublicDetailsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidatePublicDetailsPage")));
+const LoginPage = withSuspense(lazy(() => import("@/features/auth/pages/LoginPage")));
+const RegisterPage = withSuspense(lazy(() => import("@/features/auth/pages/RegisterPage")));
+
+// Admin Pages
+const AdminDashboardPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminDashboardPage")));
+const AdminJobsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminJobsPage")));
+const AdminRecruitersPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminRecruitersPage")));
+const AdminSettingsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminSettingsPage")));
+const AdminUsersPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminUsersPage")));
+
+// Candidate Pages
+const CandidateDashboardPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateDashboardPage")));
+const CandidateJobsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateJobsPage")));
+const CandidateJobDetailsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateJobDetailsPage")));
+const CandidateSavedJobsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateSavedJobsPage")));
+const CandidateAppliedJobsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateAppliedJobsPage")));
+const CandidateProfilePage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateProfilePage")));
+const CandidateEditProfilePage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateEditProfilePage")));
+const CandidateResumePage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateResumePage")));
+const CandidateSettingsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateSettingsPage")));
+const CandidateNotificationsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateNotificationsPage")));
+const CandidateMessagesPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateMessagesPage")));
+
+
+// Recruiter Pages
+const RecruiterDashboardPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterDashboardPage")));
+const RecruiterJobsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterJobsPage")));
+const RecruiterCreateJobPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterCreateJobPage")));
+const RecruiterJobDetailsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterJobDetailsPage")));
+const RecruiterEditJobPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterEditJobPage")));
+const RecruiterApplicantsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterApplicantsPage")));
+const RecruiterApplicantDetailsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterApplicantDetailsPage")));
+const RecruiterCompanyPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterCompanyPage")));
+const RecruiterCompanyEditPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterCompanyEditPage")));
+const RecruiterProfilePage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterProfilePage")));
+const RecruiterSettingsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterSettingsPage")));
+const RecruiterNotificationsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterNotificationsPage")));
+const RecruiterInterviewsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterInterviewsPage")));
+const RecruiterMessagesPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterMessagesPage")));
+
+
+// Fallback & Error Pages
+const NotFoundPage = withSuspense(lazy(() => import("@/pages/NotFoundPage")));
+const UnauthorizedPage = withSuspense(lazy(() => import("@/pages/UnauthorizedPage")));
 
 export const routes: RouteObject[] = [
   {
@@ -159,8 +186,17 @@ export const routes: RouteObject[] = [
         path: "settings",
         element: <CandidateSettingsPage />,
       },
+      {
+        path: "notifications",
+        element: <CandidateNotificationsPage />,
+      },
+      {
+        path: "messages",
+        element: <CandidateMessagesPage />,
+      },
     ],
   },
+
   {
     path: "/recruiter",
     element: (
@@ -221,8 +257,13 @@ export const routes: RouteObject[] = [
         path: "interviews",
         element: <RecruiterInterviewsPage />,
       },
+      {
+        path: "messages",
+        element: <RecruiterMessagesPage />,
+      },
     ],
   },
+
   {
     path: "/unauthorized",
     element: <UnauthorizedPage />,

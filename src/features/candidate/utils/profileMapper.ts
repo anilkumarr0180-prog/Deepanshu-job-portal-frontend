@@ -23,6 +23,33 @@ export function calculateProfileCompletion(
       filled: Boolean(profile.profilePicture),
     },
     {
+      label: "Headline & Bio",
+      filled: Boolean(profile.headline || profile.bio),
+    },
+    {
+      label: "Skills",
+      filled: Boolean(profile.skills && profile.skills.length > 0),
+    },
+    {
+      label: "Experience",
+      filled: Boolean(profile.experience && profile.experience.length > 0),
+    },
+    {
+      label: "Education",
+      filled: Boolean(profile.education && profile.education.length > 0),
+    },
+    {
+      label: "Location",
+      filled: Boolean(profile.city || profile.state || profile.country),
+    },
+    {
+      label: "Social links",
+      filled: Boolean(
+        profile.socialLinks &&
+          Object.values(profile.socialLinks).some((v) => Boolean(v))
+      ),
+    },
+    {
       label: "Resume",
       filled: Boolean(profile.resumeUrl),
     },
@@ -40,3 +67,4 @@ export function calculateProfileCompletion(
 
   return { percentage, completed, remaining };
 }
+

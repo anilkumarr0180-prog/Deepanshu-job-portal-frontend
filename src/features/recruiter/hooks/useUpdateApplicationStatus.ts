@@ -14,12 +14,38 @@ export function useUpdateApplicationStatus() {
       id: string;
       status: string;
     }) => updateApplicationStatus(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications", "all"] });
-      toast.success("Application status updated successfully.");
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["applications"] });
+      await queryClient.cancelQueries({ queryKey: ["dashboard"] });
+
+      const previousApplications = queryClient.getQueryData(["applications", "all"]);
+
+      queryClient.setQueriesData(
+        { queryKey: ["applications"] },
+        (oldData: any) => {
+          if (!Array.isArray(oldData)) return oldData;
+          return oldData.map((app: any) =>
+            app.id === id || app._id === id ? { ...app, status } : app
+          );
+        }
+      );
+
+      return { previousApplications };
     },
-    onError: () => {
-      toast.error("Failed to update application status.");
+    onError: (error: any, _variables, context) => {
+      if (context?.previousApplications) {
+        queryClient.setQueryData(["applications", "all"], context.previousApplications);
+      }
+      const message =
+        error?.response?.data?.message || "Failed to update application status.";
+      toast.error(message);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["applications"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onSuccess: () => {
+      toast.success("Application status updated successfully.");
     },
   });
 }

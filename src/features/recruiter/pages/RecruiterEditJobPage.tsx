@@ -99,6 +99,7 @@ export default function RecruiterEditJobPage() {
           cancelLabel="Cancel"
           draftLabel="Save Draft"
           submitLabel="Save Changes"
+          isSubmitting={updateMutation.isPending}
           onCancel={() => navigate(`/recruiter/jobs/${job._id}`)}
           onSaveDraft={() => undefined}
           onSubmit={handleSubmit}

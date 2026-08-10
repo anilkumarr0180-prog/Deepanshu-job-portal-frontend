@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { JobsFilterParams } from "../api/jobs.api";
 import { JOBS_PER_PAGE } from "../constants";
@@ -11,6 +11,7 @@ import JobsSidebar from "../components/JobsSidebar";
 import JobsPagination from "../components/JobsPagination";
 import JobsHero from "../components/JobsHero";
 import JobsToolbar from "../components/JobsToolbar";
+import type { SearchFilterState } from "@/shared/components/UniversalSearchBar";
 
 const initialFilters: JobsFilterParams = {
   page: "1",
@@ -25,22 +26,19 @@ const initialFilters: JobsFilterParams = {
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobsFilterParams>(initialFilters);
-  const [searchInput, setSearchInput] = useState("");
-  const [heroLocation, setHeroLocation] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const { data, isLoading, isError, refetch } = useJobs(filters);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters((prev) => ({
-        ...prev,
-        search: searchInput,
-        page: "1",
-      }));
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const handleUniversalSearch = (searchState: SearchFilterState) => {
+    const activeSearch = searchState.keyword || searchState.industry;
+    setFilters((prev) => ({
+      ...prev,
+      search: activeSearch,
+      location: searchState.location,
+      page: "1",
+    }));
+  };
 
   const handleFilterChange = (
     key: keyof JobsFilterParams,
@@ -55,23 +53,6 @@ export default function JobsPage() {
 
   const handleReset = () => {
     setFilters(initialFilters);
-    setSearchInput("");
-    setHeroLocation("");
-  };
-
-  const handleHeroSearch = () => {
-    setFilters((prev) => ({
-      ...prev,
-      search: searchInput,
-      location: heroLocation,
-      page: "1",
-    }));
-  };
-
-  const handleHeroKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleHeroSearch();
-    }
   };
 
   const activeFilters = useMemo(
@@ -81,12 +62,10 @@ export default function JobsPage() {
           filters.employmentType ||
           filters.experienceLevel ||
           filters.status ||
-          searchInput
+          filters.search
       ),
-    [filters, searchInput]
+    [filters]
   );
-
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const handleOpenFilters = () => {
     document.getElementById("jobs-sidebar")?.scrollIntoView({
@@ -112,15 +91,16 @@ export default function JobsPage() {
       <JobsHero
         isLoading={isLoading}
         totalResults={totalResults}
-        searchInput={searchInput}
-        onSearchInputChange={setSearchInput}
-        heroLocation={heroLocation}
-        onHeroLocationChange={setHeroLocation}
-        onSearch={handleHeroSearch}
-        onKeyDown={handleHeroKeyDown}
+        initialFilters={{
+          keyword: filters.search ?? "",
+          location: filters.location ?? "",
+          industry: "",
+        }}
+        onSearch={handleUniversalSearch}
+        onClear={handleReset}
       />
 
-      {/* Main content — normal page flow, single scrollbar */}
+      {/* Main Content */}
       <main className="mx-auto max-w-[1320px] px-4 py-6 sm:px-8 lg:py-8">
         <JobsToolbar
           startItem={startItem}
@@ -131,7 +111,7 @@ export default function JobsPage() {
             filters.employmentType,
             filters.experienceLevel,
             filters.status,
-            searchInput,
+            filters.search,
           ].filter(Boolean).length}
           sort={filters.sort ?? ""}
           onSortChange={(value) => handleFilterChange("sort", value)}
@@ -148,8 +128,8 @@ export default function JobsPage() {
           <aside id="jobs-sidebar" className="w-full shrink-0 lg:w-[320px] lg:pr-1">
             <JobsSidebar
               filters={filters}
-              searchInput={searchInput}
-              onSearchChange={setSearchInput}
+              searchInput={filters.search ?? ""}
+              onSearchChange={(val) => handleFilterChange("search", val)}
               onFilterChange={handleFilterChange}
               onReset={handleReset}
             />
@@ -167,7 +147,7 @@ export default function JobsPage() {
               </div>
             ) : jobs.length === 0 ? (
               <EmptyState
-                searchTerm={searchInput}
+                searchTerm={filters.search ?? ""}
                 hasActiveFilters={activeFilters}
                 onReset={handleReset}
               />

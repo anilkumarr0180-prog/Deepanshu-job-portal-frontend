@@ -1,6 +1,12 @@
 import HeroSearch from "./HeroSearch";
+import type { SearchFilterState } from "@/shared/components/UniversalSearchBar";
 
-export default function HeroContent() {
+interface HeroContentProps {
+  onSearchChange?: (filters: SearchFilterState) => void;
+  initialFilters?: SearchFilterState;
+}
+
+export default function HeroContent({ onSearchChange, initialFilters }: HeroContentProps) {
   return (
     <div className="max-w-[600px]">
       {/* Heading */}
@@ -20,7 +26,7 @@ export default function HeroContent() {
       </p>
 
       {/* Search Bar & Popular Searches */}
-      <HeroSearch />
+      <HeroSearch onSearchChange={onSearchChange} initialFilters={initialFilters} />
     </div>
   );
 }

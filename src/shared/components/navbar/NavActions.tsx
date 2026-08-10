@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 
 import useAuth from "@/features/auth/hooks/useAuth";
+import { NotificationDropdown } from "@/shared/components/NotificationDropdown";
 
 export default function NavActions() {
   const navigate = useNavigate();
@@ -17,7 +18,9 @@ export default function NavActions() {
 
   if (isAuthenticated && user) {
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <NotificationDropdown />
+
         <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3C65F5] text-sm font-semibold text-white">
             {user.name?.charAt(0)?.toUpperCase() ?? "U"}

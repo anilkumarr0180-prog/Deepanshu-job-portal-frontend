@@ -50,8 +50,11 @@ export default function RegisterPage() {
 
       toast.success("User registered successfully.");
       void navigate("/login");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Registration failed.");
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        (error instanceof Error ? error.message : "Registration failed.");
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +71,7 @@ export default function RegisterPage() {
         subtitle="Access to all features. No credit card required."
       />
 
-      <GoogleButton text="Sign up with Google" />
+      <GoogleButton text="Sign up with Google" role={role} />
 
       <AuthDivider />
 

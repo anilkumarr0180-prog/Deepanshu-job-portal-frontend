@@ -79,6 +79,7 @@ export const users: AdminUser[] = [
     email: "amelia@example.com",
     role: "Candidate",
     status: "Active",
+    isBlocked: false,
     joinedAt: "2024-08-01",
   },
   {
@@ -87,6 +88,7 @@ export const users: AdminUser[] = [
     email: "caleb@example.com",
     role: "Recruiter",
     status: "Pending",
+    isBlocked: false,
     joinedAt: "2024-07-28",
   },
   {
@@ -95,6 +97,7 @@ export const users: AdminUser[] = [
     email: "mina@example.com",
     role: "Candidate",
     status: "Suspended",
+    isBlocked: true,
     joinedAt: "2024-07-10",
   },
 ];
