@@ -5,3 +5,6 @@ export { default as AuthDivider } from "./AuthDivider";
 export { default as AuthInput } from "./AuthInput";
 export { default as AuthSelect } from "./AuthSelect";
 export { default as ProtectedRoute } from "./ProtectedRoute";
+export { default as GuestRoute } from "./GuestRoute";
+export { default as RootRedirector } from "./RootRedirector";
+

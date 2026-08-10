@@ -135,6 +135,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     void refreshUser();
   }, [refreshUser]);
 
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_TOKEN_KEY || e.key === STORAGE_USER_KEY) {
+        const nextToken = readStoredToken();
+        const nextUser = readStoredUser();
+        setToken(nextToken);
+        setUser(nextUser);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
