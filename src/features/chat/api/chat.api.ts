@@ -2,7 +2,8 @@ import { axiosInstance } from "@/lib/axios";
 import type { ChatConversation, ChatMessage } from "../types/chat.types";
 
 interface PaginatedResponse<T> {
-  data: T[];
+  items?: T[];
+  data?: T[];
   pagination?: {
     totalItems: number;
     totalPages: number;
@@ -28,7 +29,7 @@ export const fetchConversationsApi = async (page = 1, limit = 20) => {
   }
 
   return {
-    conversations: resData.data || [],
+    conversations: resData.items || resData.data || [],
     pagination: resData.pagination,
   };
 };
@@ -67,7 +68,7 @@ export const fetchMessagesApi = async (
   }
 
   return {
-    messages: resData.data || [],
+    messages: resData.items || resData.data || [],
     pagination: resData.pagination,
   };
 };

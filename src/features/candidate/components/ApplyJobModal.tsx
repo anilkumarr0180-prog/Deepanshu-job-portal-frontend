@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   X,
   User,
@@ -19,6 +19,7 @@ import { formatSalary } from "../utils/jobMapper";
 import { useProfile } from "../hooks/useProfile";
 import { useMyApplications } from "../hooks/useMyApplications";
 import { useApplyJob } from "../hooks/useApplyJob";
+import { useCreateConversation } from "@/features/chat/hooks/useChat";
 
 interface ApplyJobModalProps {
   job: BackendJobDetails | null;
@@ -31,16 +32,20 @@ export default function ApplyJobModal({
   isOpen,
   onClose,
 }: ApplyJobModalProps) {
+  const navigate = useNavigate();
   const [coverLetter, setCoverLetter] = useState("");
   const [apiError, setApiError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const { data: profile, isLoading: isProfileLoading } = useProfile();
   const { data: myApplications } = useMyApplications();
   const applyJob = useApplyJob();
+  const createConversation = useCreateConversation();
 
   useEffect(() => {
     if (!isOpen) {
       setCoverLetter("");
       setApiError(null);
+      // Don't reset conversationId — keep it so the Message button stays visible
     }
   }, [isOpen]);
 
@@ -66,6 +71,16 @@ export default function ApplyJobModal({
       { jobId: job._id, coverLetter },
       {
         onSuccess: () => {
+          // Auto-create a conversation with the recruiter after applying
+          createConversation.mutate(
+            { jobId: job._id },
+            {
+              onSuccess: (conv) => {
+                const id = conv._id || conv.id || "";
+                setConversationId(id);
+              },
+            }
+          );
           onClose();
         },
         onError: (err: unknown) => {
@@ -261,13 +276,31 @@ export default function ApplyJobModal({
                 Close
               </button>
 
-              <Link
-                to="/candidate/applied"
-                onClick={onClose}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#3C65F5] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 shadow-sm"
-              >
-                Track All Applied Jobs &rarr;
-              </Link>
+              <div className="flex items-center gap-2">
+                {/* Message Recruiter Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    navigate(
+                      conversationId
+                        ? `/candidate/messages?conversationId=${conversationId}`
+                        : `/candidate/messages?jobId=${job._id}`
+                    );
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#3C65F5] bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#3C65F5] transition hover:bg-blue-100"
+                >
+                  💬 Message Recruiter
+                </button>
+
+                <Link
+                  to="/candidate/applied"
+                  onClick={onClose}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#3C65F5] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 shadow-sm"
+                >
+                  Track All Applied Jobs &rarr;
+                </Link>
+              </div>
             </div>
           </div>
         ) : (

@@ -32,7 +32,7 @@ export default function JobOverviewCard({ job }: JobOverviewCardProps) {
         {overviewItems.map((item) => (
           <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <dt className="text-sm font-medium text-slate-500">{item.label}</dt>
-            <dd className="mt-1 text-sm font-semibold text-slate-900">{values[item.value as keyof typeof values]}</dd>
+            <dd className="mt-1 text-sm font-semibold text-slate-900">{values[item.value]}</dd>
           </div>
         ))}
       </dl>

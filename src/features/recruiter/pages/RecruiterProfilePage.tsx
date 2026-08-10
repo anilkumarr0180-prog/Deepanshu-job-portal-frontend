@@ -27,18 +27,20 @@ export default function RecruiterProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      setForm({
-        name: profile.name || "",
-        phone: profile.phone || "",
-        profilePicture: profile.profilePicture || "",
-        designation: profile.designation || "",
-        department: profile.department || "",
-        bio: profile.bio || "",
-        socialLinks: {
-          linkedin: profile.socialLinks?.linkedin || "",
-          twitter: profile.socialLinks?.twitter || "",
-          website: profile.socialLinks?.website || "",
-        },
+      queueMicrotask(() => {
+        setForm({
+          name: profile.name || "",
+          phone: profile.phone || "",
+          profilePicture: profile.profilePicture || "",
+          designation: profile.designation || "",
+          department: profile.department || "",
+          bio: profile.bio || "",
+          socialLinks: {
+            linkedin: profile.socialLinks?.linkedin || "",
+            twitter: profile.socialLinks?.twitter || "",
+            website: profile.socialLinks?.website || "",
+          },
+        });
       });
     }
   }, [profile]);

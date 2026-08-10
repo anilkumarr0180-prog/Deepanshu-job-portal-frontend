@@ -35,23 +35,25 @@ export default function CompanyEditForm({
 
   useEffect(() => {
     if (company) {
-      setForm({
-        name: company.name || "",
-        description: company.description || company.overview || company.about || "",
-        website: company.website || "",
-        logo: company.logo || "",
-        industry: company.industry || "",
-        companySize: company.companySize || "11-50",
-        foundedYear: company.foundedYear ? Number(company.foundedYear) : new Date().getFullYear(),
-        email: company.email || "",
-        phone: company.phone || "",
-        location: company.location || "",
-        city: company.city || "",
-        state: company.state || "",
-        country: company.country || "",
-        linkedin: company.socialLinks?.linkedin || "",
-        twitter: company.socialLinks?.twitter || "",
-        github: company.socialLinks?.github || "",
+      queueMicrotask(() => {
+        setForm({
+          name: company.name || "",
+          description: company.description || company.overview || company.about || "",
+          website: company.website || "",
+          logo: company.logo || "",
+          industry: company.industry || "",
+          companySize: company.companySize || "11-50",
+          foundedYear: company.foundedYear ? Number(company.foundedYear) : new Date().getFullYear(),
+          email: company.email || "",
+          phone: company.phone || "",
+          location: company.location || "",
+          city: company.city || "",
+          state: company.state || "",
+          country: company.country || "",
+          linkedin: company.socialLinks?.linkedin || "",
+          twitter: company.socialLinks?.twitter || "",
+          github: company.socialLinks?.github || "",
+        });
       });
     }
   }, [company]);

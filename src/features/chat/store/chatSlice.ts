@@ -1,10 +1,15 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
+export interface TypingUserEntry {
+  userId: string;
+  userName?: string;
+}
+
 interface ChatState {
   activeConversationId: string | null;
   onlineUsers: string[];
-  typingUsersByConversation: Record<string, string[]>;
+  typingUsersByConversation: Record<string, TypingUserEntry[]>;
   unreadTotalCount: number;
 }
 
@@ -29,12 +34,21 @@ const chatSlice = createSlice({
 
     setUserTyping(
       state,
-      action: PayloadAction<{ conversationId: string; userId: string }>
+      action: PayloadAction<{ conversationId: string; userId: string; userName?: string }>
     ) {
-      const { conversationId, userId } = action.payload;
+      const { conversationId, userId, userName } = action.payload;
       const current = state.typingUsersByConversation[conversationId] || [];
-      if (!current.includes(userId)) {
-        state.typingUsersByConversation[conversationId] = [...current, userId];
+      const exists = current.some((item) => item.userId === userId);
+      if (!exists) {
+        state.typingUsersByConversation[conversationId] = [
+          ...current,
+          { userId, userName: userName || "User" },
+        ];
+      } else {
+        // Update userName if provided
+        state.typingUsersByConversation[conversationId] = current.map((item) =>
+          item.userId === userId ? { ...item, userName: userName || item.userName } : item
+        );
       }
     },
 
@@ -45,8 +59,12 @@ const chatSlice = createSlice({
       const { conversationId, userId } = action.payload;
       const current = state.typingUsersByConversation[conversationId] || [];
       state.typingUsersByConversation[conversationId] = current.filter(
-        (id) => id !== userId
+        (item) => item.userId !== userId
       );
+    },
+
+    clearAllTypingForConversation(state, action: PayloadAction<string>) {
+      delete state.typingUsersByConversation[action.payload];
     },
 
     setUnreadTotalCount(state, action: PayloadAction<number>) {
@@ -69,6 +87,7 @@ export const {
   setOnlineUsers,
   setUserTyping,
   setUserStopTyping,
+  clearAllTypingForConversation,
   setUnreadTotalCount,
   incrementUnreadCount,
   decrementUnreadCount,

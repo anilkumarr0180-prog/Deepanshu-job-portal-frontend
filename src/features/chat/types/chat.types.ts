@@ -35,8 +35,16 @@ export interface ChatMessage {
   attachments?: MessageAttachment[];
   isRead: boolean;
   readAt?: string;
+  isEdited?: boolean;
+  isDeleted?: boolean;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface TypingUserInfo {
+  userId: string;
+  userName?: string;
+  timestamp?: number;
 }
 
 export interface ChatConversation {
@@ -51,3 +59,15 @@ export interface ChatConversation {
   createdAt: string;
   updatedAt?: string;
 }
+
+/**
+ * Safely extracts user ID string regardless of whether `user` is an object or string
+ */
+export const getUserIdString = (
+  userVal?: string | { _id?: string; id?: string } | null
+): string => {
+  if (!userVal) return "";
+  if (typeof userVal === "string") return userVal;
+  return userVal._id || userVal.id || "";
+};
+
