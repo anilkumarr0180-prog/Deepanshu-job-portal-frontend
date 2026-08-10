@@ -54,7 +54,7 @@ export default function ApplicationRow({
       </td>
 
       <td className="px-4 py-4 text-sm text-slate-600 hidden sm:table-cell">
-        ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}
+        ${(job.salaryMin ?? 0).toLocaleString()} - ${(job.salaryMax ?? 0).toLocaleString()}
       </td>
 
       <td className="px-4 py-4">
@@ -92,7 +92,6 @@ export default function ApplicationRow({
             {isWithdrawing ? "Withdrawing..." : "Withdraw"}
           </button>
         </div>
-
       </td>
     </tr>
   );

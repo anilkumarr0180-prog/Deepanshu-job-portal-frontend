@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowLeft, Download, MessageSquareMore, UserRoundCheck, XCircle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
@@ -9,6 +9,7 @@ import { downloadFile } from "@/shared/utils/fileUtils";
 
 export default function RecruiterApplicantDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const attemptedAutoReviewRef = useRef<Set<string>>(new Set());
 
   const {
     data: applications,
@@ -19,6 +20,19 @@ export default function RecruiterApplicantDetailsPage() {
   const updateMutation = useUpdateApplicationStatus();
 
   const application = applications?.find((app) => app._id === id);
+
+  useEffect(() => {
+    if (
+      id &&
+      application &&
+      (application.status === "Applied" || application.status === "Submitted") &&
+      !attemptedAutoReviewRef.current.has(id) &&
+      !updateMutation.isPending
+    ) {
+      attemptedAutoReviewRef.current.add(id);
+      updateMutation.mutate({ id, status: "Under Review" });
+    }
+  }, [id, application?.status, updateMutation.isPending]);
 
   if (isLoading) {
     return (
@@ -50,16 +64,6 @@ export default function RecruiterApplicantDetailsPage() {
     if (!id || updateMutation.isPending) return;
     updateMutation.mutate({ id, status });
   };
-
-  useEffect(() => {
-    if (
-      id &&
-      application &&
-      (application.status === "Applied" || application.status === "Submitted")
-    ) {
-      updateMutation.mutate({ id, status: "Under Review" });
-    }
-  }, [id, application?.status]);
 
   const resumeUrl =
     application.resume || application.applicantId.resumeUrl || "";

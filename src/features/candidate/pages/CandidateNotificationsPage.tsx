@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -53,6 +53,13 @@ export default function CandidateNotificationsPage() {
   } = useNotifications();
 
   const [activeTab, setActiveTab] = useState<string>("ALL");
+
+  // Enterprise Feature: Auto mark all as read on entering Candidate Notification Center
+  useEffect(() => {
+    if (unreadCount > 0) {
+      void markAllAsRead();
+    }
+  }, [unreadCount, markAllAsRead]);
 
   const filteredNotifications = notifications.filter((item) => {
     const isRead = item.is_read || item.isRead;

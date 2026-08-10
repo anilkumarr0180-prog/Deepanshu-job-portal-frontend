@@ -26,9 +26,9 @@ export interface BackendCandidateApplication {
   updatedAt: string;
 }
 
-interface MyApplicationsApiResponse {
+export interface MyApplicationsApiResponse {
   success: boolean;
-  data: BackendCandidateApplication[];
+  data: BackendCandidateApplication[] | { items: BackendCandidateApplication[] };
 }
 
 interface WithdrawApplicationApiResponse {
@@ -37,19 +37,24 @@ interface WithdrawApplicationApiResponse {
 }
 
 export async function getMyApplications(): Promise<BackendCandidateApplication[]> {
-  const response = await axiosInstance.get<any>("/applications/my");
+  try {
+    const response = await axiosInstance.get<MyApplicationsApiResponse>("/applications/my");
 
-  const rawData = response.data?.data;
+    const rawData = response.data?.data;
 
-  if (Array.isArray(rawData)) {
-    return rawData;
+    if (Array.isArray(rawData)) {
+      return rawData;
+    }
+
+    if (rawData && typeof rawData === "object" && Array.isArray(rawData.items)) {
+      return rawData.items;
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch my applications:", error);
+    return [];
   }
-
-  if (rawData && typeof rawData === "object" && Array.isArray(rawData.items)) {
-    return rawData.items;
-  }
-
-  return [];
 }
 
 export async function withdrawApplication(

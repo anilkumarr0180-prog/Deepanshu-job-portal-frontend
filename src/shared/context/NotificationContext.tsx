@@ -53,6 +53,42 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [isAuthenticated, token]);
 
+  // Dynamic Document Title Sync for Enterprise UX
+  useEffect(() => {
+    const baseTitle = document.title.replace(/^\(\d+\)\s*/, "");
+    if (unreadCount > 0) {
+      document.title = `(${unreadCount}) ${baseTitle}`;
+    } else {
+      document.title = baseTitle;
+    }
+  }, [unreadCount]);
+
+  // Enterprise Web Audio Sound Chime
+  const playNotificationSound = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 chime
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12); // A5 chime
+
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } catch {
+      // Ignore autoplay restriction errors before user interaction
+    }
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated && token) {
       refetchNotifications();
@@ -137,6 +173,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       setUnreadCount((prev) => prev + 1);
+      playNotificationSound();
 
       // Automatically refresh live application caches in real-time
       void queryClient.invalidateQueries({ queryKey: ["applications"] });

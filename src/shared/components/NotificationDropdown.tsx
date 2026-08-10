@@ -64,6 +64,13 @@ export const NotificationDropdown: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Enterprise Feature: Automatically mark all notifications as read when opening dropdown
+  useEffect(() => {
+    if (isOpen && unreadCount > 0) {
+      void markAllAsRead();
+    }
+  }, [isOpen, unreadCount, markAllAsRead]);
+
   const filteredNotifications = notifications.filter((item) => {
     const isRead = item.is_read || item.isRead;
     if (filter === "unread") return !isRead;

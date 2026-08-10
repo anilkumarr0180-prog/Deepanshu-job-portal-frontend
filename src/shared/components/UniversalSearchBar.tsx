@@ -1,6 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { BriefcaseBusiness, MapPin, Search, Navigation, X } from "lucide-react";
 import toast from "react-hot-toast";
+import {
+  getStoredUserLocation,
+  LOCATION_UPDATED_EVENT,
+  broadcastLocationUpdate,
+  resolveExactLocality,
+  type LocationDetail,
+} from "./LocationSelectionModal";
 
 export interface SearchFilterState {
   keyword: string;
@@ -26,9 +33,31 @@ export default function UniversalSearchBar({
   compact = false,
 }: UniversalSearchBarProps) {
   const [keyword, setKeyword] = useState(initialValues?.keyword ?? "");
-  const [location, setLocation] = useState(initialValues?.location ?? "");
+  const [location, setLocation] = useState(() => {
+    if (initialValues?.location) return initialValues.location;
+    const stored = getStoredUserLocation();
+    return stored?.city || stored?.formattedName || "";
+  });
   const [industry, setIndustry] = useState(initialValues?.industry ?? "");
   const [isLocating, setIsLocating] = useState(false);
+
+  // Sync with SwiggyLocationHeader location updates
+  useEffect(() => {
+    const handleLocationEvent = (e: Event) => {
+      const customEvt = e as CustomEvent<LocationDetail>;
+      if (customEvt.detail?.city || customEvt.detail?.formattedName) {
+        const detected = customEvt.detail.city || customEvt.detail.formattedName;
+        setLocation(detected);
+        onSearch({
+          keyword: keyword.trim(),
+          location: detected.trim(),
+          industry: industry.trim(),
+        });
+      }
+    };
+    window.addEventListener(LOCATION_UPDATED_EVENT, handleLocationEvent);
+    return () => window.removeEventListener(LOCATION_UPDATED_EVENT, handleLocationEvent);
+  }, [keyword, industry, onSearch]);
 
   const isFiltered = Boolean(keyword.trim() || location.trim() || industry.trim());
 
@@ -63,28 +92,27 @@ export default function UniversalSearchBar({
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          // Reverse geocode using free OpenStreetMap Nominatim API
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
           );
           const data = (await response.json()) as {
-            address?: { city?: string; town?: string; state?: string; country?: string };
+            address?: Record<string, string>;
           };
 
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.state ||
-            data.address?.country ||
-            "Detected Location";
+          const resolved = resolveExactLocality(data.address || {});
 
-          setLocation(city);
-          toast.success(`Location set to ${city}`);
-          onSearch({ keyword: keyword.trim(), location: city, industry: industry.trim() });
+          setLocation(resolved.formattedName);
+          broadcastLocationUpdate({
+            ...resolved,
+            latitude,
+            longitude,
+          });
+          toast.success(`📍 Location set to ${resolved.formattedName}`);
+          onSearch({ keyword: keyword.trim(), location: resolved.formattedName, industry: industry.trim() });
         } catch {
-          setLocation("Remote");
-          toast.success("Location set to Remote");
-          onSearch({ keyword: keyword.trim(), location: "Remote", industry: "Remote" });
+          setLocation("Mohali");
+          toast.success("Location set to Mohali");
+          onSearch({ keyword: keyword.trim(), location: "Mohali", industry: industry.trim() });
         } finally {
           setIsLocating(false);
         }
@@ -94,7 +122,7 @@ export default function UniversalSearchBar({
         toast.error("Unable to retrieve your location");
         setIsLocating(false);
       },
-      { timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 }
     );
   }, [keyword, industry, onSearch]);
 

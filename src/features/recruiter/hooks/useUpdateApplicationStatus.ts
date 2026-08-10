@@ -32,11 +32,13 @@ export function useUpdateApplicationStatus() {
 
       return { previousApplications };
     },
-    onError: (_error: unknown, _variables, context) => {
+    onError: (error: any, _variables, context) => {
       if (context?.previousApplications) {
         queryClient.setQueryData(["applications", "all"], context.previousApplications);
       }
-      toast.error("Failed to update application status.");
+      const message =
+        error?.response?.data?.message || "Failed to update application status.";
+      toast.error(message);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["applications"] });

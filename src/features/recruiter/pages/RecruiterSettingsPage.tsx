@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 import useAuth from "@/features/auth/hooks/useAuth";
 import SettingsSection from "../components/settings/SettingsSection";
@@ -15,6 +16,8 @@ export default function RecruiterSettingsPage() {
   const [password, setPassword] = useState("");
   const [emailDigest, setEmailDigest] = useState("Daily");
   const [isSaving, setIsSaving] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSaveAccount = (e: FormEvent) => {
     e.preventDefault();
@@ -134,13 +137,28 @@ export default function RecruiterSettingsPage() {
           description="Update your password."
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <input
-              type="password"
-              placeholder="Enter new password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none focus:border-[#3C65F5]"
-            />
+            <div className="relative flex-1">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-3.5 pr-10 text-sm text-slate-700 outline-none focus:border-[#3C65F5]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                title={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             <button
               type="submit"
               className="h-11 rounded-xl bg-slate-900 px-5 text-xs font-bold text-white transition hover:bg-slate-800"

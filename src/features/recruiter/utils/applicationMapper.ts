@@ -59,63 +59,99 @@ export function formatDate(dateString: string): string {
 export function mapApplicantRecord(
   application: BackendApplicationWithJob
 ): RecruiterApplicantRecord {
+  const applicantObj =
+    typeof application?.applicantId === "object" && application?.applicantId !== null
+      ? application.applicantId
+      : null;
+  const candidateName = applicantObj?.name || "Candidate";
+  const jobTitle =
+    application?.jobTitle ||
+    (typeof application?.jobId === "object" && application?.jobId !== null
+      ? (application.jobId as any).title
+      : "Job Application");
+
   return {
-    id: application._id,
-    candidate: application.applicantId.name,
-    job: application.jobTitle,
+    id: application?._id || "",
+    candidate: candidateName,
+    job: jobTitle,
     experience: "N/A",
     skills: [],
-    appliedDate: formatDate(application.createdAt),
-    status: normalizeApplicantStatus(application.status),
+    appliedDate: application?.createdAt ? formatDate(application.createdAt) : "Recently",
+    status: normalizeApplicantStatus(application?.status || ""),
   };
 }
 
 export function mapRecruiterApplicant(
   application: BackendApplicationWithJob
 ): RecruiterApplicant {
+  const applicantObj =
+    typeof application?.applicantId === "object" && application?.applicantId !== null
+      ? application.applicantId
+      : null;
+  const candidateName = applicantObj?.name || "Candidate";
+  const jobTitle =
+    application?.jobTitle ||
+    (typeof application?.jobId === "object" && application?.jobId !== null
+      ? (application.jobId as any).title
+      : "Job Application");
+
   return {
-    id: application._id,
-    candidate: application.applicantId.name,
-    job: application.jobTitle,
-    status: normalizeApplicantStatus(application.status),
-    appliedDate: formatDate(application.createdAt),
+    id: application?._id || "",
+    candidate: candidateName,
+    job: jobTitle,
+    status: normalizeApplicantStatus(application?.status || ""),
+    appliedDate: application?.createdAt ? formatDate(application.createdAt) : "Recently",
   };
 }
 
 export function mapApplicantDetails(
   application: BackendApplicationWithJob
 ): RecruiterApplicantDetails {
+  const applicantObj =
+    typeof application?.applicantId === "object" && application?.applicantId !== null
+      ? application.applicantId
+      : null;
+
+  const candidateName = applicantObj?.name || "Candidate";
+  const candidateEmail = applicantObj?.email || "N/A";
+  const candidatePhone = applicantObj?.phone || "N/A";
+  const jobTitle =
+    application?.jobTitle ||
+    (typeof application?.jobId === "object" && application?.jobId !== null
+      ? (application.jobId as any).title
+      : "Job Application");
+
   const resumeUrl =
-    application.resume || application.applicantId.resumeUrl || "";
+    application?.resume || applicantObj?.resumeUrl || "";
 
   const resumeFileName = resumeUrl
     ? resumeUrl.split("/").pop()!.split("?")[0]
     : "";
 
   const resumeLabel = resumeFileName
-    ? `${application.applicantId.name} — ${resumeFileName}`
+    ? `${candidateName} — ${resumeFileName}`
     : "No resume uploaded";
 
   return {
-    id: application._id,
-    candidate: application.applicantId.name,
-    email: application.applicantId.email,
-    phone: application.applicantId.phone ?? "N/A",
+    id: application?._id || "",
+    candidate: candidateName,
+    email: candidateEmail,
+    phone: candidatePhone,
     location: "N/A",
     experience: "N/A",
     skills: [],
     education: [],
     portfolio: "N/A",
     coverLetter:
-      application.coverLetter || "No cover letter provided.",
+      application?.coverLetter || "No cover letter provided.",
     summary: "N/A",
     resumeLabel,
     notes: [],
     timeline: [
       {
         title: "Applied",
-        detail: `Applied to ${application.jobTitle}`,
-        date: formatDate(application.createdAt),
+        detail: `Applied to ${jobTitle}`,
+        date: application?.createdAt ? formatDate(application.createdAt) : "Recently",
       },
     ],
   };

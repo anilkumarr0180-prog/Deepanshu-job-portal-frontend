@@ -8,10 +8,13 @@ import {
   MapPin,
   CheckCircle2,
   Send,
+  Bookmark,
 } from "lucide-react";
 
 import { useJobDetails } from "@/features/jobs/hooks/useJobDetails";
 import { useMyApplications } from "../hooks/useMyApplications";
+import { useCheckJobSavedStatus } from "../hooks/useSavedJobs";
+import { useToggleSaveJob } from "../hooks/useToggleSaveJob";
 import { formatSalary, formatRelativeDate } from "../utils/jobMapper";
 import JobDetailsSkeleton from "../components/JobDetailsSkeleton";
 import ApplyJobModal from "../components/ApplyJobModal";
@@ -29,6 +32,14 @@ export default function CandidateJobDetailsPage() {
   } = useJobDetails(id ?? "");
 
   const { data: myApplications } = useMyApplications();
+
+  const { data: isSaved = false } = useCheckJobSavedStatus(id ?? "");
+  const toggleSaveMutation = useToggleSaveJob();
+
+  const handleBookmarkToggle = () => {
+    if (!id) return;
+    toggleSaveMutation.mutate({ jobId: id, isCurrentlySaved: isSaved });
+  };
 
   const isAlreadyApplied = useMemo(() => {
     if (!job || !myApplications) return false;
@@ -107,6 +118,19 @@ export default function CandidateJobDetailsPage() {
               <p className="mt-1 text-lg text-slate-600">{job.company}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={handleBookmarkToggle}
+                disabled={toggleSaveMutation.isPending}
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition border ${
+                  isSaved
+                    ? "bg-blue-50 text-[#3C65F5] border-blue-200"
+                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                <Bookmark className={`h-4 w-4 ${isSaved ? "fill-[#3C65F5] text-[#3C65F5]" : ""}`} />
+                <span>{isSaved ? "Saved" : "Save Job"}</span>
+              </button>
               {isAlreadyApplied && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Already Applied

@@ -4,6 +4,7 @@ import { LogOut, Menu, X } from "lucide-react";
 import useAuth from "@/features/auth/hooks/useAuth";
 import DashboardMenu from "./DashboardMenu";
 import { NotificationDropdown } from "@/shared/components/NotificationDropdown";
+import { SwiggyLocationHeader } from "@/shared/components/SwiggyLocationHeader";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -25,9 +26,11 @@ export default function DashboardHeader() {
             </button>
 
             <div className="space-y-0.5">
-              <p className="text-base font-semibold text-[#05264E] sm:text-lg">
-                Good Morning, {displayName} 👋
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-base font-semibold text-[#05264E] sm:text-lg">
+                  Good Morning, {displayName} 👋
+                </p>
+              </div>
               <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
                 Manage your hiring workflow efficiently.
               </p>
@@ -35,6 +38,7 @@ export default function DashboardHeader() {
           </div>
 
           <div className="flex items-center gap-3">
+            <SwiggyLocationHeader />
             <NotificationDropdown />
             <button
               type="button"
