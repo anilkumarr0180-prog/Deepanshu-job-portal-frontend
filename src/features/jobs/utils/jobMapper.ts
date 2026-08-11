@@ -16,6 +16,7 @@ export interface BackendJob {
 export interface BackendJobDetails extends BackendJob {
   company: string;
   experienceLevel: string;
+  isFeatured?: boolean;
 
   salaryMin: number;
   salaryMax: number;
