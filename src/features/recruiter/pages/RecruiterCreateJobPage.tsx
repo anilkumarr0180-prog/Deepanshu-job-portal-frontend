@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AlertTriangle, Building, ArrowRight } from "lucide-react";
 
 import CreateJobForm from "../components/CreateJobForm";
+import QuotaUpgradeModal from "@/features/subscription/components/QuotaUpgradeModal";
 import type { CreateJobPayload } from "@/features/jobs/api/jobs.api";
 import { useCreateJob } from "@/features/jobs/hooks/useCreateJob";
 import { useCompany } from "../hooks/useCompany";
@@ -10,17 +12,41 @@ export default function RecruiterCreateJobPage() {
   const navigate = useNavigate();
   const createMutation = useCreateJob();
   const { data: company, isLoading: isLoadingCompany } = useCompany();
+  const [quotaModalState, setQuotaModalState] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message?: string;
+  }>({ isOpen: false });
 
   const handleSubmit = (values: CreateJobPayload) => {
     createMutation.mutate(values, {
       onSuccess: () => {
         navigate("/recruiter/jobs");
       },
+      onError: (error: any) => {
+        const quotaMsg = error.response?.data?.message;
+        if (error.response?.status === 403 || error.response?.data?.upgradeRequired) {
+          setQuotaModalState({
+            isOpen: true,
+            title: "Recruiter Job Limit Reached",
+            message: quotaMsg || "Your current plan allows 1 active job post. Upgrade to Recruiter Lite or Enterprise to post more jobs.",
+          });
+        }
+      },
     });
   };
 
   return (
     <div className="space-y-6">
+      {/* Quota Upgrade Modal Prompt */}
+      <QuotaUpgradeModal
+        isOpen={quotaModalState.isOpen}
+        onClose={() => setQuotaModalState({ isOpen: false })}
+        title={quotaModalState.title}
+        message={quotaModalState.message}
+        feature="job_limit"
+      />
+
       {/* Header Banner */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

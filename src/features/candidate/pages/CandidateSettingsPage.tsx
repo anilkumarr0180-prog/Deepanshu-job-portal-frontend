@@ -1,14 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { LogOut } from "lucide-react";
 
-import useAuth from "@/features/auth/hooks/useAuth";
 
 import { useProfile } from "../hooks/useProfile";
 import { useUpdateProfile } from "../hooks/useUpdateProfile";
 
 export default function CandidateSettingsPage() {
-  const { logout } = useAuth();
 
   const {
     data: profile,
@@ -42,9 +39,7 @@ export default function CandidateSettingsPage() {
     );
   };
 
-  const handleLogout = () => {
-    logout();
-  };
+
 
   if (isLoading) {
     return (
@@ -216,23 +211,8 @@ export default function CandidateSettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-red-900">Danger Zone</h3>
-        <p className="mt-1 text-sm text-red-700">
-          Once you log out, you will need to sign in again to access your
-          account.
-        </p>
-        <div className="mt-5">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
-        </div>
-      </section>
+
+
     </div>
   );
 }

@@ -15,4 +15,8 @@ export const NAV_MENU = [
     label: "Candidates",
     path: "/candidates",
   },
+  {
+    label: "Pricing",
+    path: "/pricing",
+  },
 ];

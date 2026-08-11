@@ -2,6 +2,7 @@ import { ArrowRight, Clock, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { BackendJobDetails } from "@/features/jobs/utils/jobMapper";
+import { FeaturedJobBadge } from "@/features/subscription/components/PremiumBadges";
 import {
   formatSalary,
   formatRelativeDate,
@@ -53,6 +54,12 @@ export default function PublicJobCard({ job }: PublicJobCardProps) {
             <span className="line-clamp-1">{job.location || "Remote"}</span>
           </p>
         </div>
+
+        {job.isFeatured && (
+          <div className="shrink-0">
+            <FeaturedJobBadge />
+          </div>
+        )}
       </div>
 
       {/* Badges + Posted time */}

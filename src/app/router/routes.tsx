@@ -26,6 +26,8 @@ const CandidatesPage = withSuspense(lazy(() => import("@/features/candidate/page
 const CandidatePublicDetailsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidatePublicDetailsPage")));
 const LoginPage = withSuspense(lazy(() => import("@/features/auth/pages/LoginPage")));
 const RegisterPage = withSuspense(lazy(() => import("@/features/auth/pages/RegisterPage")));
+const PricingPage = withSuspense(lazy(() => import("@/features/subscription/pages/PricingPage")));
+const BillingSettingsPage = withSuspense(lazy(() => import("@/features/subscription/pages/BillingSettingsPage")));
 
 // Admin Pages
 const AdminDashboardPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminDashboardPage")));
@@ -105,6 +107,10 @@ export const routes: RouteObject[] = [
       {
         path: "candidates/:id",
         element: <CandidatePublicDetailsPage />,
+      },
+      {
+        path: "pricing",
+        element: <PricingPage />,
       },
       {
         path: "login",
@@ -199,6 +205,10 @@ export const routes: RouteObject[] = [
         element: <CandidateSettingsPage />,
       },
       {
+        path: "billing",
+        element: <BillingSettingsPage />,
+      },
+      {
         path: "notifications",
         element: <CandidateNotificationsPage />,
       },
@@ -260,6 +270,10 @@ export const routes: RouteObject[] = [
       {
         path: "settings",
         element: <RecruiterSettingsPage />,
+      },
+      {
+        path: "billing",
+        element: <BillingSettingsPage />,
       },
       {
         path: "notifications",
