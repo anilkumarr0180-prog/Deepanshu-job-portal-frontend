@@ -23,9 +23,22 @@ export default function CompanyCard({ job }: CompanyCardProps) {
       </h3>
 
       <div className="mt-5 flex items-center gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-lg font-bold text-white shadow-sm">
-          {companyInitials || <Building2 className="h-6 w-6 text-white" />}
-        </div>
+        {(() => {
+          const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
+          return (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-lg font-bold text-white shadow-sm">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={job.company}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                companyInitials || <Building2 className="h-6 w-6 text-white" />
+              )}
+            </div>
+          );
+        })()}
         <div className="min-w-0 flex-1">
           <h4 className="truncate text-base font-bold text-slate-900">
             {job.company}

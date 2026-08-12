@@ -11,6 +11,7 @@ export interface CompanyPayload {
   name: string;
   description: string;
   logo?: string;
+  logoPublicId?: string;
   website?: string;
   industry?: string;
   companySize?: string;

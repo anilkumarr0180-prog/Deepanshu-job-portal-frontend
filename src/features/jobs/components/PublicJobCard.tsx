@@ -38,9 +38,22 @@ export default function PublicJobCard({ job }: PublicJobCardProps) {
     >
       {/* Logo + Title + Company + Location */}
       <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#EEF3FF] text-sm font-bold text-[#3C65F5]">
-          {initials}
-        </div>
+        {(() => {
+          const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
+          return (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-[#EEF3FF] text-sm font-bold text-[#3C65F5]">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={companyName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                initials
+              )}
+            </div>
+          );
+        })()}
 
         <div className="min-w-0 flex-1">
           <h3 className="line-clamp-1 text-lg font-semibold text-[#05264E] transition-colors group-hover:text-[#3C65F5]">

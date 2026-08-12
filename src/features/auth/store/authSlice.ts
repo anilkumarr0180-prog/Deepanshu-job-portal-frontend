@@ -7,6 +7,7 @@ interface UserPayload {
   name: string;
   email: string;
   role: UserRole;
+  profilePicture?: string;
 }
 
 interface AuthState {

@@ -16,6 +16,8 @@ import DashboardMenu from "./DashboardMenu";
 import { NotificationDropdown } from "@/shared/components/NotificationDropdown";
 import { SwiggyLocationHeader } from "@/shared/components/SwiggyLocationHeader";
 
+import { UserAvatar } from "@/shared/components/UserAvatar";
+
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
 
@@ -25,13 +27,6 @@ export default function DashboardHeader() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const initials = displayName
-    .split(" ")
-    .map((name) => name[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
   const profileRoute =
     user?.role === "candidate"
@@ -112,7 +107,12 @@ export default function DashboardHeader() {
 
             <div className="space-y-0.5">
               <p className="text-base font-semibold text-[#05264E] sm:text-lg">
-                Good Morning, {displayName} 👋
+                {(() => {
+                  const hour = new Date().getHours();
+                  const timeGreeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+                  const cleanName = (user?.name ?? "User").replace(/\s+(Recruiter|Candidate|Admin)$/i, "").trim();
+                  return `${timeGreeting}, ${cleanName} 👋`;
+                })()}
               </p>
 
               <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
@@ -146,15 +146,7 @@ export default function DashboardHeader() {
                   : "border-slate-200 bg-white hover:border-[#3C65F5] hover:bg-blue-50/50"
                   }`}
               >
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black text-white shadow-sm"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #3C65F5 0%, #6366f1 100%)",
-                  }}
-                >
-                  {initials}
-                </div>
+                <UserAvatar src={user?.profilePicture} name={displayName} size="sm" />
 
                 <div className="hidden text-left sm:block">
                   <p className="max-w-[90px] truncate text-[12px] font-bold leading-tight text-[#05264E]">
@@ -181,16 +173,7 @@ export default function DashboardHeader() {
                   {/* User information */}
                   <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/60 px-4 py-3">
                     <div className="flex items-center gap-2.5">
-
-                      <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[11px] font-black text-white shadow-md"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #3C65F5 0%, #6366f1 100%)",
-                        }}
-                      >
-                        {initials}
-                      </div>
+                      <UserAvatar src={user?.profilePicture} name={displayName} size="md" />
 
                       <div className="min-w-0">
                         <p className="truncate text-[12px] font-black text-[#05264E]">

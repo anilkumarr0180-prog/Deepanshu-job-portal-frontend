@@ -15,6 +15,7 @@ export interface BackendJob {
 
 export interface BackendJobDetails extends BackendJob {
   company: string;
+  companyLogo?: string;
   experienceLevel: string;
   isFeatured?: boolean;
 
@@ -24,10 +25,17 @@ export interface BackendJobDetails extends BackendJob {
   description: string;
   skills: string[];
   updatedAt: string;
+  companyId?: {
+    _id?: string;
+    name?: string;
+    logo?: string;
+    website?: string;
+  };
   recruiterId?: {
     _id: string;
     name?: string;
     email?: string;
+    profilePicture?: string;
   };
 }
 

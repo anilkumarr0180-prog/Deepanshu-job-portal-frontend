@@ -36,7 +36,11 @@ export interface BackendProfile {
   role: string;
   phone?: string;
   profilePicture?: string;
+  profilePicturePublicId?: string;
   resumeUrl?: string;
+  resumePublicId?: string;
+  resumeFileName?: string;
+  resumeUploadedAt?: string;
   headline?: string;
   bio?: string;
   skills?: string[];
@@ -58,7 +62,11 @@ export interface UpdateProfilePayload {
   name?: string;
   phone?: string;
   profilePicture?: string;
+  profilePicturePublicId?: string;
   resumeUrl?: string;
+  resumePublicId?: string;
+  resumeFileName?: string;
+  resumeUploadedAt?: string;
   headline?: string;
   bio?: string;
   skills?: string[];

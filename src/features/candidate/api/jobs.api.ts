@@ -31,6 +31,15 @@ export interface JobsResponse {
 
 export interface ApplyJobPayload {
   coverLetter?: string;
+  applicantName?: string;
+  applicantPhone?: string;
+  applicantDesignation?: string;
+  experienceYears?: number;
+  relevantSkills?: string[];
+  noticePeriod?: string;
+  resumeUrl?: string;
+  resumePublicId?: string;
+  resumeFileName?: string;
 }
 
 interface JobsApiResponse {
@@ -63,10 +72,10 @@ export async function getJobsWithFilters(
 
 export async function applyForJob(
   jobId: string,
-  coverLetter?: string
+  payload?: ApplyJobPayload
 ): Promise<void> {
   await axiosInstance.post<{ success: boolean; message: string }>(
     `/jobs/${jobId}/apply`,
-    coverLetter ? { coverLetter } : {}
+    payload ?? {}
   );
 }

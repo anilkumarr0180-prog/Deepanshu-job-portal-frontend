@@ -10,10 +10,12 @@ export function useUpdateApplicationStatus() {
     mutationFn: ({
       id,
       status,
+      interviewDetails,
     }: {
       id: string;
       status: string;
-    }) => updateApplicationStatus(id, status),
+      interviewDetails?: any;
+    }) => updateApplicationStatus(id, status, interviewDetails),
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: ["applications"] });
       await queryClient.cancelQueries({ queryKey: ["dashboard"] });

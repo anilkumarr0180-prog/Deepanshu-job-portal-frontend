@@ -21,7 +21,17 @@ import {
   type PaymentTransaction,
 } from "../api/subscriptionApi";
 
+import useAuth from "@/features/auth/hooks/useAuth";
+
 export default function BillingSettingsPage() {
+  const { user } = useAuth();
+  const pricingRoute =
+    user?.role === "candidate"
+      ? "/candidate/pricing"
+      : user?.role === "recruiter"
+      ? "/recruiter/pricing"
+      : "/pricing";
+
   const [subData, setSubData] = useState<{
     subscription: UserSubscription;
     plan: SubscriptionPlan;
@@ -100,7 +110,7 @@ export default function BillingSettingsPage() {
           </div>
 
           <Link
-            to="/pricing"
+            to={pricingRoute}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.02]"
           >
             <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />

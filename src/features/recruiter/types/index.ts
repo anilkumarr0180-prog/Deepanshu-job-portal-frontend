@@ -72,6 +72,7 @@ export interface RecruiterApplicantDetails {
 export interface RecruiterCompanyProfile {
   id: string;
   name: string;
+  logo?: string;
   tagline: string;
   overview: string;
   about: string;

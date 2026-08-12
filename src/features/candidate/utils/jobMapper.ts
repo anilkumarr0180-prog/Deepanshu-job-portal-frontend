@@ -34,6 +34,7 @@ export function mapCandidateJob(job: BackendJobDetails): CandidateJob {
     id: job._id,
     title: job.title,
     company: job.company,
+    companyLogo: job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture,
     location: job.location,
     type: job.employmentType,
     postedAt: new Date(job.createdAt).toLocaleDateString(),

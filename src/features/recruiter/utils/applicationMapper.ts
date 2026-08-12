@@ -13,11 +13,36 @@ export interface BackendApplicant {
   resumeUrl?: string;
 }
 
+export interface BackendCandidateProfile {
+  _id?: string;
+  headline?: string;
+  bio?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  skills?: string[];
+  experienceYears?: number;
+  noticePeriod?: string;
+  portfolioUrl?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+}
+
 export interface BackendApplication {
   _id: string;
   jobId: string;
   applicantId: BackendApplicant;
+  candidateProfileId?: BackendCandidateProfile;
+  applicantName?: string;
+  applicantEmail?: string;
+  applicantPhone?: string;
+  applicantDesignation?: string;
+  experienceYears?: number;
+  relevantSkills?: string[];
+  noticePeriod?: string;
   resume: string;
+  resumePublicId?: string;
+  resumeFileName?: string;
   coverLetter?: string;
   status: string;
   createdAt: string;
@@ -33,6 +58,7 @@ export function normalizeApplicantStatus(
 ): RecruiterApplicantStatus {
   switch (status) {
     case "Applied":
+    case "Submitted":
       return "Pending";
 
     case "Shortlisted":
@@ -63,19 +89,24 @@ export function mapApplicantRecord(
     typeof application?.applicantId === "object" && application?.applicantId !== null
       ? application.applicantId
       : null;
-  const candidateName = applicantObj?.name || "Candidate";
+  const candidateName = application?.applicantName || applicantObj?.name || "Candidate";
   const jobTitle =
     application?.jobTitle ||
     (typeof application?.jobId === "object" && application?.jobId !== null
       ? (application.jobId as any).title
       : "Job Application");
 
+  const exp =
+    typeof application?.experienceYears === "number" && application.experienceYears > 0
+      ? `${application.experienceYears} Yrs`
+      : "1-3 Yrs";
+
   return {
     id: application?._id || "",
     candidate: candidateName,
     job: jobTitle,
-    experience: "N/A",
-    skills: [],
+    experience: exp,
+    skills: application?.relevantSkills || [],
     appliedDate: application?.createdAt ? formatDate(application.createdAt) : "Recently",
     status: normalizeApplicantStatus(application?.status || ""),
   };
@@ -88,7 +119,7 @@ export function mapRecruiterApplicant(
     typeof application?.applicantId === "object" && application?.applicantId !== null
       ? application.applicantId
       : null;
-  const candidateName = applicantObj?.name || "Candidate";
+  const candidateName = application?.applicantName || applicantObj?.name || "Candidate";
   const jobTitle =
     application?.jobTitle ||
     (typeof application?.jobId === "object" && application?.jobId !== null
@@ -112,9 +143,37 @@ export function mapApplicantDetails(
       ? application.applicantId
       : null;
 
-  const candidateName = applicantObj?.name || "Candidate";
-  const candidateEmail = applicantObj?.email || "N/A";
-  const candidatePhone = applicantObj?.phone || "N/A";
+  const candidateProfile =
+    typeof application?.candidateProfileId === "object" && application?.candidateProfileId !== null
+      ? application.candidateProfileId
+      : null;
+
+  const candidateName = application?.applicantName || applicantObj?.name || "Candidate";
+  const candidateEmail = application?.applicantEmail || applicantObj?.email || "Not Provided";
+  const candidatePhone = application?.applicantPhone || applicantObj?.phone || "Not Provided";
+  const candidateDesignation =
+    application?.applicantDesignation || candidateProfile?.headline || "Job Applicant";
+
+  const location =
+    [candidateProfile?.city, candidateProfile?.state, candidateProfile?.country]
+      .filter(Boolean)
+      .join(", ") || "Remote / India";
+
+  const expYears =
+    typeof application?.experienceYears === "number" && application.experienceYears > 0
+      ? application.experienceYears
+      : candidateProfile?.experienceYears;
+
+  const experience =
+    typeof expYears === "number" && expYears > 0
+      ? `${expYears} ${expYears === 1 ? "Year" : "Years"}`
+      : "1-3 Years";
+
+  const skills =
+    application?.relevantSkills && application.relevantSkills.length > 0
+      ? application.relevantSkills
+      : candidateProfile?.skills || [];
+
   const jobTitle =
     application?.jobTitle ||
     (typeof application?.jobId === "object" && application?.jobId !== null
@@ -124,9 +183,9 @@ export function mapApplicantDetails(
   const resumeUrl =
     application?.resume || applicantObj?.resumeUrl || "";
 
-  const resumeFileName = resumeUrl
+  const resumeFileName = application?.resumeFileName || (resumeUrl
     ? resumeUrl.split("/").pop()!.split("?")[0]
-    : "";
+    : "");
 
   const resumeLabel = resumeFileName
     ? `${candidateName} — ${resumeFileName}`
@@ -137,14 +196,14 @@ export function mapApplicantDetails(
     candidate: candidateName,
     email: candidateEmail,
     phone: candidatePhone,
-    location: "N/A",
-    experience: "N/A",
-    skills: [],
+    location,
+    experience,
+    skills,
     education: [],
-    portfolio: "N/A",
+    portfolio: candidateProfile?.portfolioUrl || "N/A",
     coverLetter:
       application?.coverLetter || "No cover letter provided.",
-    summary: "N/A",
+    summary: candidateDesignation,
     resumeLabel,
     notes: [],
     timeline: [

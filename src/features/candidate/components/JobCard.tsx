@@ -37,14 +37,24 @@ export default function JobCard({
     toggleSaveMutation.mutate({ jobId: job._id, isCurrentlySaved: isSaved });
   };
 
+  const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
+
   return (
     <article className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5]/40 hover:shadow-xl hover:shadow-blue-500/10">
       <div className="flex-1">
         {/* Header section with Company Initial Avatar & Bookmark Button */}
         <header className="mb-4 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 font-bold text-[#3C65F5] shadow-xs group-hover:scale-105 transition-transform">
-              {job.company?.[0]?.toUpperCase() || <Building2 className="h-6 w-6" />}
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-blue-50 to-indigo-100 font-bold text-[#3C65F5] shadow-xs group-hover:scale-105 transition-transform">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={job.company || job.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                job.company?.[0]?.toUpperCase() || <Building2 className="h-6 w-6" />
+              )}
             </div>
             <div className="min-w-0">
               <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-[#3C65F5] transition-colors">

@@ -42,6 +42,14 @@ export default function PricingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   useEffect(() => {
+    if (authUser?.role === "recruiter") {
+      setActiveRoleTab("recruiter");
+    } else if (authUser?.role === "candidate") {
+      setActiveRoleTab("candidate");
+    }
+  }, [authUser?.role]);
+
+  useEffect(() => {
     loadData();
   }, [activeRoleTab, authUser]);
 

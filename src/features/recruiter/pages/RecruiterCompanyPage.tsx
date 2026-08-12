@@ -32,6 +32,7 @@ export default function RecruiterCompanyPage() {
     ? {
         id: apiCompany._id || "my-company",
         name: apiCompany.name || recruiterCompanyProfile.name,
+        logo: apiCompany.logo,
         tagline:
           apiCompany.tagline ||
           `${apiCompany.name || recruiterCompanyProfile.name} - Official Company Profile`,
@@ -73,7 +74,7 @@ export default function RecruiterCompanyPage() {
           Showing default company template. Create or edit your company profile to sync with live backend data.
         </div>
       )}
-      <CompanyProfileHeader name={company.name} tagline={company.tagline} />
+      <CompanyProfileHeader name={company.name} tagline={company.tagline} logo={company.logo} />
       <CompanyProfileOverview profile={company} />
       <CompanyProfileStats profile={company} />
       <CompanyProfileDetails profile={company} />

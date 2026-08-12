@@ -209,6 +209,12 @@ export const routes: RouteObject[] = [
         element: <BillingSettingsPage />,
       },
       {
+        // Pricing rendered inside the dashboard shell so sidebar stays visible.
+        // The sidebar's "View Plans" button links here instead of /pricing.
+        path: "pricing",
+        element: <PricingPage />,
+      },
+      {
         path: "notifications",
         element: <CandidateNotificationsPage />,
       },
@@ -274,6 +280,12 @@ export const routes: RouteObject[] = [
       {
         path: "billing",
         element: <BillingSettingsPage />,
+      },
+      {
+        // Pricing rendered inside the dashboard shell so sidebar stays visible.
+        // The sidebar's "View Plans" button links here instead of /pricing.
+        path: "pricing",
+        element: <PricingPage />,
       },
       {
         path: "notifications",

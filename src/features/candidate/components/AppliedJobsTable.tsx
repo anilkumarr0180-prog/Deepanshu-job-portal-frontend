@@ -5,12 +5,14 @@ interface AppliedJobsTableProps {
   applications: BackendCandidateApplication[];
   onWithdraw: (applicationId: string) => void;
   withdrawingId: string | null;
+  onOpenDetails?: (application: BackendCandidateApplication) => void;
 }
 
 export default function AppliedJobsTable({
   applications,
   onWithdraw,
   withdrawingId,
+  onOpenDetails,
 }: AppliedJobsTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -44,6 +46,7 @@ export default function AppliedJobsTable({
               application={application}
               onWithdraw={onWithdraw}
               isWithdrawing={withdrawingId === application._id}
+              onOpenDetails={onOpenDetails}
             />
           ))}
         </tbody>

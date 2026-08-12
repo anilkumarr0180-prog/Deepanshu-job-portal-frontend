@@ -11,12 +11,22 @@ import AppliedJobsTable from "../components/AppliedJobsTable";
 import AppliedJobsSkeleton from "../components/AppliedJobsSkeleton";
 import EmptyApplications from "../components/EmptyApplications";
 import JobsPagination from "../components/JobsPagination";
+import ApplyJobModal from "../components/ApplyJobModal";
+import type { BackendJobDetails } from "@/features/jobs/utils/jobMapper";
+import type { BackendCandidateApplication } from "../api/applications.api";
 
 export default function CandidateAppliedJobsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<BackendJobDetails | null>(null);
+
+  const handleOpenDetails = (app: BackendCandidateApplication) => {
+    if (app.jobId && typeof app.jobId === "object") {
+      setSelectedJob(app.jobId as any);
+    }
+  };
 
   const {
     data: applications,
@@ -201,6 +211,7 @@ export default function CandidateAppliedJobsPage() {
             applications={items}
             onWithdraw={handleWithdraw}
             withdrawingId={withdrawingId}
+            onOpenDetails={handleOpenDetails}
           />
 
           {pagination.totalPages > 1 && (
@@ -211,6 +222,12 @@ export default function CandidateAppliedJobsPage() {
           )}
         </>
       )}
+
+      <ApplyJobModal
+        job={selectedJob}
+        isOpen={Boolean(selectedJob)}
+        onClose={() => setSelectedJob(null)}
+      />
     </div>
   );
 }

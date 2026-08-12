@@ -4,6 +4,13 @@ import DashboardMenu from "./DashboardMenu.tsx";
 import { getDashboardConfig } from "./dashboardConfig.ts";
 import { Crown, LogOut } from "lucide-react";
 
+// Role-specific pricing routes so the user stays inside the dashboard layout
+// instead of being dropped into the public /pricing page.
+function getPricingRoute(role?: string | null): string {
+  if (role === "candidate") return "/candidate/pricing";
+  return "/recruiter/pricing";
+}
+
 export default function DashboardSidebar() {
   const { user, logout } = useAuth();
   const config = getDashboardConfig(user?.role);
@@ -41,7 +48,7 @@ export default function DashboardSidebar() {
       <div className="mx-6 border-b border-slate-100 shrink-0" />
 
       {/* Navigation Menu */}
-      <div className="mt-3 flex-1 overflow-y-auto px-4 min-h-0">
+      <div className="mt-2 flex-1 overflow-y-auto px-4 py-2 min-h-0">
         <DashboardMenu role={user?.role} />
       </div>
 
@@ -52,7 +59,7 @@ export default function DashboardSidebar() {
         {/* Upgrade CTA — candidates & recruiters only */}
         {user?.role !== "admin" && (
           <Link
-            to="/pricing"
+            to={getPricingRoute(user?.role)}
             className="group relative flex flex-col items-center justify-center gap-1 w-full rounded-2xl px-4 py-4 overflow-hidden text-white transition-all duration-300 hover:scale-[1.03]"
             style={{
               background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6d28d9 100%)",
