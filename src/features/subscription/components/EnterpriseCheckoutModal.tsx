@@ -68,6 +68,7 @@ function loadRazorpayScript(): Promise<boolean> {
 interface EnterpriseCheckoutModalProps {
   isOpen: boolean;
   plan: SubscriptionPlan | null;
+  userSub?: any;
   onClose: () => void;
   onSuccess: (result: { subscription: any; transaction: any }) => void;
 }
@@ -77,6 +78,7 @@ interface EnterpriseCheckoutModalProps {
 export default function EnterpriseCheckoutModal({
   isOpen,
   plan,
+  userSub,
   onClose,
   onSuccess,
 }: EnterpriseCheckoutModalProps) {
@@ -121,13 +123,38 @@ export default function EnterpriseCheckoutModal({
 
   if (!isOpen || !plan) return null;
 
-  // ─── Price Calculations ────────────────────────────────────────────────────
+  // ─── Price & Proration Calculations ────────────────────────────────────────
+
+  let prorationCredit = 0;
+  let remainingDays = 0;
+
+  if (
+    userSub &&
+    userSub.planId &&
+    typeof userSub.planId.price === "number" &&
+    userSub.planId.price > 0 &&
+    plan.price > userSub.planId.price
+  ) {
+    const end = new Date(userSub.currentPeriodEnd).getTime();
+    const start = new Date(userSub.currentPeriodStart).getTime();
+    const now = Date.now();
+    if (end > now && end > start) {
+      const totalMs = end - start;
+      const remainingMs = end - now;
+      const ratio = Math.max(0, Math.min(1, remainingMs / totalMs));
+      const unadjustedCredit = userSub.planId.price * ratio;
+      // Cap proration credit so upgrade subtotal remains at least 1 Rupee
+      prorationCredit = Number(Math.min(unadjustedCredit, plan.price - 1).toFixed(2));
+      remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
+    }
+  }
 
   const subtotal = plan.price;
-  const discountAmount = discountPercent ? (subtotal * discountPercent) / 100 : 0;
-  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const afterProration = Math.max(1, subtotal - prorationCredit);
+  const discountAmount = discountPercent ? Number(((afterProration * discountPercent) / 100).toFixed(2)) : 0;
+  const afterDiscount = Math.max(1, afterProration - discountAmount);
   const tax = Number((afterDiscount * 0.18).toFixed(2));
-  const finalTotal = Number((afterDiscount + tax).toFixed(2));
+  const finalTotal = Math.max(1, Math.round(afterDiscount + tax));
   // ─── Apply Coupon ──────────────────────────────────────────────────────────
 
   const handleApplyCoupon = () => {
@@ -519,7 +546,7 @@ export default function EnterpriseCheckoutModal({
                 ) : (
                   <>
                     <Lock className="w-4 h-4 text-emerald-300" />
-                    <span>Pay ₹{Math.round(finalTotal * 84).toLocaleString("en-IN")} with Razorpay</span>
+                    <span>Pay ₹{Math.round(finalTotal).toLocaleString("en-IN")} with Razorpay</span>
                   </>
                 )}
               </button>
@@ -541,7 +568,7 @@ export default function EnterpriseCheckoutModal({
                       <div className="text-white font-bold text-sm">{plan.name}</div>
                       <div className="text-slate-400 text-[11px] mt-0.5 capitalize">{plan.billingPeriod} billing</div>
                     </div>
-                    <div className="text-white font-black text-lg">${plan.price}</div>
+                    <div className="text-white font-black text-lg">₹{plan.price.toLocaleString("en-IN")}</div>
                   </div>
                 </div>
 
@@ -572,22 +599,29 @@ export default function EnterpriseCheckoutModal({
                 {/* Price Breakdown */}
                 <div className="space-y-2 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-400">
-                    <span>Subtotal (USD)</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>New Plan ({plan.name})</span>
+                    <span>₹{subtotal.toLocaleString("en-IN")}</span>
                   </div>
+
+                  {prorationCredit > 0 && (
+                    <div className="flex justify-between text-indigo-300 font-bold bg-indigo-500/10 p-2.5 rounded-xl border border-indigo-500/25 shadow-sm">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300 shrink-0" />
+                        <span>Active Plan Credit ({remainingDays}d left)</span>
+                      </div>
+                      <span className="text-amber-300 font-extrabold">-₹{prorationCredit.toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+
                   {discountPercent && (
                     <div className="flex justify-between text-emerald-400 font-bold">
                       <span>Promo ({discountPercent}% off)</span>
-                      <span>-${discountAmount.toFixed(2)}</span>
+                      <span>-₹{discountAmount.toLocaleString("en-IN")}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-slate-400">
                     <span>GST (18%)</span>
-                    <span>${tax.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-400 text-[10px]">
-                    <span>INR Conversion (≈₹84/USD)</span>
-                    <span>—</span>
+                    <span>₹{tax.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               </div>
@@ -597,10 +631,10 @@ export default function EnterpriseCheckoutModal({
                 <div className="flex justify-between items-baseline">
                   <span className="text-xs font-bold text-slate-300">Total Due Today</span>
                   <span className="text-2xl font-black text-white tracking-tight">
-                    ₹{Math.round(finalTotal * 84).toLocaleString("en-IN")}
+                    ₹{Math.round(finalTotal).toLocaleString("en-IN")}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500">≈ ${finalTotal} USD • Secured by Razorpay 256-bit SSL</p>
+                <p className="text-[10px] text-slate-500">Secured by Razorpay 256-bit SSL</p>
                 <div className="flex items-center gap-1.5 mt-2">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="text-[10px] text-slate-400">Zero contracts • Cancel anytime</span>

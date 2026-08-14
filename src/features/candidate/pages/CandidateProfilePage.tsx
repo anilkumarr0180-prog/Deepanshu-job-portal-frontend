@@ -42,6 +42,7 @@ import { useProfile } from "../hooks/useProfile";
 import { useUpdateProfile } from "../hooks/useUpdateProfile";
 import { useCloudinaryUpload } from "@/shared/hooks/useCloudinaryUpload";
 import useAuth from "@/features/auth/hooks/useAuth";
+import { PremiumBadge } from "@/shared/components/PremiumBadge";
 import type {
   CandidateExperience,
   CandidateEducation,
@@ -388,9 +389,14 @@ export default function CandidateProfilePage() {
           </div>
 
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-slate-900">
-              {displayName}
-            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xl font-semibold text-slate-900">
+                {displayName}
+              </h2>
+              {profile.subscription && profile.subscription.planCode && !profile.subscription.planCode.includes("free") && (
+                <PremiumBadge planCode={profile.subscription.planCode} size="md" />
+              )}
+            </div>
             {profile.headline && (
               <p className="mt-0.5 text-sm font-medium text-slate-700">
                 {profile.headline}

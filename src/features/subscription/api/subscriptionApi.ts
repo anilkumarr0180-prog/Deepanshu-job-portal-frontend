@@ -117,6 +117,15 @@ export const cancelSubscription = async () => {
   return response.data;
 };
 
+export const reactivateSubscription = async () => {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    message: string;
+    data: UserSubscription;
+  }>("/subscriptions/reactivate");
+  return response.data;
+};
+
 export const createRazorpayOrder = async (planCode: string, couponCode?: string) => {
   const response = await axiosInstance.post<{
     success: boolean;

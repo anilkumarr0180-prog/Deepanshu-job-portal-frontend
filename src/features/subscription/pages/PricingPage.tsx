@@ -84,6 +84,12 @@ export default function PricingPage() {
       return;
     }
 
+    const activePlanPrice = userSub?.planId?.price ?? 0;
+    if (activePlanPrice > 0 && plan.price <= activePlanPrice) {
+      toast.error(`You are already subscribed to a higher plan (${userSub?.planId?.name || "Active Tier"}).`);
+      return;
+    }
+
     if (plan.price === 0) {
       toast("Free tier is active by default.", { icon: "ℹ️" });
       return;
@@ -198,6 +204,8 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch mb-20">
             {plans.map((plan) => {
               const isCurrent = userSub?.planCode === plan.code;
+              const activePlanPrice = userSub?.planId?.price ?? 0;
+              const isLowerTier = !isCurrent && activePlanPrice > 0 && plan.price <= activePlanPrice;
               const isPopular = plan.isPopular;
               const displayPrice = billingInterval === "yearly" ? Math.round(plan.price * 0.8 * 12) : plan.price;
 
@@ -237,7 +245,7 @@ export default function PricingPage() {
                     {/* Price Tag */}
                     <div className="flex items-baseline gap-1.5 mb-8 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/60">
                       <span className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-                        ${displayPrice}
+                        ₹{displayPrice.toLocaleString("en-IN")}
                       </span>
                       <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
                         /{billingInterval === "yearly" ? "year" : plan.billingPeriod}
@@ -296,17 +304,27 @@ export default function PricingPage() {
                   {/* Action Button */}
                   <button
                     onClick={() => handleSelectPlan(plan)}
-                    disabled={isCurrent}
+                    disabled={isCurrent || isLowerTier}
                     className={`w-full py-4 px-6 rounded-2xl font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${
-                      isCurrent
-                        ? "bg-slate-800/60 text-slate-500 border border-slate-800 cursor-default"
+                      isCurrent || isLowerTier
+                        ? "bg-slate-800/60 text-slate-500 border border-slate-800 cursor-not-allowed opacity-60"
                         : isPopular
                         ? "bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 shadow-xl shadow-indigo-600/30 hover:scale-[1.02]"
                         : "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:scale-[1.02]"
                     }`}
                   >
-                    <span>{isCurrent ? "Current Active Plan" : plan.price === 0 ? "Default Free Tier" : "Upgrade Plan"}</span>
-                    {!isCurrent && plan.price > 0 && <ArrowRight className="w-4 h-4" />}
+                    <span>
+                      {isCurrent
+                        ? "Current Active Plan"
+                        : isLowerTier
+                        ? "Included in Higher Plan"
+                        : plan.price === 0
+                        ? "Default Free Tier"
+                        : activePlanPrice > 0
+                        ? "Upgrade (Prorated Discount)"
+                        : "Upgrade Plan"}
+                    </span>
+                    {!isCurrent && !isLowerTier && plan.price > 0 && <ArrowRight className="w-4 h-4" />}
                   </button>
                 </div>
               );
@@ -389,6 +407,7 @@ export default function PricingPage() {
       <EnterpriseCheckoutModal
         isOpen={Boolean(selectedPlanForCheckout)}
         plan={selectedPlanForCheckout}
+        userSub={userSub}
         onClose={() => setSelectedPlanForCheckout(null)}
         onSuccess={(result) => {
           toast.success(`🎉 Successfully upgraded to ${selectedPlanForCheckout?.name}!`);

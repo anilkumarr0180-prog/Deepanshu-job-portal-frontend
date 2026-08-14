@@ -53,6 +53,7 @@ export interface BackendProfile {
   designation?: string;
   department?: string;
   companyId?: string | { _id: string; name?: string; logo?: string };
+  subscription?: { planCode?: string; status?: string; planId?: any };
   isBlocked?: boolean;
   createdAt?: string;
   updatedAt?: string;

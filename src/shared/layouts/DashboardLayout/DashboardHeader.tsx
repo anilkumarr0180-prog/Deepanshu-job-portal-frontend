@@ -17,9 +17,24 @@ import { NotificationDropdown } from "@/shared/components/NotificationDropdown";
 import { SwiggyLocationHeader } from "@/shared/components/SwiggyLocationHeader";
 
 import { UserAvatar } from "@/shared/components/UserAvatar";
+import { PremiumBadge } from "@/shared/components/PremiumBadge";
+import { fetchMySubscription, type UserSubscription } from "@/features/subscription/api/subscriptionApi";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
+  const [userSub, setUserSub] = useState<UserSubscription | null>(null);
+
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      fetchMySubscription()
+        .then((data) => {
+          if (data?.subscription) {
+            setUserSub(data.subscription);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user]);
 
   const displayName = user?.name ?? "User";
 
@@ -106,14 +121,19 @@ export default function DashboardHeader() {
             </button>
 
             <div className="space-y-0.5">
-              <p className="text-base font-semibold text-[#05264E] sm:text-lg">
-                {(() => {
-                  const hour = new Date().getHours();
-                  const timeGreeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-                  const cleanName = (user?.name ?? "User").replace(/\s+(Recruiter|Candidate|Admin)$/i, "").trim();
-                  return `${timeGreeting}, ${cleanName} 👋`;
-                })()}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-base font-semibold text-[#05264E] sm:text-lg">
+                  {(() => {
+                    const hour = new Date().getHours();
+                    const timeGreeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+                    const cleanName = (user?.name ?? "User").replace(/\s+(Recruiter|Candidate|Admin)$/i, "").trim();
+                    return `${timeGreeting}, ${cleanName} 👋`;
+                  })()}
+                </p>
+                {userSub && userSub.planCode && !userSub.planCode.includes("free") && (
+                  <PremiumBadge planCode={userSub.planCode} size="sm" />
+                )}
+              </div>
 
               <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
                 Manage your hiring workflow efficiently.
@@ -154,7 +174,9 @@ export default function DashboardHeader() {
                   </p>
 
                   <p className="text-[10px] capitalize leading-tight text-slate-400">
-                    {user?.role ?? "member"}
+                    {userSub && userSub.planCode && !userSub.planCode.includes("free")
+                      ? userSub.planCode.replace("_", " ").toUpperCase()
+                      : (user?.role ?? "member")}
                   </p>
                 </div>
 
@@ -176,13 +198,20 @@ export default function DashboardHeader() {
                       <UserAvatar src={user?.profilePicture} name={displayName} size="md" />
 
                       <div className="min-w-0">
-                        <p className="truncate text-[12px] font-black text-[#05264E]">
-                          {displayName}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="truncate text-[12px] font-black text-[#05264E]">
+                            {displayName}
+                          </p>
+                        </div>
 
                         <p className="truncate text-[10px] text-slate-400">
                           {user?.email ?? ""}
                         </p>
+                        {userSub && userSub.planCode && !userSub.planCode.includes("free") && (
+                          <div className="mt-1">
+                            <PremiumBadge planCode={userSub.planCode} size="sm" />
+                          </div>
+                        )}
                       </div>
 
                     </div>
