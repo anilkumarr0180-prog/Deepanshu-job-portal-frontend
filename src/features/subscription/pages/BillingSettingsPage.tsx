@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Receipt,
   Layers,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -17,6 +18,7 @@ import {
   fetchBillingHistory,
   cancelSubscription,
   reactivateSubscription,
+  downloadInvoiceApi,
   type UserSubscription,
   type SubscriptionPlan,
   type PaymentTransaction,
@@ -41,6 +43,27 @@ export default function BillingSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
   const [isReactivating, setIsReactivating] = useState(false);
+  const [downloadingTxId, setDownloadingTxId] = useState<string | null>(null);
+
+  const handleDownloadInvoice = async (txId: string) => {
+    if (!txId) return;
+    setDownloadingTxId(txId);
+    try {
+      const htmlData = await downloadInvoiceApi(txId);
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(htmlData);
+        printWindow.document.close();
+      } else {
+        toast.error("Please allow popups to view receipt PDF.");
+      }
+    } catch (error: any) {
+      console.error("Download invoice error:", error);
+      toast.error(error?.response?.data?.message || "Failed to download receipt PDF");
+    } finally {
+      setDownloadingTxId(null);
+    }
+  };
 
   useEffect(() => {
     loadBillingInfo();
@@ -152,7 +175,9 @@ export default function BillingSettingsPage() {
             <div className="flex items-center gap-4 bg-slate-950/60 px-5 py-3 rounded-2xl border border-slate-800/80">
               <div className="text-right">
                 <div className="text-3xl font-black text-white tracking-tight">₹{plan?.price?.toLocaleString("en-IN") || 0}</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Per {plan?.billingPeriod || "month"}</div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Per {plan?.billingPeriod === "yearly" ? "year" : "month"}
+                </div>
               </div>
             </div>
           </div>
@@ -164,10 +189,22 @@ export default function BillingSettingsPage() {
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Renewal Date</div>
+                <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">
+                  {(!plan?.price || plan.price === 0)
+                    ? "Billing Cycle"
+                    : subscription?.cancelAtPeriodEnd
+                    ? "Expires On"
+                    : "Next Billing Date"}
+                </div>
                 <div className="text-sm font-bold text-white mt-0.5">
-                  {subscription?.currentPeriodEnd
-                    ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
+                  {(!plan?.price || plan.price === 0)
+                    ? "Lifetime Free"
+                    : subscription?.currentPeriodEnd
+                    ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
                     : "Lifetime Free"}
                 </div>
               </div>
@@ -175,7 +212,9 @@ export default function BillingSettingsPage() {
 
             <div className="flex items-center gap-3.5">
               <div className={`p-2.5 rounded-xl border ${
-                subscription?.cancelAtPeriodEnd
+                (!plan?.price || plan.price === 0)
+                  ? "bg-slate-800/40 text-slate-400 border-slate-700/40"
+                  : subscription?.cancelAtPeriodEnd
                   ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                   : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
               }`}>
@@ -184,9 +223,11 @@ export default function BillingSettingsPage() {
               <div>
                 <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Auto Renewal</div>
                 <div className="text-sm font-bold text-white mt-0.5">
-                  {subscription?.cancelAtPeriodEnd
-                    ? `Disabled (Expires ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString() : "at cycle end"})`
-                    : "Active Enabled"}
+                  {(!plan?.price || plan.price === 0)
+                    ? "Not Applicable (Free Plan)"
+                    : subscription?.cancelAtPeriodEnd
+                    ? `Disabled (Expires ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "at cycle end"})`
+                    : "Active (Auto-renews)"}
                 </div>
               </div>
             </div>
@@ -197,7 +238,9 @@ export default function BillingSettingsPage() {
               </div>
               <div>
                 <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Payment Gateway</div>
-                <div className="text-sm font-bold text-white mt-0.5 capitalize">{subscription?.provider || "Razorpay"}</div>
+                <div className="text-sm font-bold text-white mt-0.5 capitalize">
+                  {(!plan?.price || plan.price === 0) ? "Internal / Free" : (subscription?.provider || "Razorpay")}
+                </div>
               </div>
             </div>
           </div>
@@ -293,19 +336,21 @@ export default function BillingSettingsPage() {
                         </span>
                       </td>
                       <td className="py-4 px-4 text-right">
-                        {tx.invoiceUrl ? (
-                          <a
-                            href={tx.invoiceUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/20 transition-all hover:scale-105"
-                          >
-                            <span>Receipt PDF</span>
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                          </a>
-                        ) : (
-                          <span className="text-slate-500 text-xs font-medium">Receipt</span>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadInvoice(tx._id || tx.transactionId)}
+                          disabled={downloadingTxId === (tx._id || tx.transactionId)}
+                          className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-xl border border-indigo-500/20 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
+                        >
+                          {downloadingTxId === (tx._id || tx.transactionId) ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                          ) : (
+                            <>
+                              <span>Receipt PDF</span>
+                              <ArrowUpRight className="w-3.5 h-3.5" />
+                            </>
+                          )}
+                        </button>
                       </td>
                     </tr>
                   ))}

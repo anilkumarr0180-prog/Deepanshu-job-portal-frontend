@@ -202,55 +202,77 @@ export default function PricingPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch mb-20">
-            {plans.map((plan) => {
-              const isCurrent = userSub?.planCode === plan.code;
-              const activePlanPrice = userSub?.planId?.price ?? 0;
-              const isLowerTier = !isCurrent && activePlanPrice > 0 && plan.price <= activePlanPrice;
-              const isPopular = plan.isPopular;
-              const displayPrice = billingInterval === "yearly" ? Math.round(plan.price * 0.8 * 12) : plan.price;
+            {(() => {
+              const hasDedicatedYearlyPlans = plans.some((p) => p.billingPeriod === "yearly");
+              const visiblePlans = hasDedicatedYearlyPlans
+                ? plans.filter((p) => (p.price === 0 ? true : p.billingPeriod === billingInterval))
+                : plans.filter((p) => p.billingPeriod === "monthly" || p.price === 0);
 
-              return (
-                <div
-                  key={plan.code}
-                  className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
-                    isPopular
-                      ? "bg-gradient-to-b from-slate-900/90 via-slate-900/95 to-indigo-950/40 border-2 border-indigo-500 shadow-2xl shadow-indigo-500/15 lg:-translate-y-2"
-                      : "bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:shadow-2xl hover:shadow-indigo-500/5 hover:-translate-y-1"
-                  } backdrop-blur-2xl`}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-[11px] font-extrabold uppercase tracking-widest shadow-lg shadow-indigo-500/30 flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
-                      <span>Most Popular</span>
-                    </div>
-                  )}
+              return visiblePlans.map((plan) => {
+                const isCurrent = userSub?.planCode === plan.code;
+                const activePlanPrice = userSub?.planId?.price ?? 0;
+                const isYearly = billingInterval === "yearly";
+                const displayPrice =
+                  !hasDedicatedYearlyPlans && isYearly && plan.price > 0
+                    ? Math.round(plan.price * 0.8 * 12)
+                    : plan.price;
+                const isLowerTier = !isCurrent && activePlanPrice > 0 && displayPrice <= activePlanPrice;
+                const isPopular = plan.isPopular;
 
-                  <div>
-                    {/* Tier Icon & Name */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <PlanIcon code={plan.code} />
-                        <h3 className="text-xl font-bold text-white tracking-tight">{plan.name}</h3>
+                const effectivePlan: SubscriptionPlan = {
+                  ...plan,
+                  price: displayPrice,
+                  billingPeriod: isYearly && plan.price > 0 ? "yearly" : (plan.billingPeriod || "monthly"),
+                  code:
+                    !hasDedicatedYearlyPlans && isYearly && plan.price > 0 && !plan.code.includes("yearly")
+                      ? `${plan.code}_yearly`
+                      : plan.code,
+                };
+
+                return (
+                  <div
+                    key={plan.code}
+                    className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
+                      isPopular
+                        ? "bg-gradient-to-b from-slate-900/90 via-slate-900/95 to-indigo-950/40 border-2 border-indigo-500 shadow-2xl shadow-indigo-500/15 lg:-translate-y-2"
+                        : "bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:shadow-2xl hover:shadow-indigo-500/5 hover:-translate-y-1"
+                    } backdrop-blur-2xl`}
+                  >
+                    {isPopular && (
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-[11px] font-extrabold uppercase tracking-widest shadow-lg shadow-indigo-500/30 flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
+                        <span>Most Popular</span>
+                      </div>
+                    )}
+
+                    <div>
+                      {/* Tier Icon & Name */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <PlanIcon code={plan.code} />
+                          <h3 className="text-xl font-bold text-white tracking-tight">
+                            {plan.name} {isYearly && plan.price > 0 && !plan.name.includes("Annual") && !plan.name.includes("Yearly") ? "(Annual)" : ""}
+                          </h3>
+                        </div>
+
+                        {isCurrent && (
+                          <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
+                            Active Plan
+                          </span>
+                        )}
                       </div>
 
-                      {isCurrent && (
-                        <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
-                          Active Plan
+                      <p className="text-slate-400 text-sm mb-6 min-h-[40px] leading-relaxed">{plan.description}</p>
+
+                      {/* Price Tag */}
+                      <div className="flex items-baseline gap-1.5 mb-8 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/60">
+                        <span className="text-4xl sm:text-5xl font-black text-white tracking-tight">
+                          ₹{displayPrice.toLocaleString("en-IN")}
                         </span>
-                      )}
-                    </div>
-
-                    <p className="text-slate-400 text-sm mb-6 min-h-[40px] leading-relaxed">{plan.description}</p>
-
-                    {/* Price Tag */}
-                    <div className="flex items-baseline gap-1.5 mb-8 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/60">
-                      <span className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-                        ₹{displayPrice.toLocaleString("en-IN")}
-                      </span>
-                      <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                        /{billingInterval === "yearly" ? "year" : plan.billingPeriod}
-                      </span>
-                    </div>
+                        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                          /{isYearly && plan.price > 0 ? "year" : (plan.billingPeriod || "month")}
+                        </span>
+                      </div>
 
                     {/* Feature Checklist */}
                     <div className="space-y-3.5 mb-8 border-t border-slate-800/80 pt-6">
@@ -303,7 +325,7 @@ export default function PricingPage() {
 
                   {/* Action Button */}
                   <button
-                    onClick={() => handleSelectPlan(plan)}
+                    onClick={() => handleSelectPlan(effectivePlan)}
                     disabled={isCurrent || isLowerTier}
                     className={`w-full py-4 px-6 rounded-2xl font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${
                       isCurrent || isLowerTier
@@ -328,7 +350,8 @@ export default function PricingPage() {
                   </button>
                 </div>
               );
-            })}
+            });
+          })()}
           </div>
         )}
 

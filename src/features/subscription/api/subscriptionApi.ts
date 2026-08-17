@@ -161,3 +161,11 @@ export const fetchBillingHistory = async () => {
   );
   return response.data.data;
 };
+
+export const downloadInvoiceApi = async (transactionId: string) => {
+  const response = await axiosInstance.get<string>(`/subscriptions/invoices/${transactionId}/download`, {
+    responseType: "text" as any,
+  });
+  return response.data;
+};
+
