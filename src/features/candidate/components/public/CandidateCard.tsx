@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import type { BackendProfile } from "../../api/profile.api";
 import { formatRelativeDate } from "@/features/jobs/utils/jobMapper";
+import { PremiumBadge } from "@/shared/components/PremiumBadge";
 
 interface CandidateCardProps {
   candidate: BackendProfile;
@@ -55,8 +56,12 @@ export default function CandidateCard({ candidate }: CandidateCardProps) {
           </p>
         )}
 
-        {/* Resume status badge */}
+        {/* Resume status badge & Premium Badge */}
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          {candidate.subscription?.planCode && !candidate.subscription.planCode.includes("free") && (
+            <PremiumBadge planCode={candidate.subscription.planCode} size="sm" />
+          )}
+
           {candidate.resumeUrl ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-2xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
               <CheckCircle2 className="h-3 w-3" />

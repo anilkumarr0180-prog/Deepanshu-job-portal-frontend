@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   CheckCircle2,
@@ -10,6 +10,8 @@ import {
   Briefcase,
   GraduationCap,
   MapPin,
+  Camera,
+  Loader2,
 } from "lucide-react";
 
 function LinkedinIcon({ className }: { className?: string }) {
@@ -38,6 +40,9 @@ function TwitterIcon({ className }: { className?: string }) {
 
 import { useProfile } from "../hooks/useProfile";
 import { useUpdateProfile } from "../hooks/useUpdateProfile";
+import { useCloudinaryUpload } from "@/shared/hooks/useCloudinaryUpload";
+import useAuth from "@/features/auth/hooks/useAuth";
+import { PremiumBadge } from "@/shared/components/PremiumBadge";
 import type {
   CandidateExperience,
   CandidateEducation,
@@ -45,8 +50,12 @@ import type {
 } from "../api/profile.api";
 
 export default function CandidateProfilePage() {
-  const { data: profile, isLoading, isError } = useProfile();
+  const { data: profile, isLoading, isError, refetch } = useProfile();
   const updateProfileMutation = useUpdateProfile();
+  const { uploadFile, isUploading: isUploadingAvatar } = useCloudinaryUpload();
+  const { refreshUser } = useAuth();
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [newSkillInput, setNewSkillInput] = useState("");
@@ -55,6 +64,7 @@ export default function CandidateProfilePage() {
     name: "",
     phone: "",
     profilePicture: "",
+    profilePicturePublicId: "",
     headline: "",
     bio: "",
     city: "",
@@ -79,6 +89,7 @@ export default function CandidateProfilePage() {
         name: profile.name || "",
         phone: profile.phone || "",
         profilePicture: profile.profilePicture || "",
+        profilePicturePublicId: profile.profilePicturePublicId || "",
         headline: profile.headline || "",
         bio: profile.bio || "",
         city: profile.city || "",
@@ -99,6 +110,57 @@ export default function CandidateProfilePage() {
     }
   }, [profile]);
 
+  const handleAvatarUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const res = await uploadFile(file, "profile");
+    if (res) {
+      setForm((prev) => ({
+        ...prev,
+        profilePicture: res.secure_url,
+        profilePicturePublicId: res.public_id,
+      }));
+      // Auto save avatar update if not in edit mode
+      if (!isEditing) {
+        updateProfileMutation.mutate(
+          {
+            profilePicture: res.secure_url,
+            profilePicturePublicId: res.public_id,
+          },
+          {
+            onSuccess: () => {
+              void refetch();
+              void refreshUser();
+            },
+          }
+        );
+      }
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setForm((prev) => ({
+      ...prev,
+      profilePicture: "",
+      profilePicturePublicId: "",
+    }));
+    if (!isEditing) {
+      updateProfileMutation.mutate(
+        {
+          profilePicture: "",
+          profilePicturePublicId: "",
+        },
+        {
+          onSuccess: () => {
+            void refetch();
+            void refreshUser();
+          },
+        }
+      );
+    }
+  };
+
   const handleEdit = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -118,6 +180,7 @@ export default function CandidateProfilePage() {
         name: profile.name || "",
         phone: profile.phone || "",
         profilePicture: profile.profilePicture || "",
+        profilePicturePublicId: profile.profilePicturePublicId || "",
         headline: profile.headline || "",
         bio: profile.bio || "",
         city: profile.city || "",
@@ -150,6 +213,7 @@ export default function CandidateProfilePage() {
         name: form.name,
         phone: form.phone,
         profilePicture: form.profilePicture,
+        profilePicturePublicId: form.profilePicturePublicId,
         headline: form.headline,
         bio: form.bio,
         city: form.city,
@@ -164,6 +228,7 @@ export default function CandidateProfilePage() {
       {
         onSuccess: () => {
           setIsEditing(false);
+          void refreshUser();
         },
       }
     );
@@ -273,22 +338,65 @@ export default function CandidateProfilePage() {
       {/* Header Section */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-slate-500">
-            {profile.profilePicture ? (
-              <img
-                src={profile.profilePicture}
-                alt={displayName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <UserRound className="h-10 w-10" />
+          {/* Hidden File Input for Avatar */}
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
+
+          <div className="flex items-center gap-3">
+            <div className="relative group flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-slate-200 bg-slate-100 text-slate-500 shadow-xs">
+              {form.profilePicture ? (
+                <img
+                  src={form.profilePicture}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <UserRound className="h-10 w-10 text-slate-400" />
+              )}
+
+              {/* Hover Camera Overlay for Avatar Upload */}
+              <div
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5" />
+                    <span className="text-[10px] font-medium mt-0.5">Upload</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {form.profilePicture && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                title="Remove photo"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove
+              </button>
             )}
           </div>
 
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-slate-900">
-              {displayName}
-            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xl font-semibold text-slate-900">
+                {displayName}
+              </h2>
+              {profile.subscription && profile.subscription.planCode && !profile.subscription.planCode.includes("free") && (
+                <PremiumBadge planCode={profile.subscription.planCode} size="md" />
+              )}
+            </div>
             {profile.headline && (
               <p className="mt-0.5 text-sm font-medium text-slate-700">
                 {profile.headline}

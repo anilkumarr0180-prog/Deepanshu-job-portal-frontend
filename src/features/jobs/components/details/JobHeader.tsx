@@ -31,9 +31,22 @@ export default function JobHeader({ job }: JobHeaderProps) {
       <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
           {/* Company Avatar / Logo */}
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-xl font-extrabold text-white shadow-md shadow-blue-500/20 sm:h-20 sm:w-20 sm:text-2xl">
-            {companyInitials || <Building2 className="h-8 w-8 text-white" />}
-          </div>
+          {(() => {
+            const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
+            return (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-xl font-extrabold text-white shadow-md shadow-blue-500/20 sm:h-20 sm:w-20 sm:text-2xl">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={job.company || job.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  companyInitials || <Building2 className="h-8 w-8 text-white" />
+                )}
+              </div>
+            );
+          })()}
 
           {/* Job Header Text Info */}
           <div className="space-y-2">

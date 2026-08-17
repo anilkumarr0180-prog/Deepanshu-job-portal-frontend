@@ -4,9 +4,12 @@ import type { UserRole } from "@/shared/types/role";
 
 export interface AuthUser {
   id?: string;
+  _id?: string;
   name?: string;
   email?: string;
   role?: UserRole;
+  profilePicture?: string;
+  profilePicturePublicId?: string;
   [key: string]: unknown;
 }
 

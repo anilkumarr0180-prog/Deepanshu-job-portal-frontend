@@ -16,12 +16,23 @@ import {
   fetchMySubscription,
   fetchBillingHistory,
   cancelSubscription,
+  reactivateSubscription,
   type UserSubscription,
   type SubscriptionPlan,
   type PaymentTransaction,
 } from "../api/subscriptionApi";
 
+import useAuth from "@/features/auth/hooks/useAuth";
+
 export default function BillingSettingsPage() {
+  const { user } = useAuth();
+  const pricingRoute =
+    user?.role === "candidate"
+      ? "/candidate/pricing"
+      : user?.role === "recruiter"
+      ? "/recruiter/pricing"
+      : "/pricing";
+
   const [subData, setSubData] = useState<{
     subscription: UserSubscription;
     plan: SubscriptionPlan;
@@ -29,6 +40,7 @@ export default function BillingSettingsPage() {
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isReactivating, setIsReactivating] = useState(false);
 
   useEffect(() => {
     loadBillingInfo();
@@ -57,12 +69,25 @@ export default function BillingSettingsPage() {
     try {
       setIsCanceling(true);
       await cancelSubscription();
-      toast.success("Subscription auto-renewal canceled.");
+      toast.success("Subscription auto-renewal disabled. Unused period remains active.");
       loadBillingInfo();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to cancel subscription.");
+      toast.error(error.response?.data?.message || "Failed to cancel auto-renewal.");
     } finally {
       setIsCanceling(false);
+    }
+  };
+
+  const handleReactivateSubscription = async () => {
+    try {
+      setIsReactivating(true);
+      await reactivateSubscription();
+      toast.success("🎉 Auto-pay re-enabled! Subscription will automatically renew at period end.");
+      loadBillingInfo();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to re-enable auto-pay.");
+    } finally {
+      setIsReactivating(false);
     }
   };
 
@@ -100,7 +125,7 @@ export default function BillingSettingsPage() {
           </div>
 
           <Link
-            to="/pricing"
+            to={pricingRoute}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.02]"
           >
             <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
@@ -126,7 +151,7 @@ export default function BillingSettingsPage() {
 
             <div className="flex items-center gap-4 bg-slate-950/60 px-5 py-3 rounded-2xl border border-slate-800/80">
               <div className="text-right">
-                <div className="text-3xl font-black text-white tracking-tight">${plan?.price || 0}</div>
+                <div className="text-3xl font-black text-white tracking-tight">₹{plan?.price?.toLocaleString("en-IN") || 0}</div>
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Per {plan?.billingPeriod || "month"}</div>
               </div>
             </div>
@@ -149,13 +174,19 @@ export default function BillingSettingsPage() {
             </div>
 
             <div className="flex items-center gap-3.5">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className={`p-2.5 rounded-xl border ${
+                subscription?.cancelAtPeriodEnd
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+              }`}>
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
                 <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Auto Renewal</div>
                 <div className="text-sm font-bold text-white mt-0.5">
-                  {subscription?.cancelAtPeriodEnd ? "Canceled (Expires at End)" : "Active Enabled"}
+                  {subscription?.cancelAtPeriodEnd
+                    ? `Disabled (Expires ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString() : "at cycle end"})`
+                    : "Active Enabled"}
                 </div>
               </div>
             </div>
@@ -166,7 +197,7 @@ export default function BillingSettingsPage() {
               </div>
               <div>
                 <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Payment Gateway</div>
-                <div className="text-sm font-bold text-white mt-0.5 capitalize">{subscription?.provider || "Mock Gateway"}</div>
+                <div className="text-sm font-bold text-white mt-0.5 capitalize">{subscription?.provider || "Razorpay"}</div>
               </div>
             </div>
           </div>
@@ -195,15 +226,33 @@ export default function BillingSettingsPage() {
           )}
 
           {/* Actions Bar */}
-          <div className="pt-6 flex justify-end gap-4">
+          <div className="pt-6 flex flex-wrap justify-end gap-3">
             {plan?.price && plan.price > 0 && !subscription?.cancelAtPeriodEnd && (
               <button
                 onClick={handleCancelSubscription}
                 disabled={isCanceling}
                 className="px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all hover:scale-[1.02]"
               >
-                {isCanceling ? "Processing..." : "Cancel Auto-Renewal"}
+                {isCanceling ? "Processing..." : "Cancel Auto-Pay"}
               </button>
+            )}
+
+            {plan?.price && plan.price > 0 && subscription?.cancelAtPeriodEnd && (
+              <>
+                <button
+                  onClick={handleReactivateSubscription}
+                  disabled={isReactivating}
+                  className="px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all hover:scale-[1.02]"
+                >
+                  {isReactivating ? "Processing..." : "Turn On Auto-Pay"}
+                </button>
+                <Link
+                  to={pricingRoute}
+                  className="px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-500 transition-all hover:scale-[1.02]"
+                >
+                  Renew / Upgrade Plan
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -236,7 +285,7 @@ export default function BillingSettingsPage() {
                     <tr key={tx._id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-4 px-4 font-mono text-xs text-indigo-400 font-bold">{tx.transactionId}</td>
                       <td className="py-4 px-4 text-slate-300 text-xs font-medium">{new Date(tx.createdAt).toLocaleDateString()}</td>
-                      <td className="py-4 px-4 font-black text-white">${tx.amount} {tx.currency}</td>
+                      <td className="py-4 px-4 font-black text-white">₹{tx.amount} {tx.currency}</td>
                       <td className="py-4 px-4">
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                           <CheckCircle2 className="w-3.5 h-3.5" />

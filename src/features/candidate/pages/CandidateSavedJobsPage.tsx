@@ -126,9 +126,22 @@ export default function CandidateSavedJobsPage() {
                   {/* Top Bar: Company Badge & Remove Action */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3.5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 font-bold text-[#3C65F5] shadow-xs group-hover:scale-105 transition-transform">
-                        {job.company?.[0]?.toUpperCase() || <Building2 className="h-6 w-6" />}
-                      </div>
+                      {(() => {
+                        const logoUrl = (job as any).companyLogo || (job as any).companyId?.logo || (job as any).recruiterId?.profilePicture;
+                        return (
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-blue-50 to-indigo-100 font-bold text-[#3C65F5] shadow-xs group-hover:scale-105 transition-transform">
+                            {logoUrl ? (
+                              <img
+                                src={logoUrl}
+                                alt={job.company || job.title}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              job.company?.[0]?.toUpperCase() || <Building2 className="h-6 w-6" />
+                            )}
+                          </div>
+                        );
+                      })()}
                       <div>
                         <h3 className="text-base font-bold text-slate-900 group-hover:text-[#3C65F5] transition-colors line-clamp-1">
                           {job.title}

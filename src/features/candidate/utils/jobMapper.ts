@@ -8,11 +8,11 @@ export function formatSalary(min?: number, max?: number): string {
 
   if (safeMin === 0 && safeMax === 0) return "Competitive / Negotiable";
   if (safeMin > 0 && safeMax > 0) {
-    if (safeMin === safeMax) return `$${safeMin.toLocaleString()}`;
-    return `$${safeMin.toLocaleString()} - $${safeMax.toLocaleString()}`;
+    if (safeMin === safeMax) return `₹${safeMin.toLocaleString("en-IN")}`;
+    return `₹${safeMin.toLocaleString("en-IN")} - ₹${safeMax.toLocaleString("en-IN")}`;
   }
-  if (safeMin > 0 && safeMax === 0) return `From $${safeMin.toLocaleString()}`;
-  if (safeMin === 0 && safeMax > 0) return `Up to $${safeMax.toLocaleString()}`;
+  if (safeMin > 0 && safeMax === 0) return `From ₹${safeMin.toLocaleString("en-IN")}`;
+  if (safeMin === 0 && safeMax > 0) return `Up to ₹${safeMax.toLocaleString("en-IN")}`;
   return "Competitive / Negotiable";
 }
 
@@ -34,6 +34,7 @@ export function mapCandidateJob(job: BackendJobDetails): CandidateJob {
     id: job._id,
     title: job.title,
     company: job.company,
+    companyLogo: job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture,
     location: job.location,
     type: job.employmentType,
     postedAt: new Date(job.createdAt).toLocaleDateString(),

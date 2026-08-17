@@ -1,4 +1,5 @@
 import type { BackendProfile } from "@/features/candidate/api/profile.api";
+import { UserAvatar } from "@/shared/components/UserAvatar";
 
 interface RecruiterProfileCardProps {
   profile: BackendProfile;
@@ -14,17 +15,7 @@ export default function RecruiterProfileCard({ profile }: RecruiterProfileCardPr
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-lg font-semibold text-white">
-            {profile.profilePicture ? (
-              <img
-                src={profile.profilePicture}
-                alt={profile.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              (profile.name || "R").charAt(0).toUpperCase()
-            )}
-          </div>
+          <UserAvatar src={profile.profilePicture} name={profile.name} size="lg" />
           <div>
             <h2 className="text-2xl font-semibold text-slate-900">{profile.name}</h2>
             {profile.designation && (

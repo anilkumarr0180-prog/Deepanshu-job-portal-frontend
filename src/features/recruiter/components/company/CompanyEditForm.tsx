@@ -1,5 +1,7 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from "react";
+import { Upload, Loader2, Trash2 } from "lucide-react";
 import type { CompanyResponse, CompanyPayload } from "../../api/company.api";
+import { useCloudinaryUpload } from "@/shared/hooks/useCloudinaryUpload";
 
 interface CompanyEditFormProps {
   company?: CompanyResponse | null;
@@ -14,11 +16,15 @@ export default function CompanyEditForm({
   onSubmit,
   onCancel,
 }: CompanyEditFormProps) {
+  const { uploadFile, isUploading, progress } = useCloudinaryUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
     website: "",
     logo: "",
+    logoPublicId: "",
     industry: "",
     companySize: "11-50",
     foundedYear: new Date().getFullYear(),
@@ -41,6 +47,7 @@ export default function CompanyEditForm({
           description: company.description || company.overview || company.about || "",
           website: company.website || "",
           logo: company.logo || "",
+          logoPublicId: company.logoPublicId || "",
           industry: company.industry || "",
           companySize: company.companySize || "11-50",
           foundedYear: company.foundedYear ? Number(company.foundedYear) : new Date().getFullYear(),
@@ -58,6 +65,20 @@ export default function CompanyEditForm({
     }
   }, [company]);
 
+  const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const res = await uploadFile(file, "company-logo");
+    if (res) {
+      setForm((prev) => ({
+        ...prev,
+        logo: res.secure_url,
+        logoPublicId: res.public_id,
+      }));
+    }
+  };
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -66,6 +87,7 @@ export default function CompanyEditForm({
       name: form.name,
       description: form.description.length >= 10 ? form.description : `${form.name} is a leading organization in the industry offering exciting career opportunities.`,
       logo: form.logo || undefined,
+      logoPublicId: form.logoPublicId || undefined,
       website: form.website || undefined,
       industry: form.industry || undefined,
       companySize: form.companySize || undefined,
@@ -93,21 +115,84 @@ export default function CompanyEditForm({
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="border-b border-slate-200 pb-5">
           <h3 className="text-lg font-semibold text-slate-900">Visual Branding & Logo</h3>
-          <p className="mt-1 text-sm text-slate-500">Provide your logo URL and basic branding details.</p>
+          <p className="mt-1 text-sm text-slate-500">Upload your official company logo and branding details.</p>
         </div>
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <div>
+          <div className="md:col-span-2">
             <label className="mb-1.5 block text-xs font-medium text-slate-700">
-              Logo Image URL
+              Company Logo
             </label>
+
             <input
-              type="url"
-              value={form.logo}
-              onChange={(e) => setForm((prev) => ({ ...prev, logo: e.target.value }))}
-              placeholder="https://example.com/logo.png"
-              className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-700 outline-none transition focus:border-[#3C65F5] focus:bg-white"
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleLogoUpload}
             />
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-xs">
+                {form.logo ? (
+                  <img
+                    src={form.logo}
+                    alt="Company logo preview"
+                    className="h-full w-full object-contain p-2"
+                  />
+                ) : (
+                  <span className="text-xs text-slate-400 font-medium">No Logo</span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[#3C65F5]" />
+                  ) : (
+                    <Upload className="h-4 w-4 text-[#3C65F5]" />
+                  )}
+                  Upload Logo Image
+                </button>
+
+                {form.logo && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        logo: "",
+                        logoPublicId: "",
+                      }))
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {isUploading && (
+              <div className="mt-3 max-w-xs space-y-1">
+                <div className="flex justify-between text-xs text-slate-500 font-medium">
+                  <span>Uploading to Cloudinary...</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full bg-[#3C65F5] transition-all duration-200"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-700">

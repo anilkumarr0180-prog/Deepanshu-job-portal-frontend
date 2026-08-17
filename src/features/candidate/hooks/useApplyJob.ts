@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-import { applyForJob } from "../api/jobs.api";
+import { applyForJob, type ApplyJobPayload } from "../api/jobs.api";
 
 export function useApplyJob() {
   const queryClient = useQueryClient();
@@ -9,11 +9,10 @@ export function useApplyJob() {
   return useMutation({
     mutationFn: ({
       jobId,
-      coverLetter,
+      ...payload
     }: {
       jobId: string;
-      coverLetter?: string;
-    }) => applyForJob(jobId, coverLetter),
+    } & ApplyJobPayload) => applyForJob(jobId, payload),
     onSuccess: () => {
       toast.success("Application submitted successfully.");
       void queryClient.invalidateQueries({ queryKey: ["jobs"] });

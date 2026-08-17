@@ -19,8 +19,24 @@ export interface BackendCandidateApplication {
   _id: string;
   jobId: BackendCandidateJob;
   applicantId: string;
+  applicantName?: string;
+  applicantEmail?: string;
+  applicantPhone?: string;
+  applicantDesignation?: string;
+  experienceYears?: number;
+  relevantSkills?: string[];
+  noticePeriod?: string;
   resume: string;
+  resumeFileName?: string;
   coverLetter?: string;
+  interviewDetails?: {
+    mode?: "video" | "in-person" | "phone";
+    date?: string;
+    time?: string;
+    type?: string;
+    locationOrLink?: string;
+    notes?: string;
+  };
   status: string;
   createdAt: string;
   updatedAt: string;

@@ -56,8 +56,16 @@ export default function RecommendedJobs({ jobs }: RecommendedJobsProps) {
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm">
-                  <BriefcaseBusiness className="h-5 w-5" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-white text-slate-700 shadow-sm">
+                  {job.companyLogo ? (
+                    <img
+                      src={job.companyLogo}
+                      alt={job.company}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <BriefcaseBusiness className="h-5 w-5" />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-semibold text-slate-900">

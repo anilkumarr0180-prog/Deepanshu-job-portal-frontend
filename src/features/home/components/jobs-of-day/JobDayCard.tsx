@@ -33,9 +33,22 @@ export default function JobDayCard({ job }: JobDayCardProps) {
         {/* Top Header: Logo + Company Name + Location + Lightning Icon */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-base font-extrabold text-white shadow-xs shadow-blue-500/10">
-              {initials || "JB"}
-            </div>
+            {(() => {
+              const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
+              return (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-base font-extrabold text-white shadow-xs shadow-blue-500/10">
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt={job.company}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    initials || "JB"
+                  )}
+                </div>
+              );
+            })()}
             <div className="min-w-0 flex-1">
               <h4 className="truncate text-sm font-bold text-[#05264E]">
                 {job.company}

@@ -1,12 +1,22 @@
 import { NavLink } from "react-router-dom";
 
+import useAuth from "@/features/auth/hooks/useAuth";
 import { NAV_MENU } from "./nav-menu";
 
 export default function NavMenu() {
+  const { isAuthenticated } = useAuth();
+
+  // Authenticated users already have a "Dashboard" button in NavActions.
+  // Showing "Home" for them is redundant — RootRedirector just bounces them
+  // back to their dashboard anyway, which is confusing UX.
+  const visibleItems = isAuthenticated
+    ? NAV_MENU.filter((item) => item.label !== "Home")
+    : NAV_MENU;
+
   return (
     <nav>
       <ul className="flex items-center gap-8">
-        {NAV_MENU.map((item) => (
+        {visibleItems.map((item) => (
           <li key={item.label}>
             <NavLink
               to={item.path}

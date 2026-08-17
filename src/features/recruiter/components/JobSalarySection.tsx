@@ -17,29 +17,29 @@ export default function JobSalarySection({
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="border-b border-slate-200 pb-5">
-        <h3 className="text-lg font-semibold text-slate-900">Salary</h3>
-        <p className="mt-1 text-sm text-slate-500">Outline the compensation range.</p>
+        <h3 className="text-lg font-semibold text-slate-900">Salary (INR ₹)</h3>
+        <p className="mt-1 text-sm text-slate-500">Outline the compensation range in Rupees (e.g. 600000 to 1200000).</p>
       </div>
 
       <div className="mt-6 grid gap-5 md:grid-cols-2">
         <label htmlFor="min-salary" className="text-sm text-slate-600">
-          <span className="mb-2 block font-medium text-slate-700">Minimum Salary</span>
+          <span className="mb-2 block font-medium text-slate-700">Minimum Salary (₹)</span>
           <input
             id="min-salary"
             value={minSalary}
             onChange={(event) => onMinSalaryChange(event.target.value)}
-            placeholder="120000"
+            placeholder="600000"
             className={inputClassName}
           />
         </label>
 
         <label htmlFor="max-salary" className="text-sm text-slate-600">
-          <span className="mb-2 block font-medium text-slate-700">Maximum Salary</span>
+          <span className="mb-2 block font-medium text-slate-700">Maximum Salary (₹)</span>
           <input
             id="max-salary"
             value={maxSalary}
             onChange={(event) => onMaxSalaryChange(event.target.value)}
-            placeholder="160000"
+            placeholder="1200000"
             className={inputClassName}
           />
         </label>

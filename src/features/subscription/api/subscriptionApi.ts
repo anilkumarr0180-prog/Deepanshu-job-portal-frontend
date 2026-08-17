@@ -63,7 +63,7 @@ export interface CouponDetails {
 
 export const fetchPlans = async (targetRole?: "candidate" | "recruiter") => {
   const response = await axiosInstance.get<{ success: boolean; data: SubscriptionPlan[] }>(
-    "/v1/subscriptions/plans",
+    "/subscriptions/plans",
     { params: { role: targetRole } }
   );
   return response.data.data;
@@ -73,7 +73,7 @@ export const fetchMySubscription = async () => {
   const response = await axiosInstance.get<{
     success: boolean;
     data: { subscription: UserSubscription; plan: SubscriptionPlan };
-  }>("/v1/subscriptions/me");
+  }>("/subscriptions/me");
   return response.data.data;
 };
 
@@ -86,7 +86,7 @@ export const processCheckout = async (
     success: boolean;
     message: string;
     data: { subscription: UserSubscription; transaction: PaymentTransaction };
-  }>("/v1/subscriptions/checkout", { planCode, paymentMethod, couponCode });
+  }>("/subscriptions/checkout", { planCode, paymentMethod, couponCode });
   return response.data;
 };
 
@@ -95,7 +95,7 @@ export const validateCoupon = async (code: string) => {
     success: boolean;
     message: string;
     data: CouponDetails;
-  }>("/v1/subscriptions/validate-coupon", { code });
+  }>("/subscriptions/validate-coupon", { code });
   return response.data;
 };
 
@@ -104,7 +104,7 @@ export const boostJob = async (jobId: string) => {
     success: boolean;
     message: string;
     data: any;
-  }>("/v1/subscriptions/boost-job", { jobId });
+  }>("/subscriptions/boost-job", { jobId });
   return response.data;
 };
 
@@ -113,7 +113,16 @@ export const cancelSubscription = async () => {
     success: boolean;
     message: string;
     data: UserSubscription;
-  }>("/v1/subscriptions/cancel");
+  }>("/subscriptions/cancel");
+  return response.data;
+};
+
+export const reactivateSubscription = async () => {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    message: string;
+    data: UserSubscription;
+  }>("/subscriptions/reactivate");
   return response.data;
 };
 
@@ -127,7 +136,7 @@ export const createRazorpayOrder = async (planCode: string, couponCode?: string)
       keyId: string;
       planName: string;
     };
-  }>("/v1/subscriptions/create-razorpay-order", { planCode, couponCode });
+  }>("/subscriptions/create-razorpay-order", { planCode, couponCode });
   return response.data.data;
 };
 
@@ -142,13 +151,13 @@ export const verifyRazorpayPayment = async (payload: {
     success: boolean;
     message: string;
     data: { subscription: UserSubscription; transaction: PaymentTransaction };
-  }>("/v1/subscriptions/verify-razorpay-payment", payload);
+  }>("/subscriptions/verify-razorpay-payment", payload);
   return response.data;
 };
 
 export const fetchBillingHistory = async () => {
   const response = await axiosInstance.get<{ success: boolean; data: PaymentTransaction[] }>(
-    "/v1/subscriptions/transactions"
+    "/subscriptions/transactions"
   );
   return response.data.data;
 };

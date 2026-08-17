@@ -16,8 +16,25 @@ import DashboardMenu from "./DashboardMenu";
 import { NotificationDropdown } from "@/shared/components/NotificationDropdown";
 import { SwiggyLocationHeader } from "@/shared/components/SwiggyLocationHeader";
 
+import { UserAvatar } from "@/shared/components/UserAvatar";
+import { PremiumBadge } from "@/shared/components/PremiumBadge";
+import { fetchMySubscription, type UserSubscription } from "@/features/subscription/api/subscriptionApi";
+
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
+  const [userSub, setUserSub] = useState<UserSubscription | null>(null);
+
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      fetchMySubscription()
+        .then((data) => {
+          if (data?.subscription) {
+            setUserSub(data.subscription);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user]);
 
   const displayName = user?.name ?? "User";
 
@@ -25,13 +42,6 @@ export default function DashboardHeader() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const initials = displayName
-    .split(" ")
-    .map((name) => name[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
   const profileRoute =
     user?.role === "candidate"
@@ -111,9 +121,19 @@ export default function DashboardHeader() {
             </button>
 
             <div className="space-y-0.5">
-              <p className="text-base font-semibold text-[#05264E] sm:text-lg">
-                Good Morning, {displayName} 👋
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-base font-semibold text-[#05264E] sm:text-lg">
+                  {(() => {
+                    const hour = new Date().getHours();
+                    const timeGreeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+                    const cleanName = (user?.name ?? "User").replace(/\s+(Recruiter|Candidate|Admin)$/i, "").trim();
+                    return `${timeGreeting}, ${cleanName} 👋`;
+                  })()}
+                </p>
+                {userSub && userSub.planCode && !userSub.planCode.includes("free") && (
+                  <PremiumBadge planCode={userSub.planCode} size="sm" />
+                )}
+              </div>
 
               <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
                 Manage your hiring workflow efficiently.
@@ -146,15 +166,7 @@ export default function DashboardHeader() {
                   : "border-slate-200 bg-white hover:border-[#3C65F5] hover:bg-blue-50/50"
                   }`}
               >
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black text-white shadow-sm"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #3C65F5 0%, #6366f1 100%)",
-                  }}
-                >
-                  {initials}
-                </div>
+                <UserAvatar src={user?.profilePicture} name={displayName} size="sm" />
 
                 <div className="hidden text-left sm:block">
                   <p className="max-w-[90px] truncate text-[12px] font-bold leading-tight text-[#05264E]">
@@ -162,7 +174,9 @@ export default function DashboardHeader() {
                   </p>
 
                   <p className="text-[10px] capitalize leading-tight text-slate-400">
-                    {user?.role ?? "member"}
+                    {userSub && userSub.planCode && !userSub.planCode.includes("free")
+                      ? userSub.planCode.replace("_", " ").toUpperCase()
+                      : (user?.role ?? "member")}
                   </p>
                 </div>
 
@@ -181,25 +195,23 @@ export default function DashboardHeader() {
                   {/* User information */}
                   <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/60 px-4 py-3">
                     <div className="flex items-center gap-2.5">
-
-                      <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[11px] font-black text-white shadow-md"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #3C65F5 0%, #6366f1 100%)",
-                        }}
-                      >
-                        {initials}
-                      </div>
+                      <UserAvatar src={user?.profilePicture} name={displayName} size="md" />
 
                       <div className="min-w-0">
-                        <p className="truncate text-[12px] font-black text-[#05264E]">
-                          {displayName}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="truncate text-[12px] font-black text-[#05264E]">
+                            {displayName}
+                          </p>
+                        </div>
 
                         <p className="truncate text-[10px] text-slate-400">
                           {user?.email ?? ""}
                         </p>
+                        {userSub && userSub.planCode && !userSub.planCode.includes("free") && (
+                          <div className="mt-1">
+                            <PremiumBadge planCode={userSub.planCode} size="sm" />
+                          </div>
+                        )}
                       </div>
 
                     </div>

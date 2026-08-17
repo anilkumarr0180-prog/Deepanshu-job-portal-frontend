@@ -20,6 +20,7 @@ export interface CandidateJob {
   id: string;
   title: string;
   company: string;
+  companyLogo?: string;
   location: string;
   type: string;
   postedAt: string;

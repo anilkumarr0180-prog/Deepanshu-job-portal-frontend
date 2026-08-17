@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Crown, CheckCircle2, ArrowRight, X } from "lucide-react";
+import useAuth from "@/features/auth/hooks/useAuth";
 
 interface QuotaUpgradeModalProps {
   isOpen: boolean;
@@ -16,6 +17,14 @@ export default function QuotaUpgradeModal({
   message = "You have reached the maximum allowance on your current plan. Upgrade to unlock unlimited hiring power.",
   feature = "job_limit",
 }: QuotaUpgradeModalProps) {
+  const { user } = useAuth();
+  const pricingRoute =
+    user?.role === "candidate"
+      ? "/candidate/pricing"
+      : user?.role === "recruiter"
+      ? "/recruiter/pricing"
+      : "/pricing";
+
   if (!isOpen) return null;
 
   return (
@@ -38,35 +47,32 @@ export default function QuotaUpgradeModal({
             <Crown className="w-7 h-7 fill-amber-400 text-amber-400" />
           </div>
           <div>
-            <span className="text-indigo-400 text-xs font-extrabold uppercase tracking-widest">
-              JobsBox Enterprise
+            <h3 className="text-xl font-black text-white tracking-tight">{title}</h3>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-400">
+              {feature === "job_limit" ? "Monthly Quota Exceeded" : "Premium Feature Request"}
             </span>
-            <h3 className="text-xl font-extrabold text-white tracking-tight">{title}</h3>
           </div>
         </div>
 
-        <p className="text-slate-300 text-sm mb-6 leading-relaxed bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
-          {message}
-        </p>
+        {/* Message */}
+        <p className="text-slate-300 text-sm leading-relaxed mb-6">{message}</p>
 
-        {/* Feature Highlights */}
-        <div className="space-y-3 mb-8">
-          <div className="flex items-center gap-3 text-xs font-semibold text-slate-200">
-            <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-400">
+        {/* Value Highlights */}
+        <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 mb-6 space-y-2.5">
+          <div className="flex items-center gap-2.5 text-xs text-slate-300">
+            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-4 h-4" />
             </div>
-            <span>{feature === "featured_job" ? "Pin job at top of search results with ⚡ Featured tag" : "Post up to 5 Active Jobs with Recruiter Lite"}</span>
+            <span>Post unlimited active job listings with top search visibility</span>
           </div>
-
-          <div className="flex items-center gap-3 text-xs font-semibold text-slate-200">
-            <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-400">
+          <div className="flex items-center gap-2.5 text-xs text-slate-300">
+            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-4 h-4" />
             </div>
-            <span>Access full candidate resume database & direct messaging</span>
+            <span>Access direct candidate contact details &amp; resume downloads</span>
           </div>
-
-          <div className="flex items-center gap-3 text-xs font-semibold text-slate-200">
-            <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-400">
+          <div className="flex items-center gap-2.5 text-xs text-slate-300">
+            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span>Cancel or change plans anytime with 1-click</span>
@@ -82,7 +88,7 @@ export default function QuotaUpgradeModal({
             Not Now
           </button>
           <Link
-            to="/pricing"
+            to={pricingRoute}
             onClick={onClose}
             className="w-2/3 py-3.5 rounded-xl font-extrabold text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-xl shadow-indigo-600/30 text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
           >

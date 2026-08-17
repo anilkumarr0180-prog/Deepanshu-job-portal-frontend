@@ -70,11 +70,12 @@ export async function getAllApplications(): Promise<BackendApplicationWithJob[]>
 
 export async function updateApplicationStatus(
   applicationId: string,
-  status: string
+  status: string,
+  interviewDetails?: any
 ): Promise<BackendApplication> {
   const response = await axiosInstance.put(
     `/applications/${applicationId}/status`,
-    { status }
+    { status, interviewDetails }
   );
   return response.data.data;
 }
