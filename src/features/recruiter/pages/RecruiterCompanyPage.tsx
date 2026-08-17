@@ -4,12 +4,14 @@ import CompanyProfileOverview from "../components/company/CompanyProfileOverview
 import CompanyProfileStats from "../components/company/CompanyProfileStats";
 import { recruiterCompanyProfile } from "../constants/company";
 import { useCompany } from "../hooks/useCompany";
+import { useRecruiterDashboard } from "../hooks/useRecruiterDashboard";
 import type { RecruiterCompanyProfile } from "../types";
 
 export default function RecruiterCompanyPage() {
-  const { data: apiCompany, isLoading, isError } = useCompany();
+  const { data: apiCompany, isLoading: isCompanyLoading, isError } = useCompany();
+  const { data: dashboard, isLoading: isDashboardLoading } = useRecruiterDashboard();
 
-  if (isLoading) {
+  if (isCompanyLoading) {
     return (
       <div className="space-y-6">
         <div className="h-36 animate-pulse rounded-2xl border border-slate-200 bg-slate-100" />
@@ -27,6 +29,13 @@ export default function RecruiterCompanyPage() {
         apiCompany.socialLinks.website,
       ].filter((link): link is string => Boolean(link))
     : recruiterCompanyProfile.socialLinks;
+
+  const dynamicStats = [
+    { label: "Total Jobs", value: String(dashboard?.totalJobs ?? 0) },
+    { label: "Active Jobs", value: String(dashboard?.activeJobs ?? 0) },
+    { label: "Total Applicants", value: String(dashboard?.totalApplications ?? 0) },
+    { label: "Total Hires", value: String(dashboard?.closedJobs ?? 0) },
+  ];
 
   const company: RecruiterCompanyProfile = apiCompany
     ? {
@@ -63,9 +72,12 @@ export default function RecruiterCompanyPage() {
           apiCompany.foundedYear || recruiterCompanyProfile.foundedYear
         ),
         socialLinks: socialLinksArray,
-        stats: recruiterCompanyProfile.stats,
+        stats: dynamicStats,
       }
-    : recruiterCompanyProfile;
+    : {
+        ...recruiterCompanyProfile,
+        stats: dynamicStats,
+      };
 
   return (
     <div className="space-y-6">
@@ -76,7 +88,7 @@ export default function RecruiterCompanyPage() {
       )}
       <CompanyProfileHeader name={company.name} tagline={company.tagline} logo={company.logo} />
       <CompanyProfileOverview profile={company} />
-      <CompanyProfileStats profile={company} />
+      <CompanyProfileStats profile={company} isLoading={isDashboardLoading} />
       <CompanyProfileDetails profile={company} />
     </div>
   );

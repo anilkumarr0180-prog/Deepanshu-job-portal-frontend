@@ -16,8 +16,9 @@ import {
   Building,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import useAuth from "@/features/auth/hooks/useAuth";
 import type { SubscriptionPlan } from "../api/subscriptionApi";
-import { createRazorpayOrder, verifyRazorpayPayment } from "../api/subscriptionApi";
+import { createRazorpayOrder, verifyRazorpayPayment, validateCoupon } from "../api/subscriptionApi";
 
 // ─── Razorpay SDK Types ─────────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ export default function EnterpriseCheckoutModal({
   onClose,
   onSuccess,
 }: EnterpriseCheckoutModalProps) {
+  const { user } = useAuth();
   const [step, setStep] = useState<"details" | "confirming" | "success">("details");
   const [couponCode, setCouponCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState<number | null>(null);
@@ -157,17 +159,17 @@ export default function EnterpriseCheckoutModal({
   const finalTotal = Math.max(1, Math.round(afterDiscount + tax));
   // ─── Apply Coupon ──────────────────────────────────────────────────────────
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     const code = couponCode.toUpperCase().trim();
     if (!code) return;
-    if (code === "WELCOME50") {
-      setDiscountPercent(50);
-      toast.success("🎉 Promo WELCOME50 applied! 50% OFF");
-    } else if (code === "LAUNCH20") {
-      setDiscountPercent(20);
-      toast.success("🎉 Promo LAUNCH20 applied! 20% OFF");
-    } else {
-      toast.error("Invalid promo code");
+    try {
+      const res = await validateCoupon(code);
+      if (res && res.data) {
+        setDiscountPercent(res.data.discountValue);
+        toast.success(`🎉 Promo ${res.data.code} applied! ${res.data.discountValue}${res.data.discountType === "percentage" ? "%" : "₹"} OFF`);
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Invalid promo code");
     }
   };
 
@@ -211,6 +213,11 @@ export default function EnterpriseCheckoutModal({
         name: "JobsBox Portal",
         description: `${plan.name} Subscription`,
         ...(orderData.orderId ? { order_id: orderData.orderId } : {}),
+        prefill: {
+          name: user?.name || "Test Recruiter",
+          email: user?.email || "recruiter@example.com",
+          contact: "9876543210",
+        },
         handler: async (response) => {
           // 4. After Razorpay success → verify on backend
           setIsLaunchingRazorpay(false);
@@ -511,9 +518,9 @@ export default function EnterpriseCheckoutModal({
                   </div>
                 </div>
 
-                {/* Test card hint */}
+                {/* Test card & Netbanking hint */}
                 <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-[10px] text-slate-400 leading-relaxed">
-                  <span className="text-amber-400 font-bold">Test Card:</span> 4111 1111 1111 1111 • Expiry: any future date • CVV: any 3 digits • OTP: 123456
+                  <span className="text-amber-400 font-bold">⚡ 1-Click Test:</span> In the Razorpay popup, select <span className="text-white font-bold">Netbanking</span> (Bank of Baroda / Canara Bank) and click <span className="text-emerald-400 font-bold">Success</span>!
                 </div>
               </div>
 

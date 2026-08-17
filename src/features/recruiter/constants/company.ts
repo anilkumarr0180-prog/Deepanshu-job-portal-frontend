@@ -16,10 +16,10 @@ export const recruiterCompanyProfile: RecruiterCompanyProfile = {
   foundedYear: "2018",
   socialLinks: ["LinkedIn", "X", "Instagram"],
   stats: [
-    { label: "Total Jobs", value: "24" },
-    { label: "Active Jobs", value: "12" },
-    { label: "Total Applicants", value: "284" },
-    { label: "Total Hires", value: "41" },
+    { label: "Total Jobs", value: "0" },
+    { label: "Active Jobs", value: "0" },
+    { label: "Total Applicants", value: "0" },
+    { label: "Total Hires", value: "0" },
   ],
 };
 
