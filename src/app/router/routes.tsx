@@ -31,7 +31,9 @@ const BillingSettingsPage = withSuspense(lazy(() => import("@/features/subscript
 
 // Admin Pages
 const AdminDashboardPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminDashboardPage")));
+const AdminFinancePage = withSuspense(lazy(() => import("@/features/admin/pages/AdminFinancePage")));
 const AdminJobsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminJobsPage")));
+const AdminProfilePage = withSuspense(lazy(() => import("@/features/admin/pages/AdminProfilePage")));
 const AdminRecruitersPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminRecruitersPage")));
 const AdminSettingsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminSettingsPage")));
 const AdminUsersPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminUsersPage")));
@@ -49,7 +51,6 @@ const CandidateSettingsPage = withSuspense(lazy(() => import("@/features/candida
 const CandidateNotificationsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateNotificationsPage")));
 const CandidateMessagesPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateMessagesPage")));
 
-
 // Recruiter Pages
 const RecruiterDashboardPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterDashboardPage")));
 const RecruiterJobsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterJobsPage")));
@@ -65,7 +66,6 @@ const RecruiterSettingsPage = withSuspense(lazy(() => import("@/features/recruit
 const RecruiterNotificationsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterNotificationsPage")));
 const RecruiterInterviewsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterInterviewsPage")));
 const RecruiterMessagesPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterMessagesPage")));
-
 
 // Fallback & Error Pages
 const NotFoundPage = withSuspense(lazy(() => import("@/pages/NotFoundPage")));
@@ -153,6 +153,14 @@ export const routes: RouteObject[] = [
       {
         path: "jobs",
         element: <AdminJobsPage />,
+      },
+      {
+        path: "finance",
+        element: <AdminFinancePage />,
+      },
+      {
+        path: "profile",
+        element: <AdminProfilePage />,
       },
       {
         path: "settings",
