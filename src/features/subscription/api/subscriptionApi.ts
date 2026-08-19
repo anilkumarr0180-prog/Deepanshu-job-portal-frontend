@@ -1,4 +1,14 @@
-import { axiosInstance } from "@/lib/axios";
+﻿import { axiosInstance } from "@/lib/axios";
+
+export interface ProviderMappings {
+  razorpay?: {
+    planId?: string;
+  };
+  polar?: {
+    productId?: string;
+    priceId?: string;
+  };
+}
 
 export interface SubscriptionPlan {
   _id: string;
@@ -7,6 +17,7 @@ export interface SubscriptionPlan {
   description: string;
   targetRole: "candidate" | "recruiter";
   price: number;
+  usdPrice?: number;
   currency: string;
   billingPeriod: "monthly" | "yearly";
   features: {
@@ -18,9 +29,14 @@ export interface SubscriptionPlan {
     analyticsLevel?: "basic" | "advanced" | "enterprise";
     candidateSearchAccess?: boolean;
     savedJobsLimit?: number;
+    [key: string]: any;
   };
+  providerMappings?: ProviderMappings;
+  provider?: string;
+  providerPlanId?: string;
   isActive: boolean;
   isPopular?: boolean;
+  isRecommended?: boolean;
 }
 
 export interface UserSubscription {
@@ -32,7 +48,7 @@ export interface UserSubscription {
   currentPeriodStart: string;
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;
-  provider: "mock" | "stripe" | "razorpay";
+  provider: "mock" | "stripe" | "razorpay" | "polar" | "internal";
   providerSubscriptionId?: string;
   usages: {
     jobsPostedCount: number;
@@ -59,6 +75,19 @@ export interface CouponDetails {
   code: string;
   discountType: "percentage" | "fixed";
   discountValue: number;
+}
+
+export interface PolarCheckoutResponseData {
+  checkoutId: string;
+  url: string;
+  priceId?: string;
+  amount?: number;
+  currency?: string;
+  planName?: string;
+  status?: string;
+  /** True when the backend upgraded via PATCH (no Polar checkout redirect needed) */
+  upgraded?: boolean;
+  subscription?: UserSubscription;
 }
 
 export const fetchPlans = async (targetRole?: "candidate" | "recruiter") => {
@@ -155,6 +184,31 @@ export const verifyRazorpayPayment = async (payload: {
   return response.data;
 };
 
+export const createPolarCheckout = async (payload: {
+  planCode: string;
+  couponCode?: string;
+  successUrl?: string;
+}) => {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    data: PolarCheckoutResponseData;
+  }>("/subscriptions/create-polar-checkout", payload);
+  return response.data.data;
+};
+
+export const verifyPolarPayment = async (payload: {
+  checkoutId: string;
+  planCode?: string;
+  couponCode?: string;
+}) => {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    message: string;
+    data: { subscription: UserSubscription; transaction: PaymentTransaction };
+  }>("/subscriptions/verify-polar-payment", payload);
+  return response.data;
+};
+
 export const fetchBillingHistory = async () => {
   const response = await axiosInstance.get<{ success: boolean; data: PaymentTransaction[] }>(
     "/subscriptions/transactions"
@@ -168,4 +222,5 @@ export const downloadInvoiceApi = async (transactionId: string) => {
   });
   return response.data;
 };
+
 

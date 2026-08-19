@@ -12,6 +12,7 @@ import {
   Settings,
   UserRound,
   Users,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -72,6 +73,9 @@ export const dashboardConfig = {
       { label: "Users", to: "/admin/users", icon: Users },
       { label: "Recruiters", to: "/admin/recruiters", icon: Building2 },
       { label: "Jobs", to: "/admin/jobs", icon: BriefcaseBusiness },
+      { label: "Membership Plans", to: "/admin/memberships", icon: Zap },
+      { label: "Finance & Billing", to: "/admin/finance", icon: CreditCard },
+      { label: "Profile", to: "/admin/profile", icon: UserRound },
       { label: "Settings", to: "/admin/settings", icon: Settings },
     ],
   },

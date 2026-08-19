@@ -47,7 +47,7 @@ export default function DashboardHeader() {
     user?.role === "candidate"
       ? "/candidate/profile"
       : user?.role === "admin"
-        ? "/admin/dashboard"
+        ? "/admin/profile"
         : "/recruiter/profile";
 
   const applicationsRoute =

@@ -7,9 +7,15 @@ export interface AuthUser {
   _id?: string;
   name?: string;
   email?: string;
+  phone?: string;
   role?: UserRole;
+  authProvider?: string;
   profilePicture?: string;
   profilePicturePublicId?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  isEmailVerified?: boolean;
+  isBlocked?: boolean;
   [key: string]: unknown;
 }
 

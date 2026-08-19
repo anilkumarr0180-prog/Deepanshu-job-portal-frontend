@@ -19,6 +19,7 @@ import {
   cancelSubscription,
   reactivateSubscription,
   downloadInvoiceApi,
+  verifyPolarPayment,
   type UserSubscription,
   type SubscriptionPlan,
   type PaymentTransaction,
@@ -26,14 +27,16 @@ import {
 
 import useAuth from "@/features/auth/hooks/useAuth";
 
+import PaymentSuccessModal from "../components/PaymentSuccessModal";
+
 export default function BillingSettingsPage() {
   const { user } = useAuth();
   const pricingRoute =
     user?.role === "candidate"
       ? "/candidate/pricing"
       : user?.role === "recruiter"
-      ? "/recruiter/pricing"
-      : "/pricing";
+        ? "/recruiter/pricing"
+        : "/pricing";
 
   const [subData, setSubData] = useState<{
     subscription: UserSubscription;
@@ -44,6 +47,17 @@ export default function BillingSettingsPage() {
   const [isCanceling, setIsCanceling] = useState(false);
   const [isReactivating, setIsReactivating] = useState(false);
   const [downloadingTxId, setDownloadingTxId] = useState<string | null>(null);
+  const [successModalData, setSuccessModalData] = useState<{
+    isOpen: boolean;
+    planName: string;
+    amount: string;
+    billingPeriod: string;
+  }>({
+    isOpen: false,
+    planName: "",
+    amount: "",
+    billingPeriod: "",
+  });
 
   const handleDownloadInvoice = async (txId: string) => {
     if (!txId) return;
@@ -72,6 +86,63 @@ export default function BillingSettingsPage() {
   const loadBillingInfo = async () => {
     try {
       setIsLoading(true);
+
+      // Verify Polar checkout if checkoutId is in URL query parameters
+      const searchParams = new URLSearchParams(window.location.search);
+      const checkoutId =
+        searchParams.get("checkoutId") ||
+        searchParams.get("checkout_id") ||
+        searchParams.get("polar_checkout_id");
+      const planCode = searchParams.get("planCode") || undefined;
+      const couponCode = searchParams.get("couponCode") || undefined;
+
+      if (checkoutId) {
+        const sessionKey = `verified_polar_${checkoutId}`;
+        if (!sessionStorage.getItem(sessionKey)) {
+          try {
+            const verifyRes = await verifyPolarPayment({
+              checkoutId,
+              planCode,
+              couponCode,
+            });
+            sessionStorage.setItem(sessionKey, "true");
+            toast.success(verifyRes.message || "Polar payment verified & subscription activated!");
+
+            // Dynamically set success modal attributes based on plan details
+            const matchedPlanName = planCode?.includes("enterprise") 
+              ? "Recruiter Enterprise" 
+              : planCode?.includes("lite") 
+              ? "Recruiter Lite" 
+              : planCode?.includes("premium") 
+              ? "Career Premium" 
+              : planCode?.includes("pro") 
+              ? "Career Pro" 
+              : "Premium Subscription";
+              
+            const period = planCode?.includes("yearly") ? "yearly" : "monthly";
+            const amtStr = planCode?.includes("enterprise") 
+              ? (planCode?.includes("yearly") ? "$799 USD" : "$99 USD")
+              : planCode?.includes("lite")
+              ? (planCode?.includes("yearly") ? "$149 USD" : "$15 USD")
+              : planCode?.includes("premium")
+              ? (planCode?.includes("yearly") ? "$39 USD" : "$4 USD")
+              : (planCode?.includes("yearly") ? "$19 USD" : "$2 USD");
+
+            setSuccessModalData({
+              isOpen: true,
+              planName: matchedPlanName,
+              amount: amtStr,
+              billingPeriod: period,
+            });
+          } catch (err: any) {
+            console.error("Polar verification error:", err);
+            toast.error(err?.response?.data?.message || "Polar payment verification failed.");
+          }
+        }
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+
       const data = await fetchMySubscription();
       setSubData(data);
 
@@ -171,10 +242,15 @@ export default function BillingSettingsPage() {
               </div>
               <p className="text-slate-400 text-sm">{plan?.description}</p>
             </div>
-
             <div className="flex items-center gap-4 bg-slate-950/60 px-5 py-3 rounded-2xl border border-slate-800/80">
               <div className="text-right">
-                <div className="text-3xl font-black text-white tracking-tight">₹{plan?.price?.toLocaleString("en-IN") || 0}</div>
+                <div className="text-3xl font-black text-white tracking-tight">
+                  {subscription?.provider === "polar" || plan?.currency === "USD" ? "$" : "₹"}
+                  {(subscription?.provider === "polar" || plan?.currency === "USD"
+                    ? (plan?.usdPrice ?? (plan?.price ? Math.round(plan.price / 80) : 0))
+                    : (plan?.price || 0)
+                  ).toLocaleString(subscription?.provider === "polar" || plan?.currency === "USD" ? "en-US" : "en-IN")}
+                </div>
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   Per {plan?.billingPeriod === "yearly" ? "year" : "month"}
                 </div>
@@ -182,7 +258,6 @@ export default function BillingSettingsPage() {
             </div>
           </div>
 
-          {/* Subscription Details & Renewal Info */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-800/80">
             <div className="flex items-center gap-3.5">
               <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
@@ -193,31 +268,30 @@ export default function BillingSettingsPage() {
                   {(!plan?.price || plan.price === 0)
                     ? "Billing Cycle"
                     : subscription?.cancelAtPeriodEnd
-                    ? "Expires On"
-                    : "Next Billing Date"}
+                      ? "Expires On"
+                      : "Next Billing Date"}
                 </div>
                 <div className="text-sm font-bold text-white mt-0.5">
                   {(!plan?.price || plan.price === 0)
                     ? "Lifetime Free"
                     : subscription?.currentPeriodEnd
-                    ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
+                      ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
                       })
-                    : "Lifetime Free"}
+                      : "Lifetime Free"}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-3.5">
-              <div className={`p-2.5 rounded-xl border ${
-                (!plan?.price || plan.price === 0)
+              <div className={`p-2.5 rounded-xl border ${(!plan?.price || plan.price === 0)
                   ? "bg-slate-800/40 text-slate-400 border-slate-700/40"
                   : subscription?.cancelAtPeriodEnd
-                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-              }`}>
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                }`}>
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
@@ -226,8 +300,8 @@ export default function BillingSettingsPage() {
                   {(!plan?.price || plan.price === 0)
                     ? "Not Applicable (Free Plan)"
                     : subscription?.cancelAtPeriodEnd
-                    ? `Disabled (Expires ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "at cycle end"})`
-                    : "Active (Auto-renews)"}
+                      ? `Disabled (Expires ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "at cycle end"})`
+                      : "Active (Auto-renews)"}
                 </div>
               </div>
             </div>
@@ -245,7 +319,6 @@ export default function BillingSettingsPage() {
             </div>
           </div>
 
-          {/* Usage Progress Bars (Recruiters & Candidates) */}
           {plan?.targetRole === "recruiter" && (
             <div className="pt-6 space-y-4">
               <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest flex items-center gap-2">
@@ -300,12 +373,16 @@ export default function BillingSettingsPage() {
           </div>
         </div>
 
-        {/* Invoice & Transaction Audit Log */}
-        <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
-          <h2 className="text-xl font-extrabold text-white mb-6 flex items-center gap-2.5">
-            <Receipt className="w-5 h-5 text-indigo-400" />
-            <span>Billing History & Invoices</span>
-          </h2>
+        <div className="rounded-3xl p-8 bg-slate-900/40 border border-slate-800/80 backdrop-blur-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-indigo-400" />
+                <span>Billing History & Invoices</span>
+              </h3>
+              <p className="text-slate-400 text-xs mt-1">Download official PDF receipts and transaction records for tax filing.</p>
+            </div>
+          </div>
 
           {transactions.length === 0 ? (
             <div className="text-center py-12 text-slate-500 text-sm">
@@ -328,7 +405,10 @@ export default function BillingSettingsPage() {
                     <tr key={tx._id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-4 px-4 font-mono text-xs text-indigo-400 font-bold">{tx.transactionId}</td>
                       <td className="py-4 px-4 text-slate-300 text-xs font-medium">{new Date(tx.createdAt).toLocaleDateString()}</td>
-                      <td className="py-4 px-4 font-black text-white">₹{tx.amount} {tx.currency}</td>
+                      <td className="py-4 px-4 font-black text-white">
+                        {tx.currency === "USD" ? "$" : "₹"}
+                        {tx.amount.toLocaleString(tx.currency === "USD" ? "en-US" : "en-IN")} {tx.currency || (tx.provider === "polar" ? "USD" : "INR")}
+                      </td>
                       <td className="py-4 px-4">
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                           <CheckCircle2 className="w-3.5 h-3.5" />
@@ -360,6 +440,15 @@ export default function BillingSettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Polar Success Confirmation Modal */}
+      <PaymentSuccessModal
+        isOpen={successModalData.isOpen}
+        onClose={() => setSuccessModalData({ ...successModalData, isOpen: false })}
+        planName={successModalData.planName}
+        amount={successModalData.amount}
+        billingPeriod={successModalData.billingPeriod}
+      />
     </div>
   );
 }
