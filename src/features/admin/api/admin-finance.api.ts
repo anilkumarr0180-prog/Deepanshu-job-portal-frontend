@@ -2,7 +2,11 @@ import { axiosInstance } from "@/lib/axios";
 
 export interface FinanceKPI {
   totalGross: number;
+  grossUsd?: number;
+  grossInr?: number;
   mrr: number;
+  mrrUsd?: number;
+  mrrInr?: number;
   activePaidSubscriptions: number;
   avgOrderValue: number;
   totalTransactions: number;
@@ -49,29 +53,35 @@ export interface AdminTransaction {
 
 export interface AdminSubscriptionPlan {
   _id: string;
-  code: string;
+  code?: string;
   name: string;
   description: string;
-  targetRole: "candidate" | "recruiter";
+  role: "JOB_SEEKER" | "RECRUITER" | "candidate" | "recruiter";
+  targetRole?: "candidate" | "recruiter";
   price: number;
-  currency: string;
-  billingPeriod: "monthly" | "yearly";
-  features: {
-    jobLimit?: number;
-    featuredJobLimit?: number;
-    inmailCredits?: number;
-    topApplicantBadge?: boolean;
-    prioritySupport?: boolean;
-    analyticsLevel?: string;
-    candidateSearchAccess?: boolean;
-    savedJobsLimit?: number;
-    [key: string]: any;
-  };
-  provider: string;
+  usdPrice?: number;
+  currency: "USD" | "INR" | string;
+  durationInDays?: number;
+  durationDays?: number;
+  billingPeriod?: "monthly" | "yearly";
+  features: Array<{ title: string; description?: string; enabled?: boolean } | string> | any;
+  providerMappings?: any;
+  provider?: string;
   providerPlanId?: string;
+  planId?: string;
   isActive: boolean;
   isPopular?: boolean;
-  createdAt: string;
+  isRecommended?: boolean;
+  isDeleted?: boolean;
+  prices?: Array<{
+    billingCycle: string;
+    price: number;
+    currency: string;
+    durationInDays: number;
+    providerPriceIds?: string[];
+  }>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AdminCoupon {
@@ -141,6 +151,16 @@ export const updateAdminPlan = async (
   return response.data.data;
 };
 
+export const deleteAdminPlan = async (planId: string): Promise<any> => {
+  try {
+    const response = await axiosInstance.delete(`/admin/finance/plans/${planId}`);
+    return response.data.data;
+  } catch (_err) {
+    // Fallback: Soft delete via update endpoint if DELETE route isn't mapped
+    return await updateAdminPlan(planId, { isDeleted: true, isActive: false });
+  }
+};
+
 export const fetchAdminCoupons = async (): Promise<AdminCoupon[]> => {
   const response = await axiosInstance.get("/admin/finance/coupons");
   return response.data.data;
@@ -172,3 +192,16 @@ export const overrideUserSubscription = async (payload: {
   const response = await axiosInstance.post("/admin/finance/subscriptions/override", payload);
   return response.data.data;
 };
+
+export const syncPolarPlansApi = async (): Promise<{
+  createdProducts: number;
+  createdPrices: number;
+  existingMappings: number;
+  skippedFree: number;
+  errors: number;
+  details: Array<{ code: string; status: string; productId?: string; priceId?: string; error?: string }>;
+}> => {
+  const response = await axiosInstance.post("/admin/finance/plans/sync-polar");
+  return response.data.data;
+};
+

@@ -56,6 +56,7 @@ export default function AdminFinancePage() {
     description: "",
     targetRole: "recruiter" as "recruiter" | "candidate",
     price: 0,
+    usdPrice: 0,
     currency: "INR",
     billingPeriod: "monthly" as "monthly" | "yearly",
     jobLimit: 5,
@@ -155,6 +156,7 @@ export default function AdminFinancePage() {
           name: planForm.name,
           description: planForm.description,
           price: Number(planForm.price),
+          usdPrice: Number(planForm.usdPrice),
           billingPeriod: planForm.billingPeriod,
           isActive: planForm.isActive,
           isPopular: planForm.isPopular,
@@ -172,6 +174,7 @@ export default function AdminFinancePage() {
           description: planForm.description,
           targetRole: planForm.targetRole,
           price: Number(planForm.price),
+          usdPrice: Number(planForm.usdPrice),
           currency: planForm.currency,
           billingPeriod: planForm.billingPeriod,
           isActive: planForm.isActive,
@@ -322,16 +325,20 @@ export default function AdminFinancePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Gross Volume</span>
-                  <div className="mt-2 text-2xl font-black text-slate-900">
-                    ₹{overview?.kpi.totalGross.toLocaleString("en-IN") || 0}
+                  <div className="mt-2 text-2xl font-black text-slate-900 flex items-baseline gap-1.5 flex-wrap">
+                    {overview?.kpi.grossUsd ? <span>${overview.kpi.grossUsd.toLocaleString("en-US")} USD</span> : null}
+                    {overview?.kpi.grossUsd && overview?.kpi.grossInr ? <span className="text-xs text-slate-400 font-bold">/</span> : null}
+                    {overview?.kpi.grossInr ? <span>₹{overview.kpi.grossInr.toLocaleString("en-IN")} INR</span> : (!overview?.kpi.grossUsd ? <span>₹0 INR</span> : null)}
                   </div>
                   <span className="text-xs font-semibold text-emerald-600">All successful platform checkouts</span>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Estimated MRR</span>
-                  <div className="mt-2 text-2xl font-black text-indigo-600">
-                    ₹{overview?.kpi.mrr.toLocaleString("en-IN") || 0}
+                  <div className="mt-2 text-2xl font-black text-indigo-600 flex items-baseline gap-1.5 flex-wrap">
+                    {overview?.kpi.mrrUsd ? <span>${overview.kpi.mrrUsd.toLocaleString("en-US")}</span> : null}
+                    {overview?.kpi.mrrUsd && overview?.kpi.mrrInr ? <span className="text-xs text-slate-400 font-bold">/</span> : null}
+                    {overview?.kpi.mrrInr ? <span>₹{overview.kpi.mrrInr.toLocaleString("en-IN")}</span> : (!overview?.kpi.mrrUsd ? <span>₹0</span> : null)}
                     <span className="text-xs font-medium text-slate-400">/mo</span>
                   </div>
                   <span className="text-xs font-semibold text-slate-500">From active recurring & monthly tiers</span>
@@ -369,7 +376,7 @@ export default function AdminFinancePage() {
                       {overview?.thirtyDayTimeSeries.map((point) => (
                         <div key={point.date} className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
                           <span className="text-[11px] font-bold text-slate-500">{point.date.slice(5)}</span>
-                          <div className="mt-1 text-sm font-black text-slate-900">₹{point.revenue.toLocaleString("en-IN")}</div>
+                          <div className="mt-1 text-sm font-black text-slate-900">${point.revenue.toLocaleString("en-US")}</div>
                           <span className="text-[10px] text-slate-400">{point.transactions} txn</span>
                         </div>
                       ))}
@@ -412,7 +419,10 @@ export default function AdminFinancePage() {
                             <span className="block text-xs text-slate-400 font-normal">{tx.userId?.email}</span>
                           </td>
                           <td className="py-3 font-medium text-slate-800">{tx.planId?.name || "Custom Plan"}</td>
-                          <td className="py-3 font-bold text-slate-900">₹{tx.amount.toLocaleString("en-IN")}</td>
+                          <td className="py-3 font-bold text-slate-900">
+                            {tx.currency === "USD" ? "$" : "₹"}
+                            {tx.amount.toLocaleString(tx.currency === "USD" ? "en-US" : "en-IN")}
+                          </td>
                           <td className="py-3">
                             <span
                               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
@@ -494,6 +504,7 @@ export default function AdminFinancePage() {
               >
                 <option value="All">All Gateways</option>
                 <option value="razorpay">Razorpay</option>
+                <option value="polar">Polar</option>
                 <option value="stripe">Stripe</option>
                 <option value="internal">Internal / Admin</option>
               </select>
@@ -538,9 +549,14 @@ export default function AdminFinancePage() {
                           <span className="font-medium text-slate-800">{tx.planId?.name || "Custom Plan"}</span>
                           <span className="block text-xs font-mono text-slate-400">{tx.planId?.code}</span>
                         </td>
-                        <td className="p-4 font-black text-slate-900">₹{tx.amount.toLocaleString("en-IN")}</td>
+                        <td className="p-4 font-black text-slate-900">
+                          {tx.currency === "USD" ? "$" : "₹"}
+                          {tx.amount.toLocaleString(tx.currency === "USD" ? "en-US" : "en-IN")}
+                        </td>
                         <td className="p-4">
-                          <span className="capitalize text-xs font-semibold text-slate-600">{tx.provider}</span>
+                          <span className={`capitalize text-xs font-bold ${tx.provider === "polar" ? "text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200" : "text-slate-600"}`}>
+                            {tx.provider}
+                          </span>
                           <span className="block text-[10px] text-slate-400 uppercase">{tx.paymentMethod}</span>
                         </td>
                         <td className="p-4">
@@ -614,6 +630,7 @@ export default function AdminFinancePage() {
                   description: "",
                   targetRole: "recruiter",
                   price: 999,
+                  usdPrice: 15,
                   currency: "INR",
                   billingPeriod: "monthly",
                   jobLimit: 10,
@@ -654,9 +671,17 @@ export default function AdminFinancePage() {
                   <h4 className="text-xl font-black text-slate-900">{plan.name}</h4>
                   <p className="text-xs text-slate-500 mt-1">{plan.description}</p>
 
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-slate-900">₹{plan.price.toLocaleString("en-IN")}</span>
-                    <span className="text-xs font-medium text-slate-500">/{plan.billingPeriod}</span>
+                  <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-slate-900">₹{plan.price.toLocaleString("en-IN")}</span>
+                      <span className="text-xs font-medium text-slate-500">/{plan.billingPeriod}</span>
+                    </div>
+                    {plan.usdPrice !== undefined && plan.usdPrice !== null && (
+                      <div className="flex items-center gap-1 text-xs text-slate-400 font-semibold bg-slate-50 border px-2 py-0.5 rounded-lg">
+                        <span>or</span>
+                        <span className="font-bold text-slate-700">${plan.usdPrice} USD</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-xs">
@@ -693,13 +718,14 @@ export default function AdminFinancePage() {
                     onClick={() => {
                       setEditingPlan(plan);
                       setPlanForm({
-                        code: plan.code,
+                        code: plan.code || plan._id,
                         name: plan.name,
                         description: plan.description,
-                        targetRole: plan.targetRole,
+                        targetRole: plan.targetRole || (plan.role === "RECRUITER" ? "recruiter" : "candidate"),
                         price: plan.price,
+                        usdPrice: plan.usdPrice || 0,
                         currency: plan.currency,
-                        billingPeriod: plan.billingPeriod,
+                        billingPeriod: plan.billingPeriod || "monthly",
                         jobLimit: plan.features?.jobLimit ?? 5,
                         featuredJobLimit: plan.features?.featuredJobLimit ?? 0,
                         inmailCredits: plan.features?.inmailCredits ?? 0,
@@ -776,13 +802,39 @@ export default function AdminFinancePage() {
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Price (INR)</label>
                       <input
-                        type="number"
-                        min="0"
-                        required
-                        value={planForm.price}
-                        onChange={(e) => setPlanForm({ ...planForm, price: Number(e.target.value) })}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500"
+                         type="number"
+                         min="0"
+                         required
+                         value={planForm.price}
+                         onChange={(e) => setPlanForm({ ...planForm, price: Number(e.target.value) })}
+                         className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Price (USD)</label>
+                      <input
+                         type="number"
+                         min="0"
+                         required
+                         value={planForm.usdPrice}
+                         onChange={(e) => setPlanForm({ ...planForm, usdPrice: Number(e.target.value) })}
+                         className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Target Audience</label>
+                      <select
+                        value={planForm.targetRole}
+                        onChange={(e) => setPlanForm({ ...planForm, targetRole: e.target.value as any })}
+                        className="w-full p-2.5 rounded-xl border border-slate-200 text-sm"
+                      >
+                        <option value="recruiter">Recruiters</option>
+                        <option value="candidate">Candidates</option>
+                      </select>
                     </div>
 
                     <div>

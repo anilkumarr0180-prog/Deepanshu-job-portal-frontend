@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   Lock,
   CheckCircle2,
@@ -18,7 +18,7 @@ import {
 import toast from "react-hot-toast";
 import useAuth from "@/features/auth/hooks/useAuth";
 import type { SubscriptionPlan } from "../api/subscriptionApi";
-import { createRazorpayOrder, verifyRazorpayPayment, validateCoupon } from "../api/subscriptionApi";
+import { createRazorpayOrder, verifyRazorpayPayment, createPolarCheckout, validateCoupon } from "../api/subscriptionApi";
 
 // ─── Razorpay SDK Types ─────────────────────────────────────────────────────
 
@@ -91,6 +91,8 @@ export default function EnterpriseCheckoutModal({
   const [progressPercent, setProgressPercent] = useState(0);
   const [confirmingStep, setConfirmingStep] = useState(1);
   const [isLaunchingRazorpay, setIsLaunchingRazorpay] = useState(false);
+  const [isLaunchingPolar, setIsLaunchingPolar] = useState(false);
+  const [selectedGateway, setSelectedGateway] = useState<"razorpay" | "polar">("razorpay");
 
   const [successReceipt, setSuccessReceipt] = useState<{
     txnId: string;
@@ -98,6 +100,17 @@ export default function EnterpriseCheckoutModal({
     date: string;
     method: string;
   } | null>(null);
+
+  // Auto-select gateway based on plan defaults
+  useEffect(() => {
+    if (plan) {
+      if (plan.currency === "USD" || plan.provider === "polar" || plan.providerMappings?.polar?.priceId) {
+        setSelectedGateway("polar");
+      } else {
+        setSelectedGateway("razorpay");
+      }
+    }
+  }, [plan]);
 
   // Prevent accidental reload during payment verification
   useEffect(() => {
@@ -145,7 +158,7 @@ export default function EnterpriseCheckoutModal({
       const remainingMs = end - now;
       const ratio = Math.max(0, Math.min(1, remainingMs / totalMs));
       const unadjustedCredit = userSub.planId.price * ratio;
-      // Cap proration credit so upgrade subtotal remains at least 1 Rupee
+      // Cap proration credit so upgrade subtotal remains at least 1 Rupee/Dollar
       prorationCredit = Number(Math.min(unadjustedCredit, plan.price - 1).toFixed(2));
       remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
     }
@@ -157,6 +170,7 @@ export default function EnterpriseCheckoutModal({
   const afterDiscount = Math.max(1, afterProration - discountAmount);
   const tax = Number((afterDiscount * 0.18).toFixed(2));
   const finalTotal = Math.max(1, Math.round(afterDiscount + tax));
+
   // ─── Apply Coupon ──────────────────────────────────────────────────────────
 
   const handleApplyCoupon = async () => {
@@ -166,14 +180,63 @@ export default function EnterpriseCheckoutModal({
       const res = await validateCoupon(code);
       if (res && res.data) {
         setDiscountPercent(res.data.discountValue);
-        toast.success(`🎉 Promo ${res.data.code} applied! ${res.data.discountValue}${res.data.discountType === "percentage" ? "%" : "₹"} OFF`);
+        toast.success(`🎉 Promo ${res.data.code} applied! ${res.data.discountValue}${res.data.discountType === "percentage" ? "%" : " off"}`);
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Invalid promo code");
     }
   };
 
-  // ─── Main Payment Flow ─────────────────────────────────────────────────────
+  // ─── Polar Payment Flow ───────────────────────────────────────────────────
+
+  const handlePayWithPolar = async () => {
+    setIsLaunchingPolar(true);
+    try {
+      const redirectPath = user?.role === "recruiter" ? "/recruiter/billing" : "/candidate/billing";
+      const params = new URLSearchParams();
+      params.set("planCode", plan.code);
+      if (couponCode && couponCode.trim()) {
+        params.set("couponCode", couponCode.trim());
+      }
+      const successUrl = `${window.location.origin}${redirectPath}?${params.toString()}`;
+
+      const checkoutData = await createPolarCheckout({
+        planCode: plan.code,
+        couponCode: couponCode || undefined,
+        successUrl,
+      });
+
+      // UPGRADE PATH: backend upgraded the subscription via PATCH — no Polar redirect needed
+      if (checkoutData?.upgraded === true) {
+        setIsLaunchingPolar(false);
+        setSuccessReceipt({
+          txnId: checkoutData.checkoutId || "polar_upgrade",
+          amount: finalTotal,
+          date: new Date().toLocaleDateString("en-IN", {
+            month: "short", day: "numeric", year: "numeric",
+            hour: "2-digit", minute: "2-digit",
+          }),
+          method: "Polar (Upgrade)",
+        });
+        setStep("success");
+        onSuccess({ subscription: checkoutData.subscription, transaction: null });
+        return;
+      }
+
+      // NEW SUBSCRIPTION PATH: redirect to Polar hosted checkout
+      if (checkoutData?.url) {
+        window.location.href = checkoutData.url;
+      } else {
+        toast.error("Polar checkout URL was not returned by server.");
+        setIsLaunchingPolar(false);
+      }
+    } catch (err: any) {
+      setIsLaunchingPolar(false);
+      toast.error(err?.response?.data?.message || "Failed to launch Polar checkout.");
+    }
+  };
+
+  // ─── Main Payment Flow (Razorpay) ──────────────────────────────────────────
 
   const handlePayWithRazorpay = async () => {
     setIsLaunchingRazorpay(true);
@@ -294,6 +357,9 @@ export default function EnterpriseCheckoutModal({
     setTimeout(() => setCopiedTxn(false), 2000);
   };
 
+  const rawCurrency = (plan?.currency || "INR").toUpperCase();
+  const currencySymbol = rawCurrency === "USD" ? "$" : rawCurrency === "INR" ? "₹" : `${rawCurrency} `;
+
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -382,14 +448,14 @@ export default function EnterpriseCheckoutModal({
 
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Total Charged:</span>
-                <span className="text-white font-black text-sm">₹{Math.round(finalTotal * 84)}</span>
+                <span className="text-white font-black text-sm">{currencySymbol}{Math.round(finalTotal).toLocaleString()}</span>
               </div>
 
               <div className="flex justify-between items-center border-t border-slate-800 pt-3 text-xs">
                 <span className="text-slate-400">Payment Gateway:</span>
                 <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Razorpay • 256-bit SSL</span>
+                  <span>{successReceipt.method} • 256-bit SSL</span>
                 </div>
               </div>
             </div>
@@ -415,7 +481,7 @@ export default function EnterpriseCheckoutModal({
               <div className="text-xs font-extrabold text-left leading-relaxed">
                 <span>DO NOT REFRESH OR PRESS BACK</span>
                 <span className="block font-normal text-[11px] text-amber-300/80 mt-0.5">
-                  Verifying your payment with Razorpay secure gateway...
+                  Verifying your payment...
                 </span>
               </div>
             </div>
@@ -435,7 +501,7 @@ export default function EnterpriseCheckoutModal({
                 <Shield className="w-4 h-4" />
                 <span>Confirming your payment</span>
               </div>
-              <h3 className="text-2xl font-black text-white mt-1">Verifying with Razorpay</h3>
+              <h3 className="text-2xl font-black text-white mt-1">Verifying Signature</h3>
               <p className="text-slate-400 text-xs mt-2">This usually takes a few seconds. Please wait...</p>
             </div>
 
@@ -453,8 +519,8 @@ export default function EnterpriseCheckoutModal({
                 />
               </div>
 
-              <ConfirmStep step={1} current={confirmingStep} title="Razorpay Signature Received" subtitle="Payment captured by Razorpay gateway" />
-              <ConfirmStep step={2} current={confirmingStep} title="Verifying Payment Signature" subtitle="Cryptographic HMAC-SHA256 verification" />
+              <ConfirmStep step={1} current={confirmingStep} title="Payment Signature Received" subtitle="Payment captured by gateway" />
+              <ConfirmStep step={2} current={confirmingStep} title="Verifying Signature" subtitle="Cryptographic security verification" />
               <ConfirmStep step={3} current={confirmingStep} title="Activating Subscription" subtitle="Unlocking all plan features & quotas" />
             </div>
           </div>
@@ -470,59 +536,125 @@ export default function EnterpriseCheckoutModal({
                 <div className="flex items-center gap-2 mb-1">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                    Secured by Razorpay • 256-Bit SSL
+                    Secured Gateway • 256-Bit SSL
                   </span>
                 </div>
                 <h3 className="text-xl font-black text-white tracking-tight">Complete Payment</h3>
                 <p className="text-slate-400 text-xs mt-1">
-                  You'll be redirected to Razorpay's secure checkout to complete payment.
+                  Select your preferred payment gateway to complete checkout.
                 </p>
               </div>
 
-              {/* Razorpay Info Card */}
-              <div className="bg-gradient-to-br from-indigo-950/60 via-slate-900/80 to-purple-950/40 border border-indigo-500/20 rounded-2xl p-5 space-y-4">
-                {/* Razorpay Logo Badge */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-[#072654] rounded-lg flex items-center justify-center shadow-md">
-                      <svg viewBox="0 0 40 40" className="w-5 h-5" fill="none">
-                        <path d="M8 32L20 8l12 24H8z" fill="#3395FF" />
-                        <path d="M14 20l6-12 6 12H14z" fill="#fff" opacity="0.7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <span className="text-white font-extrabold text-sm">Razorpay</span>
-                      <div className="text-[10px] text-slate-400 font-medium">India's Most Trusted Gateway</div>
-                    </div>
-                  </div>
-                  <div className="px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
-                    Test Mode
-                  </div>
-                </div>
-
-                {/* Supported payment methods */}
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Supported Payment Methods</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { icon: <CreditCard className="w-4 h-4" />, label: "Cards", sub: "Visa, MC, Amex" },
-                      { icon: <Smartphone className="w-4 h-4" />, label: "UPI", sub: "GPay, PhonePe" },
-                      { icon: <Building className="w-4 h-4" />, label: "Banking", sub: "HDFC, ICICI, SBI" },
-                    ].map((m) => (
-                      <div key={m.label} className="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 text-center">
-                        <div className="text-indigo-400 flex justify-center mb-1">{m.icon}</div>
-                        <div className="text-white text-[11px] font-bold">{m.label}</div>
-                        <div className="text-slate-500 text-[9px]">{m.sub}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Test card & Netbanking hint */}
-                <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-[10px] text-slate-400 leading-relaxed">
-                  <span className="text-amber-400 font-bold">⚡ 1-Click Test:</span> In the Razorpay popup, select <span className="text-white font-bold">Netbanking</span> (Bank of Baroda / Canara Bank) and click <span className="text-emerald-400 font-bold">Success</span>!
-                </div>
+              {/* Gateway Switcher Tabs */}
+              <div className="grid grid-cols-2 gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setSelectedGateway("razorpay")}
+                  className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-extrabold transition-all ${
+                    selectedGateway === "razorpay"
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Razorpay (INR ₹)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGateway("polar")}
+                  className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-extrabold transition-all ${
+                    selectedGateway === "polar"
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Polar ({rawCurrency})</span>
+                </button>
               </div>
+
+              {selectedGateway === "razorpay" ? (
+                /* Razorpay Info Card */
+                <div className="bg-gradient-to-br from-indigo-950/60 via-slate-900/80 to-purple-950/40 border border-indigo-500/20 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 bg-[#072654] rounded-lg flex items-center justify-center shadow-md">
+                        <svg viewBox="0 0 40 40" className="w-5 h-5" fill="none">
+                          <path d="M8 32L20 8l12 24H8z" fill="#3395FF" />
+                          <path d="M14 20l6-12 6 12H14z" fill="#fff" opacity="0.7" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="text-white font-extrabold text-sm">Razorpay</span>
+                        <div className="text-[10px] text-slate-400 font-medium">India's Most Trusted Gateway</div>
+                      </div>
+                    </div>
+                    <div className="px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                      Test Mode
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Supported Payment Methods</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { icon: <CreditCard className="w-4 h-4" />, label: "Cards", sub: "Visa, MC, Amex" },
+                        { icon: <Smartphone className="w-4 h-4" />, label: "UPI", sub: "GPay, PhonePe" },
+                        { icon: <Building className="w-4 h-4" />, label: "Banking", sub: "HDFC, ICICI, SBI" },
+                      ].map((m) => (
+                        <div key={m.label} className="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 text-center">
+                          <div className="text-indigo-400 flex justify-center mb-1">{m.icon}</div>
+                          <div className="text-white text-[11px] font-bold">{m.label}</div>
+                          <div className="text-slate-500 text-[9px]">{m.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-[10px] text-slate-400 leading-relaxed">
+                    <span className="text-amber-400 font-bold">⚡ 1-Click Test:</span> In the Razorpay popup, select <span className="text-white font-bold">Netbanking</span> (Bank of Baroda / Canara Bank) and click <span className="text-emerald-400 font-bold">Success</span>!
+                  </div>
+                </div>
+              ) : (
+                /* Polar Info Card */
+                <div className="bg-gradient-to-br from-blue-950/60 via-slate-900/80 to-indigo-950/40 border border-blue-500/20 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md text-white font-black text-xs">
+                        <Zap className="w-4 h-4 fill-amber-300 text-amber-300" />
+                      </div>
+                      <div>
+                        <span className="text-white font-extrabold text-sm">Polar Gateway</span>
+                        <div className="text-[10px] text-slate-400 font-medium">Polar Hosted Checkout ({rawCurrency})</div>
+                      </div>
+                    </div>
+                    <div className="px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                      Hosted Checkout
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Supported Payment Methods</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { icon: <CreditCard className="w-4 h-4" />, label: "Global Cards", sub: "Visa, MC, Amex" },
+                        { icon: <Shield className="w-4 h-4" />, label: "Apple / Google", sub: "Mobile One-Click" },
+                        { icon: <Zap className="w-4 h-4 text-amber-300" />, label: "Instant Sync", sub: "Auto-Activation" },
+                      ].map((m) => (
+                        <div key={m.label} className="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 text-center">
+                          <div className="text-blue-400 flex justify-center mb-1">{m.icon}</div>
+                          <div className="text-white text-[11px] font-bold">{m.label}</div>
+                          <div className="text-slate-500 text-[9px]">{m.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-[10px] text-slate-400 leading-relaxed">
+                    <span className="text-blue-400 font-bold">⚡ Secure Checkout:</span> You will be redirected to Polar's secure checkout page to complete payment.
+                  </div>
+                </div>
+              )}
 
               {/* Security features */}
               <div className="grid grid-cols-3 gap-2 text-center">
@@ -539,27 +671,48 @@ export default function EnterpriseCheckoutModal({
               </div>
 
               {/* Pay Button */}
-              <button
-                type="button"
-                onClick={handlePayWithRazorpay}
-                disabled={isLaunchingRazorpay}
-                className="w-full py-4 rounded-2xl font-extrabold text-sm uppercase tracking-wider bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-              >
-                {isLaunchingRazorpay ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Launching Razorpay...</span>
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4 text-emerald-300" />
-                    <span>Pay ₹{Math.round(finalTotal).toLocaleString("en-IN")} with Razorpay</span>
-                  </>
-                )}
-              </button>
+              {selectedGateway === "polar" ? (
+                <button
+                  type="button"
+                  onClick={handlePayWithPolar}
+                  disabled={isLaunchingPolar}
+                  className="w-full py-4 rounded-2xl font-extrabold text-sm uppercase tracking-wider bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isLaunchingPolar ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Redirecting to Polar...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-emerald-300" />
+                      <span>Pay with Polar ({currencySymbol}{Math.round(finalTotal).toLocaleString()})</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePayWithRazorpay}
+                  disabled={isLaunchingRazorpay}
+                  className="w-full py-4 rounded-2xl font-extrabold text-sm uppercase tracking-wider bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isLaunchingRazorpay ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Launching Razorpay...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-emerald-300" />
+                      <span>Pay {currencySymbol}{Math.round(finalTotal).toLocaleString()} with Razorpay</span>
+                    </>
+                  )}
+                </button>
+              )}
 
               <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-                By proceeding, you agree to our terms & authorize Razorpay to process this payment securely.
+                By proceeding, you agree to our terms & authorize {selectedGateway === "polar" ? "Polar" : "Razorpay"} to process this payment securely.
               </p>
             </div>
 
@@ -575,7 +728,7 @@ export default function EnterpriseCheckoutModal({
                       <div className="text-white font-bold text-sm">{plan.name}</div>
                       <div className="text-slate-400 text-[11px] mt-0.5 capitalize">{plan.billingPeriod} billing</div>
                     </div>
-                    <div className="text-white font-black text-lg">₹{plan.price.toLocaleString("en-IN")}</div>
+                    <div className="text-white font-black text-lg">{currencySymbol}{plan.price.toLocaleString()}</div>
                   </div>
                 </div>
 
@@ -607,7 +760,7 @@ export default function EnterpriseCheckoutModal({
                 <div className="space-y-2 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-400">
                     <span>New Plan ({plan.name})</span>
-                    <span>₹{subtotal.toLocaleString("en-IN")}</span>
+                    <span>{currencySymbol}{subtotal.toLocaleString()}</span>
                   </div>
 
                   {prorationCredit > 0 && (
@@ -616,19 +769,19 @@ export default function EnterpriseCheckoutModal({
                         <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300 shrink-0" />
                         <span>Active Plan Credit ({remainingDays}d left)</span>
                       </div>
-                      <span className="text-amber-300 font-extrabold">-₹{prorationCredit.toLocaleString("en-IN")}</span>
+                      <span className="text-amber-300 font-extrabold">-{currencySymbol}{prorationCredit.toLocaleString()}</span>
                     </div>
                   )}
 
                   {discountPercent && (
                     <div className="flex justify-between text-emerald-400 font-bold">
                       <span>Promo ({discountPercent}% off)</span>
-                      <span>-₹{discountAmount.toLocaleString("en-IN")}</span>
+                      <span>-{currencySymbol}{discountAmount.toLocaleString()}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-slate-400">
                     <span>GST (18%)</span>
-                    <span>₹{tax.toLocaleString("en-IN")}</span>
+                    <span>{currencySymbol}{tax.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -638,10 +791,10 @@ export default function EnterpriseCheckoutModal({
                 <div className="flex justify-between items-baseline">
                   <span className="text-xs font-bold text-slate-300">Total Due Today</span>
                   <span className="text-2xl font-black text-white tracking-tight">
-                    ₹{Math.round(finalTotal).toLocaleString("en-IN")}
+                    {currencySymbol}{Math.round(finalTotal).toLocaleString()}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500">Secured by Razorpay 256-bit SSL</p>
+                <p className="text-[10px] text-slate-500">Secured 256-bit SSL</p>
                 <div className="flex items-center gap-1.5 mt-2">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="text-[10px] text-slate-400">Zero contracts • Cancel anytime</span>

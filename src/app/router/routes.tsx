@@ -33,6 +33,7 @@ const BillingSettingsPage = withSuspense(lazy(() => import("@/features/subscript
 const AdminDashboardPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminDashboardPage")));
 const AdminFinancePage = withSuspense(lazy(() => import("@/features/admin/pages/AdminFinancePage")));
 const AdminJobsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminJobsPage")));
+const AdminMembershipsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminMembershipsPage")));
 const AdminProfilePage = withSuspense(lazy(() => import("@/features/admin/pages/AdminProfilePage")));
 const AdminRecruitersPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminRecruitersPage")));
 const AdminSettingsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminSettingsPage")));
@@ -157,6 +158,10 @@ export const routes: RouteObject[] = [
       {
         path: "finance",
         element: <AdminFinancePage />,
+      },
+      {
+        path: "memberships",
+        element: <AdminMembershipsPage />,
       },
       {
         path: "profile",
