@@ -11,6 +11,7 @@ import {
   Receipt,
   Layers,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -143,11 +144,13 @@ export default function BillingSettingsPage() {
         window.history.replaceState({}, document.title, cleanUrl);
       }
 
-      const data = await fetchMySubscription();
-      setSubData(data);
+      const [data, history] = await Promise.all([
+        fetchMySubscription().catch(() => null),
+        fetchBillingHistory().catch(() => []),
+      ]);
 
-      const history = await fetchBillingHistory();
-      setTransactions(history);
+      if (data) setSubData(data);
+      if (history) setTransactions(history);
     } catch (error) {
       console.error("Failed to load billing settings:", error);
     } finally {
@@ -343,6 +346,14 @@ export default function BillingSettingsPage() {
 
           {/* Actions Bar */}
           <div className="pt-6 flex flex-wrap justify-end gap-3">
+            <Link
+              to={pricingRoute}
+              className="px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-md shadow-indigo-500/20 transition-all hover:scale-[1.02] flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>{plan?.price && plan.price > 0 ? "Upgrade / Change Plan" : "View Premium Plans"}</span>
+            </Link>
+
             {plan?.price && plan.price > 0 && !subscription?.cancelAtPeriodEnd && (
               <button
                 onClick={handleCancelSubscription}
@@ -354,21 +365,13 @@ export default function BillingSettingsPage() {
             )}
 
             {plan?.price && plan.price > 0 && subscription?.cancelAtPeriodEnd && (
-              <>
-                <button
-                  onClick={handleReactivateSubscription}
-                  disabled={isReactivating}
-                  className="px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all hover:scale-[1.02]"
-                >
-                  {isReactivating ? "Processing..." : "Turn On Auto-Pay"}
-                </button>
-                <Link
-                  to={pricingRoute}
-                  className="px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-500 transition-all hover:scale-[1.02]"
-                >
-                  Renew / Upgrade Plan
-                </Link>
-              </>
+              <button
+                onClick={handleReactivateSubscription}
+                disabled={isReactivating}
+                className="px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all hover:scale-[1.02]"
+              >
+                {isReactivating ? "Processing..." : "Turn On Auto-Pay"}
+              </button>
             )}
           </div>
         </div>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Lock,
   CheckCircle2,
@@ -192,7 +192,8 @@ export default function EnterpriseCheckoutModal({
   const handlePayWithPolar = async () => {
     setIsLaunchingPolar(true);
     try {
-      const redirectPath = user?.role === "recruiter" ? "/recruiter/billing" : "/candidate/billing";
+      // Redirect back to current page on payment completion
+      const redirectPath = window.location.pathname || (user?.role === "recruiter" ? "/recruiter/billing" : "/candidate/billing");
       const params = new URLSearchParams();
       params.set("planCode", plan.code);
       if (couponCode && couponCode.trim()) {
@@ -206,24 +207,7 @@ export default function EnterpriseCheckoutModal({
         successUrl,
       });
 
-      // UPGRADE PATH: backend upgraded the subscription via PATCH — no Polar redirect needed
-      if (checkoutData?.upgraded === true) {
-        setIsLaunchingPolar(false);
-        setSuccessReceipt({
-          txnId: checkoutData.checkoutId || "polar_upgrade",
-          amount: finalTotal,
-          date: new Date().toLocaleDateString("en-IN", {
-            month: "short", day: "numeric", year: "numeric",
-            hour: "2-digit", minute: "2-digit",
-          }),
-          method: "Polar (Upgrade)",
-        });
-        setStep("success");
-        onSuccess({ subscription: checkoutData.subscription, transaction: null });
-        return;
-      }
-
-      // NEW SUBSCRIPTION PATH: redirect to Polar hosted checkout
+      // Redirect user directly to Polar hosted checkout URL to complete payment
       if (checkoutData?.url) {
         window.location.href = checkoutData.url;
       } else {
