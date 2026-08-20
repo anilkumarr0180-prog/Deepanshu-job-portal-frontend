@@ -175,7 +175,7 @@ export default function DashboardHeader() {
 
                   <p className="text-[10px] capitalize leading-tight text-slate-400">
                     {userSub && userSub.planCode && !userSub.planCode.includes("free")
-                      ? userSub.planCode.replace("_", " ").toUpperCase()
+                      ? (userSub.planId?.name || (userSub.planCode.includes("premium") ? "Career Premium" : "Career Pro"))
                       : (user?.role ?? "member")}
                   </p>
                 </div>
