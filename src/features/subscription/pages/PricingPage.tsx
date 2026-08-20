@@ -69,9 +69,19 @@ export default function PricingPage() {
 
   const loadData = async () => {
     try {
-      setIsLoading(true);
+      if (plans.length === 0) {
+        setIsLoading(true);
+      }
 
-      const plansData = await fetchPlans(activeRoleTab);
+      // Fetch plans and user subscription in parallel for high speed
+      const [plansData, subData] = await Promise.all([
+        fetchPlans(activeRoleTab).catch((err) => {
+          console.error("Failed to load plans:", err);
+          return [] as SubscriptionPlan[];
+        }),
+        authUser ? fetchMySubscription().catch(() => null) : Promise.resolve(null),
+      ]);
+
       const canonicalPlans = (plansData || []).filter(
         (p) =>
           !p.code?.toLowerCase().startsWith("unmapped_") &&
@@ -80,6 +90,10 @@ export default function PricingPage() {
           !p.name?.toLowerCase().includes("unmapped")
       );
       setPlans(canonicalPlans);
+
+      if (subData?.subscription) {
+        setUserSub(subData.subscription);
+      }
 
       // Verify Polar checkout if checkoutId is present in URL search params
       const searchParams = new URLSearchParams(window.location.search);
@@ -102,9 +116,16 @@ export default function PricingPage() {
             sessionStorage.setItem(sessionKey, "true");
             toast.success(verifyRes.message || "Subscription activated via Polar!");
             
+            if (verifyRes?.data?.subscription) {
+              setUserSub(verifyRes.data.subscription);
+            } else {
+              const freshSub = await fetchMySubscription().catch(() => null);
+              if (freshSub?.subscription) setUserSub(freshSub.subscription);
+            }
+
             // Look up plan details for the popup
             const matchedPlan = canonicalPlans.find((p) => p.code === planCode);
-            const period = matchedPlan?.billingPeriod || "monthly";
+            const period = matchedPlan?.billingPeriod || (planCode?.includes("yearly") ? "yearly" : "monthly");
             const amtStr = matchedPlan?.usdPrice ? `$${matchedPlan.usdPrice} USD` : (planCode?.includes("yearly") ? "$799 USD" : "$99 USD");
 
             setSuccessModalData({
@@ -121,15 +142,8 @@ export default function PricingPage() {
         const cleanUrl = window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
       }
-
-      if (authUser) {
-        const subData = await fetchMySubscription();
-        if (subData?.subscription) {
-          setUserSub(subData.subscription);
-        }
-      }
     } catch (error) {
-      console.error("Failed to load plans:", error);
+      console.error("Failed to load pricing data:", error);
     } finally {
       setIsLoading(false);
     }
