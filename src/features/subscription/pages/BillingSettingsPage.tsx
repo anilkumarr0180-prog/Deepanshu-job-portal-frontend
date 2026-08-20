@@ -12,6 +12,8 @@ import {
   Layers,
   Loader2,
   Sparkles,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 
 import {
@@ -47,6 +49,8 @@ export default function BillingSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
   const [isReactivating, setIsReactivating] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
   const [downloadingTxId, setDownloadingTxId] = useState<string | null>(null);
   const [successModalData, setSuccessModalData] = useState<{
     isOpen: boolean;
@@ -158,15 +162,16 @@ export default function BillingSettingsPage() {
     }
   };
 
-  const handleCancelSubscription = async () => {
-    if (!window.confirm("Are you sure you want to cancel auto-renewal for your subscription?")) {
-      return;
-    }
+  const handleCancelSubscription = () => {
+    setIsCancelModalOpen(true);
+  };
 
+  const handleConfirmCancel = async () => {
     try {
       setIsCanceling(true);
       await cancelSubscription();
       toast.success("Subscription auto-renewal disabled. Unused period remains active.");
+      setIsCancelModalOpen(false);
       loadBillingInfo();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to cancel auto-renewal.");
@@ -175,11 +180,16 @@ export default function BillingSettingsPage() {
     }
   };
 
-  const handleReactivateSubscription = async () => {
+  const handleReactivateSubscription = () => {
+    setIsReactivateModalOpen(true);
+  };
+
+  const handleConfirmReactivate = async () => {
     try {
       setIsReactivating(true);
       await reactivateSubscription();
       toast.success("🎉 Auto-pay re-enabled! Subscription will automatically renew at period end.");
+      setIsReactivateModalOpen(false);
       loadBillingInfo();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to re-enable auto-pay.");
@@ -443,6 +453,156 @@ export default function BillingSettingsPage() {
           )}
         </div>
       </div>
+
+      
+      {/* Custom Reactivate Auto-Renewal Confirmation Modal */}
+      {isReactivateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900 border border-slate-800/90 p-6 sm:p-8 shadow-2xl shadow-emerald-500/10 text-left">
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <button
+              onClick={() => setIsReactivateModalOpen(false)}
+              disabled={isReactivating}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight">
+                  Turn On Auto-Renewal? 🔄
+                </h2>
+                <p className="text-slate-400 text-xs">
+                  Keep your {plan?.name || "Career Pro"} membership uninterrupted
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 mb-5 flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0 mt-0.5" />
+              <p className="text-slate-300 text-xs leading-relaxed">
+                Your <strong className="text-emerald-400 font-bold">{plan?.name || "Career Pro"}</strong> plan will automatically renew on <strong className="text-white font-semibold">{subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "the cycle renewal date"}</strong> so you never lose feature access or active quotas.
+              </p>
+            </div>
+
+            <div className="bg-slate-950/50 border border-slate-800/80 rounded-2xl p-4 mb-6 space-y-2">
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                What this means:
+              </p>
+              <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                <li>Your saved payment method will be charged automatically at period end.</li>
+                <li>Zero interruption to top applicant badge, InMails, and job boost slots.</li>
+                <li>You can pause or disable auto-pay anytime from this billing dashboard.</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={() => setIsReactivateModalOpen(false)}
+                disabled={isReactivating}
+                className="w-full sm:w-1/2 py-3.5 px-5 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition-all text-center"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleConfirmReactivate}
+                disabled={isReactivating}
+                className="w-full sm:w-1/2 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] text-center flex items-center justify-center gap-2"
+              >
+                {isReactivating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Activating...</span>
+                  </>
+                ) : (
+                  <span>Enable Auto-Pay</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Polar Success Confirmation Modal */}
+            {/* Custom Cancellation Confirmation Modal */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900 border border-slate-800/90 p-6 sm:p-8 shadow-2xl shadow-rose-500/10 text-left">
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-60 h-60 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <button
+              onClick={() => setIsCancelModalOpen(false)}
+              disabled={isCanceling}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight">
+                  Pause Auto-Renewal?
+                </h2>
+                <p className="text-slate-400 text-xs">
+                  Manage your {plan?.name || "Career Pro"} subscription
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 mb-5 flex items-start gap-3">
+              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <p className="text-slate-300 text-xs leading-relaxed">
+                <strong className="text-white font-bold">Good news:</strong> You will keep <strong className="text-emerald-400">{plan?.name || "Career Pro"}</strong> features until <strong className="text-white font-semibold">{subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "the end of your cycle"}</strong>. You will not be charged again.
+              </p>
+            </div>
+
+            <div className="bg-slate-950/50 border border-slate-800/80 rounded-2xl p-4 mb-6 space-y-2">
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                What happens at cycle end:
+              </p>
+              <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                <li>Your account gracefully reverts to the Free Starter tier.</li>
+                <li>Unused monthly InMail and top applicant features will expire.</li>
+                <li>You can re-enable Auto-Pay at any time with 1 click.</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={() => setIsCancelModalOpen(false)}
+                disabled={isCanceling}
+                className="w-full sm:w-1/2 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] text-center"
+              >
+                Keep My Subscription
+              </button>
+
+              <button
+                onClick={handleConfirmCancel}
+                disabled={isCanceling}
+                className="w-full sm:w-1/2 py-3.5 px-5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-bold text-xs uppercase tracking-wider transition-all text-center flex items-center justify-center gap-2"
+              >
+                {isCanceling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Disabling...</span>
+                  </>
+                ) : (
+                  <span>Confirm Cancellation</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Polar Success Confirmation Modal */}
       <PaymentSuccessModal
