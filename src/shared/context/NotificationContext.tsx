@@ -113,7 +113,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
 
     const socketInstance = io(backendUrl, {
       auth: { token: `Bearer ${token}` },
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,

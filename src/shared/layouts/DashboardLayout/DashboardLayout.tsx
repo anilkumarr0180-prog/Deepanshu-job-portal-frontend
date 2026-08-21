@@ -8,7 +8,7 @@ import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 export default function DashboardLayout() {
   // Fetch unread chat count globally so the badge is active anywhere in the dashboard
   useUnreadChatCount();
-  
+
   // Establish socket connection globally to listen for real-time unread count updates
   useChatSocket();
 
