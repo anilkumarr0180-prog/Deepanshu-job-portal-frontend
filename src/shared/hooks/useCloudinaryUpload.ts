@@ -16,6 +16,12 @@ export interface UploadResult {
 }
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_POST_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 const ALLOWED_RESUME_TYPES = [
   "application/pdf",
   "application/msword",
@@ -40,9 +46,24 @@ export function useCloudinaryUpload() {
     (file: File, type: CloudinaryUploadType): boolean => {
       setError(null);
 
-      if (type === "profile" || type === "company-logo") {
+      if (type === "post") {
+        if (!ALLOWED_POST_IMAGE_TYPES.includes(file.type.toLowerCase())) {
+          const msg =
+            "Invalid file format. Only JPG, PNG, WebP, and GIF images are allowed.";
+          setError(msg);
+          toast.error(msg);
+          return false;
+        }
+        if (file.size > MAX_IMAGE_SIZE) {
+          const msg = "File size exceeds limit. Maximum allowed size is 5MB.";
+          setError(msg);
+          toast.error(msg);
+          return false;
+        }
+      } else if (type === "profile" || type === "company-logo") {
         if (!ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())) {
-          const msg = "Invalid file format. Only JPG, PNG, and WebP images are allowed.";
+          const msg =
+            "Invalid file format. Only JPG, PNG, and WebP images are allowed.";
           setError(msg);
           toast.error(msg);
           return false;
@@ -61,13 +82,15 @@ export function useCloudinaryUpload() {
           file.name.toLowerCase().endsWith(".docx");
 
         if (!isPdfOrDoc) {
-          const msg = "Invalid document format. Please upload a PDF or DOC file.";
+          const msg =
+            "Invalid document format. Please upload a PDF or DOC file.";
           setError(msg);
           toast.error(msg);
           return false;
         }
         if (file.size > MAX_RESUME_SIZE) {
-          const msg = "Resume file size exceeds limit. Maximum allowed size is 10MB.";
+          const msg =
+            "Resume file size exceeds limit. Maximum allowed size is 10MB.";
           setError(msg);
           toast.error(msg);
           return false;
@@ -105,7 +128,12 @@ export function useCloudinaryUpload() {
         formData.append("api_key", sig.apiKey);
         formData.append("timestamp", String(sig.timestamp));
         formData.append("signature", sig.signature);
-        formData.append("upload_preset", sig.uploadPreset);
+        if (sig.folder) {
+          formData.append("folder", sig.folder);
+        }
+        if (sig.uploadPreset) {
+          formData.append("upload_preset", sig.uploadPreset);
+        }
 
         // Step 3: Direct upload to Cloudinary with progress tracking
         const response = await axios.post<UploadResult>(cloudinaryUrl, formData, {

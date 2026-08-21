@@ -1,13 +1,18 @@
 import { axiosInstance } from "@/lib/axios";
 
-export type CloudinaryUploadType = "profile" | "company-logo" | "resume";
+export type CloudinaryUploadType =
+  | "profile"
+  | "company-logo"
+  | "resume"
+  | "post";
 
 export interface SignatureResponse {
   timestamp: number;
   signature: string;
-  uploadPreset: string;
+  folder: string;
   cloudName: string;
   apiKey: string;
+  uploadPreset?: string;
 }
 
 export interface AuthenticatedResumeUrlPayload {

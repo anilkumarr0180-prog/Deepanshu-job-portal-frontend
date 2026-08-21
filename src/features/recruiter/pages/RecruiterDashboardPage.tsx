@@ -14,6 +14,7 @@ import QuickActions from "../components/QuickActions";
 import DashboardInsights from "../components/DashboardInsights";
 import RecentJobsTable from "../components/RecentJobsTable";
 import RecentApplicantsTable from "../components/RecentApplicantsTable";
+import RecentPosts from "@/features/posts/components/RecentPosts";
 import { quickActions } from "../constants";
 
 export default function RecruiterDashboardPage() {
@@ -106,6 +107,9 @@ export default function RecruiterDashboardPage() {
           <RecentApplicantsTable applicants={recentApplicants} isLoading={applicationsLoading} />
         )}
       </div>
+
+      {/* Community / Recent Posts Section */}
+      <RecentPosts limit={3} />
     </div>
   );
 }

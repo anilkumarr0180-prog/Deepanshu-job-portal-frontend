@@ -29,6 +29,7 @@ import ProfileCompletionCard from "../components/ProfileCompletionCard";
 import QuickActions from "../components/QuickActions";
 import RecentApplicationsTable from "../components/RecentApplicationsTable";
 import RecommendedJobs from "../components/RecommendedJobs";
+import RecentPosts from "@/features/posts/components/RecentPosts";
 
 import type { CandidateStat } from "../types";
 
@@ -179,6 +180,9 @@ export default function CandidateDashboardPage() {
       ) : (
         <RecentApplicationsTable applications={recentApplications} />
       )}
+
+      {/* Community / Recent Posts Section */}
+      <RecentPosts limit={3} />
     </div>
   );
 }

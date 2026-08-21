@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CreditCard,
   FileText,
+  Globe,
   LayoutGrid,
   MessageSquare,
   Search,
@@ -38,6 +39,7 @@ export const dashboardConfig = {
       { label: "Dashboard", to: "/recruiter/dashboard", icon: LayoutGrid },
       { label: "Jobs", to: "/recruiter/jobs", icon: BriefcaseBusiness },
       { label: "Applicants", to: "/recruiter/applicants", icon: Users },
+      { label: "Networking", to: "/recruiter/networking", icon: Globe },
       { label: "Messages", to: "/recruiter/messages", icon: MessageSquare },
       { label: "Company", to: "/recruiter/company", icon: Building2 },
       { label: "Profile", to: "/recruiter/profile", icon: UserRound },
@@ -54,6 +56,7 @@ export const dashboardConfig = {
     menu: [
       { label: "Dashboard", to: "/candidate/dashboard", icon: LayoutGrid },
       { label: "Browse Jobs", to: "/candidate/jobs", icon: Search },
+      { label: "Networking", to: "/candidate/networking", icon: Globe },
       { label: "Saved Jobs", to: "/candidate/saved", icon: Bookmark },
       { label: "Applied Jobs", to: "/candidate/applied", icon: BriefcaseBusiness },
       { label: "Messages", to: "/candidate/messages", icon: MessageSquare },
