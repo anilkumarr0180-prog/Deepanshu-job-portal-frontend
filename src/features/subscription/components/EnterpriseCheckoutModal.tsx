@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuth from "@/features/auth/hooks/useAuth";
+import { useNotifications } from "@/shared/context/NotificationContext";
 import type { SubscriptionPlan } from "../api/subscriptionApi";
 import { createRazorpayOrder, verifyRazorpayPayment, createPolarCheckout, validateCoupon } from "../api/subscriptionApi";
 
@@ -84,6 +85,7 @@ export default function EnterpriseCheckoutModal({
   onSuccess,
 }: EnterpriseCheckoutModalProps) {
   const { user } = useAuth();
+  const { refetchNotifications } = useNotifications();
   const [step, setStep] = useState<"details" | "confirming" | "success">("details");
   const [couponCode, setCouponCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState<number | null>(null);
@@ -308,6 +310,7 @@ export default function EnterpriseCheckoutModal({
             });
 
             setStep("success");
+            void refetchNotifications();
             onSuccess(verifyResult.data);
           } catch (err: any) {
             toast.error(err?.response?.data?.message || "Payment verification failed.");

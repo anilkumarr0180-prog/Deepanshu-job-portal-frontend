@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -12,18 +12,24 @@ import {
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import ConversationSidebar from "@/features/chat/components/ConversationSidebar";
 import ChatWindow from "@/features/chat/components/ChatWindow";
+import type { ChatConversation } from "@/features/chat/types/chat.types";
+import { getUserIdString } from "@/features/chat/types/chat.types";
 
 export default function CandidateMessagesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialConvId = searchParams.get("conversationId");
   const jobIdParam = searchParams.get("jobId");
+  const userIdParam = searchParams.get("userId") || searchParams.get("targetUserId");
+  const nameParam = searchParams.get("name");
+  const roleParam = searchParams.get("role");
+  const avatarParam = searchParams.get("avatar");
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConvId);
-  const [showMobileChat, setShowMobileChat] = useState<boolean>(Boolean(initialConvId));
+  const [showMobileChat, setShowMobileChat] = useState<boolean>(Boolean(initialConvId || userIdParam));
+  const [draftConversation, setDraftConversation] = useState<ChatConversation | null>(null);
 
-  // Track if we've already auto-created a conversation for this jobId
-  // to prevent the mutate firing again on re-renders
-  const creatingForJobId = useRef<string | null>(null);
+  // Guard against duplicate mutation triggers
+  const creationAttemptedRef = useRef<string | null>(null);
 
   const { user } = useAuth();
   const currentUserId = user?.id || (user as any)?._id || "";
@@ -37,49 +43,108 @@ export default function CandidateMessagesPage() {
 
   const createConversation = useCreateConversation();
 
-  // If jobId param is in URL, create/get a conversation for it.
-  // Guard prevents duplicate calls on re-render.
+  // Handle URL query parameters (userId or jobId) to initialize conversation
   useEffect(() => {
-    if (!jobIdParam || !user) return;
-    if (creatingForJobId.current === jobIdParam) return; // already in flight
-    creatingForJobId.current = jobIdParam;
+    if (!user || isLoadingConversations) return;
 
-    createConversation.mutate(
-      { jobId: jobIdParam },
-      {
-        onSuccess: (conv) => {
-          const id = conv._id || conv.id || "";
-          setActiveConversationId(id);
-          setShowMobileChat(true);
-          // Replace jobId with conversationId so a page refresh lands directly
-          setSearchParams({ conversationId: id }, { replace: true });
-        },
-        onError: (err) => {
-          console.error("Failed to initialize conversation from jobId:", err);
-          creatingForJobId.current = null; // allow retry on next render if desired
-        },
+    if (userIdParam || jobIdParam) {
+      const initKey = `${userIdParam || ""}_${jobIdParam || ""}`;
+
+      // Check if existing conversation is already loaded
+      const existingConv = conversations.find((c) => {
+        const candId = getUserIdString(c.candidateId);
+        const recId = getUserIdString(c.recruiterId);
+        const matchesUser = userIdParam ? candId === userIdParam || recId === userIdParam : true;
+        const matchesJob = jobIdParam ? ((c.jobId as any)?._id || (c.jobId as any)?.id || c.jobId) === jobIdParam : true;
+        return matchesUser && matchesJob;
+      });
+
+      if (existingConv) {
+        const id = existingConv._id || existingConv.id || "";
+        setActiveConversationId(id);
+        setShowMobileChat(true);
+        setDraftConversation(null);
+        setSearchParams({ conversationId: id }, { replace: true });
+        return;
       }
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobIdParam, user]);
 
-  // Auto-select first conversation on desktop when none is active
+      // If not found in list, attempt creation or prepare draft
+      if (creationAttemptedRef.current === initKey) return;
+      creationAttemptedRef.current = initKey;
+
+      createConversation.mutate(
+        {
+          jobId: jobIdParam || undefined,
+          targetUserId: userIdParam || undefined,
+        },
+        {
+          onSuccess: (conv) => {
+            const id = conv._id || conv.id || "";
+            setActiveConversationId(id);
+            setShowMobileChat(true);
+            setDraftConversation(null);
+            setSearchParams({ conversationId: id }, { replace: true });
+          },
+          onError: () => {
+            // If backend auto-create is waiting for first message, create a local draft session
+            if (userIdParam) {
+              const draft: ChatConversation = {
+                _id: `draft_${userIdParam}`,
+                candidateId: {
+                  _id: currentUserId,
+                  name: user.name || "Me",
+                  email: user.email || "",
+                  role: "candidate",
+                  profilePicture: (user as any).profilePicture,
+                },
+                recruiterId: {
+                  _id: userIdParam,
+                  name: nameParam || "User",
+                  email: "",
+                  role: (roleParam as any) || "candidate",
+                  profilePicture: avatarParam || undefined,
+                },
+                jobId: jobIdParam ? { _id: jobIdParam, title: "Direct Discussion" } : undefined,
+                createdAt: new Date().toISOString(),
+                unreadCount: 0,
+              };
+              setDraftConversation(draft);
+              setActiveConversationId(draft._id);
+              setShowMobileChat(true);
+            }
+          },
+        }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userIdParam, jobIdParam, user, isLoadingConversations, conversations]);
+
+  // Combine draft conversation with conversation list
+  const allConversations = useMemo(() => {
+    if (draftConversation && !conversations.some((c) => (c._id || c.id) === draftConversation._id)) {
+      return [draftConversation, ...conversations];
+    }
+    return conversations;
+  }, [draftConversation, conversations]);
+
+  // Auto-select first conversation on desktop when none is active and no query params
   useEffect(() => {
-    if (!activeConversationId && conversations.length > 0 && !jobIdParam) {
-      const firstId = conversations[0]._id || conversations[0].id || "";
+    if (!activeConversationId && allConversations.length > 0 && !jobIdParam && !userIdParam && !initialConvId) {
+      const firstId = allConversations[0]._id || allConversations[0].id || "";
       setActiveConversationId(firstId);
     }
-  }, [conversations, activeConversationId, jobIdParam]);
+  }, [allConversations, activeConversationId, jobIdParam, userIdParam, initialConvId]);
 
-  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(activeConversationId);
+  const isRealConversationId = Boolean(activeConversationId && !activeConversationId.startsWith("draft_"));
+  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(isRealConversationId ? activeConversationId : null);
   const messages = messagesData?.messages || [];
 
-  const { sendMessage, editMessage, deleteMessage, startTyping, stopTyping } = useChatSocket(activeConversationId);
+  const { sendMessage, editMessage, deleteMessage, startTyping, stopTyping } = useChatSocket(isRealConversationId ? activeConversationId : null);
 
   const activeConversation =
-    conversations.find((c) => (c._id || c.id) === activeConversationId) || null;
+    allConversations.find((c) => (c._id || c.id) === activeConversationId) || null;
 
-  const currentTypingUsers = activeConversationId
+  const currentTypingUsers = (activeConversationId && isRealConversationId)
     ? typingUsersByConversation[activeConversationId] || []
     : [];
 
@@ -89,12 +154,30 @@ export default function CandidateMessagesPage() {
     setSearchParams({ conversationId: convId }, { replace: true });
   };
 
-  const handleSendMessage = (
+  const handleSendMessage = async (
     messageText: string,
     messageType = "text",
     attachments: Record<string, unknown>[] = []
   ) => {
     if (!activeConversationId) return;
+
+    if (activeConversationId.startsWith("draft_")) {
+      try {
+        const newConv = await createConversation.mutateAsync({
+          jobId: jobIdParam || undefined,
+          targetUserId: userIdParam || undefined,
+        });
+        const realId = newConv._id || newConv.id || "";
+        setActiveConversationId(realId);
+        setDraftConversation(null);
+        setSearchParams({ conversationId: realId }, { replace: true });
+        sendMessage(realId, messageText, messageType, attachments as any);
+      } catch (err) {
+        console.error("Failed to create conversation:", err);
+      }
+      return;
+    }
+
     sendMessage(activeConversationId, messageText, messageType, attachments as any);
   };
 
@@ -107,7 +190,7 @@ export default function CandidateMessagesPage() {
         }`}
       >
         <ConversationSidebar
-          conversations={conversations}
+          conversations={allConversations}
           activeConversationId={activeConversationId}
           currentUserId={currentUserId}
           onlineUserIds={onlineUsers}
@@ -130,11 +213,11 @@ export default function CandidateMessagesPage() {
           onlineUserIds={onlineUsers}
           typingUsers={currentTypingUsers}
           onSendMessage={handleSendMessage}
-          onEditMessage={(msgId, newText) => activeConversationId && editMessage(activeConversationId, msgId, newText)}
-          onDeleteMessage={(msgId, forEveryone) => activeConversationId && deleteMessage(activeConversationId, msgId, forEveryone)}
-          onTypingStart={() => activeConversationId && startTyping(activeConversationId)}
-          onTypingStop={() => activeConversationId && stopTyping(activeConversationId)}
-          isLoadingMessages={isLoadingMessages}
+          onEditMessage={(msgId, newText) => activeConversationId && isRealConversationId && editMessage(activeConversationId, msgId, newText)}
+          onDeleteMessage={(msgId, forEveryone) => activeConversationId && isRealConversationId && deleteMessage(activeConversationId, msgId, forEveryone)}
+          onTypingStart={() => activeConversationId && isRealConversationId && startTyping(activeConversationId)}
+          onTypingStop={() => activeConversationId && isRealConversationId && stopTyping(activeConversationId)}
+          isLoadingMessages={isRealConversationId ? isLoadingMessages : false}
           onBackToSidebar={() => setShowMobileChat(false)}
         />
       </div>

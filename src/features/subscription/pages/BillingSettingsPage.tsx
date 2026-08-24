@@ -29,11 +29,13 @@ import {
 } from "../api/subscriptionApi";
 
 import useAuth from "@/features/auth/hooks/useAuth";
+import { useNotifications } from "@/shared/context/NotificationContext";
 
 import PaymentSuccessModal from "../components/PaymentSuccessModal";
 
 export default function BillingSettingsPage() {
   const { user } = useAuth();
+  const { refetchNotifications } = useNotifications();
   const pricingRoute =
     user?.role === "candidate"
       ? "/candidate/pricing"
@@ -112,6 +114,7 @@ export default function BillingSettingsPage() {
             });
             sessionStorage.setItem(sessionKey, "true");
             toast.success(verifyRes.message || "Polar payment verified & subscription activated!");
+            void refetchNotifications();
 
             // Dynamically set success modal attributes based on plan details
             const matchedPlanName = planCode?.includes("enterprise") 

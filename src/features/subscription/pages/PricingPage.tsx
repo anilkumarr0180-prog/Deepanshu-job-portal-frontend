@@ -21,6 +21,7 @@ import {
 
 import EnterpriseCheckoutModal from "../components/EnterpriseCheckoutModal";
 import PaymentSuccessModal from "../components/PaymentSuccessModal";
+import { useNotifications } from "@/shared/context/NotificationContext";
 import {
   fetchPlans,
   fetchMySubscription,
@@ -32,6 +33,7 @@ import {
 export default function PricingPage() {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
+  const { refetchNotifications } = useNotifications();
 
   const [activeRoleTab, setActiveRoleTab] = useState<"candidate" | "recruiter">(
     authUser?.role === "recruiter" ? "recruiter" : "candidate"
@@ -122,6 +124,7 @@ export default function PricingPage() {
               const freshSub = await fetchMySubscription().catch(() => null);
               if (freshSub?.subscription) setUserSub(freshSub.subscription);
             }
+            void refetchNotifications();
 
             // Look up plan details for the popup
             const matchedPlan = canonicalPlans.find((p) => p.code === planCode);

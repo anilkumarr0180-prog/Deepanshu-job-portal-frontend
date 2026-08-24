@@ -50,7 +50,7 @@ export interface TypingUserInfo {
 export interface ChatConversation {
   _id: string;
   id?: string;
-  jobId: ChatJob;
+  jobId?: ChatJob;
   candidateId: ChatUser;
   recruiterId: ChatUser;
   lastMessageId?: ChatMessage;

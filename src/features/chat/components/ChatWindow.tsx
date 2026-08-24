@@ -308,7 +308,7 @@ export default function ChatWindow({
             <h3 className="text-[15px] font-bold text-slate-900 leading-none flex items-center gap-2">
               {partner?.name || "Participant"}
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500 uppercase tracking-wide">
-                {isCandidate ? "Recruiter" : "Applicant"}
+                {partner?.role || (isCandidate ? "Recruiter" : "Applicant")}
               </span>
             </h3>
             <p className={`text-[11px] font-medium mt-0.5 ${isPartnerOnline ? "text-emerald-600" : "text-slate-400"}`}>
@@ -326,10 +326,17 @@ export default function ChatWindow({
         {/* Action buttons */}
         <div className="flex items-center gap-1">
           <div className="hidden sm:flex items-center gap-1 mr-1">
-            <div className="flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-[11px] font-semibold text-[#3C65F5]">
-              <Briefcase className="h-3.5 w-3.5" />
-              <span className="truncate max-w-[120px]">{conversation.jobId?.title || "Job Position"}</span>
-            </div>
+            {conversation.jobId?.title ? (
+              <div className="flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-[11px] font-semibold text-[#3C65F5]">
+                <Briefcase className="h-3.5 w-3.5" />
+                <span className="truncate max-w-[150px]">{conversation.jobId.title}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                <UserIcon className="h-3.5 w-3.5" />
+                <span className="truncate max-w-[150px]">Direct Networking</span>
+              </div>
+            )}
           </div>
           <button
             type="button"

@@ -180,6 +180,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       void queryClient.invalidateQueries({ queryKey: ["jobs"] });
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      void queryClient.invalidateQueries({ queryKey: ["mySubscription"] });
+      void queryClient.invalidateQueries({ queryKey: ["profile"] });
 
       // Trigger modern toast notification
       toast.custom(

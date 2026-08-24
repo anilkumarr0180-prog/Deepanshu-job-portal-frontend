@@ -216,10 +216,21 @@ export default function ConversationSidebar({
 
                     {/* Job title pill */}
                     <div className="flex items-center gap-1 mb-0.5">
-                      <Briefcase className="h-3 w-3 shrink-0 text-[#3C65F5]" />
-                      <span className="text-[11px] font-semibold text-[#3C65F5] truncate">
-                        {conv.jobId?.title || "Job Listing"}
-                      </span>
+                      {conv.jobId?.title ? (
+                        <>
+                          <Briefcase className="h-3 w-3 shrink-0 text-[#3C65F5]" />
+                          <span className="text-[11px] font-semibold text-[#3C65F5] truncate">
+                            {conv.jobId.title}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <UserIcon className="h-3 w-3 shrink-0 text-slate-400" />
+                          <span className="text-[11px] font-medium text-slate-500 truncate">
+                            Direct Message
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     {/* Last message + unread badge */}

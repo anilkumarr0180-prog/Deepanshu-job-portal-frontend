@@ -12,6 +12,7 @@ import {
 
 import { useJobs } from "@/features/jobs/hooks/useJobs";
 import { formatRelativeDate } from "@/features/jobs/utils/jobMapper";
+import ConnectionButton from "@/features/posts/components/ConnectionButton";
 
 export default function CandidatePublicDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -167,6 +168,14 @@ export default function CandidatePublicDetailsPage() {
                       Joined {formatRelativeDate(candidate.createdAt)}
                     </span>
                   )}
+
+                  <div className="ml-auto">
+                    <ConnectionButton
+                      targetUserId={candidate._id}
+                      size="sm"
+                      showDirectMessage={true}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

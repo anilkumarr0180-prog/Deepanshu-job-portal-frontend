@@ -63,9 +63,24 @@ export async function createPost(
 }
 
 /**
+ * Repost an existing post (instant or quote with commentary).
+ */
+export async function repostPost(
+  postId: string,
+  payload?: { content?: string }
+): Promise<Post> {
+  const response = await axiosInstance.post<ApiResponse<Post>>(
+    `/posts/${postId}/repost`,
+    payload || {}
+  );
+  return response.data.data;
+}
+
+/**
  * Update an existing post by ID.
  */
 export async function updatePost(
+
   postId: string,
   payload: UpdatePostPayload
 ): Promise<Post> {

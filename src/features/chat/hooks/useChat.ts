@@ -32,7 +32,7 @@ export const useCreateConversation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ jobId, targetUserId }: { jobId: string; targetUserId?: string }) =>
+    mutationFn: ({ jobId, targetUserId }: { jobId?: string; targetUserId?: string }) =>
       createOrGetConversationApi(jobId, targetUserId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });

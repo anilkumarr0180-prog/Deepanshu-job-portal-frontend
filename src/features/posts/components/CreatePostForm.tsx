@@ -9,6 +9,10 @@ import {
   Sparkles,
   X,
   PlusCircle,
+  Trophy,
+  Lightbulb,
+  HelpCircle,
+  Briefcase,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { UserAvatar } from "@/shared/components/UserAvatar";
@@ -23,6 +27,41 @@ const ALLOWED_IMAGE_TYPES = [
   "image/png",
   "image/webp",
   "image/gif",
+];
+
+const POST_SHORTCUTS = [
+  {
+    id: "milestone",
+    label: "Milestone",
+    icon: Trophy,
+    prefix: "🎉 #Milestone: ",
+    placeholder: "Excited to share a major career milestone...",
+    colorClass: "text-amber-600 bg-amber-50 hover:bg-amber-100 border-amber-200/70",
+  },
+  {
+    id: "advice",
+    label: "Career Advice",
+    icon: Lightbulb,
+    prefix: "💡 #CareerAdvice: ",
+    placeholder: "Here is a key lesson I learned recently...",
+    colorClass: "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border-emerald-200/70",
+  },
+  {
+    id: "question",
+    label: "Ask Community",
+    icon: HelpCircle,
+    prefix: "❓ #AskJobBox: ",
+    placeholder: "Looking for recommendations or feedback on...",
+    colorClass: "text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-200/70",
+  },
+  {
+    id: "hiring",
+    label: "Hiring / Tips",
+    icon: Briefcase,
+    prefix: "💼 #HiringTip: ",
+    placeholder: "For anyone preparing for job applications...",
+    colorClass: "text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-200/70",
+  },
 ];
 
 const createPostSchema = z.object({
@@ -65,6 +104,7 @@ export default function CreatePostForm() {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CreatePostFormValues>({
     resolver: zodResolver(createPostSchema),
@@ -101,18 +141,20 @@ export default function CreatePostForm() {
   const isBusy = isUploading || isPosting;
   const isValidToPost = charCount > 0 && !isOverLimit && !isBusy;
 
-  const handleExpand = () => {
-    if (!isExpanded) {
-      setIsExpanded(true);
+  const handleExpand = (defaultPrefix?: string) => {
+    setIsExpanded(true);
+    if (defaultPrefix) {
+      const current = contentValue.trim();
+      if (!current.includes(defaultPrefix.trim())) {
+        setValue("content", defaultPrefix + (current ? "\n\n" + current : ""));
+      }
     }
   };
 
   const handleCollapse = () => {
     if (isBusy) return;
     if (charCount > 0 || selectedFile) {
-      const confirmDiscard = window.confirm(
-        "Discard this draft post?"
-      );
+      const confirmDiscard = window.confirm("Discard this draft post?");
       if (!confirmDiscard) return;
     }
     reset({ content: "" });
@@ -120,11 +162,20 @@ export default function CreatePostForm() {
     setIsExpanded(false);
   };
 
+  const handleApplyShortcut = (prefix: string) => {
+    const current = contentValue.trim();
+    if (!current) {
+      setValue("content", prefix);
+    } else if (!current.includes(prefix.trim())) {
+      setValue("content", prefix + "\n\n" + current);
+    }
+    textareaRef.current?.focus();
+  };
+
   const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate MIME type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())) {
       toast.error(
         "Invalid file format. Only JPG, PNG, WebP, and GIF images are allowed."
@@ -133,14 +184,12 @@ export default function CreatePostForm() {
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_IMAGE_SIZE) {
       toast.error("Image file size exceeds 5MB limit.");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
-    // Revoke previous preview URL if any
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
@@ -170,11 +219,9 @@ export default function CreatePostForm() {
     let mediaUrl: string | undefined = undefined;
     let mediaPublicId: string | undefined = undefined;
 
-    // If an image is selected, upload to Cloudinary first
     if (selectedFile) {
       const uploadResult = await uploadFile(selectedFile, "post");
       if (!uploadResult) {
-        // Upload failed; preserve user's entered text and do not submit
         return;
       }
       mediaUrl = uploadResult.secure_url;
@@ -210,6 +257,19 @@ export default function CreatePostForm() {
     }
   };
 
+  const getRoleBadgeClasses = (role?: string) => {
+    switch (role?.toLowerCase()) {
+      case "recruiter":
+        return "bg-purple-50 text-purple-700 border-purple-200/70";
+      case "candidate":
+        return "bg-blue-50 text-blue-700 border-blue-200/70";
+      case "admin":
+        return "bg-amber-50 text-amber-800 border-amber-200/70";
+      default:
+        return "bg-slate-100 text-slate-700 border-slate-200/70";
+    }
+  };
+
   return (
     <section
       aria-label="Create a post composer"
@@ -238,40 +298,58 @@ export default function CreatePostForm() {
 
             <button
               type="button"
-              onClick={handleExpand}
+              onClick={() => handleExpand()}
               aria-expanded={false}
               aria-label="Open post composer"
               className="flex-1 flex items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/70 px-4 py-2.5 sm:py-3 text-left text-xs sm:text-sm text-slate-500 hover:bg-slate-100/70 hover:border-slate-300 transition-all duration-150 cursor-text shadow-2xs group"
             >
               <span className="truncate group-hover:text-slate-700">
-                Start a post, share insights or milestones...
+                Share a career milestone, insight, or advice...
               </span>
               <Sparkles className="h-4 w-4 text-[#3C65F5] opacity-70 shrink-0 ml-2 group-hover:opacity-100 transition" />
             </button>
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 pl-1 sm:pl-2">
-            <button
-              type="button"
-              onClick={() => {
-                setIsExpanded(true);
-                setTimeout(() => fileInputRef.current?.click(), 100);
-              }}
-              aria-label="Add photo to new post"
-              className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-blue-50/70 hover:text-[#3C65F5] transition"
-            >
-              <ImageIcon className="h-4 w-4 text-[#3C65F5]" />
-              <span>Photo</span>
-            </button>
+          {/* Quick Post Type Shortcuts */}
+          <div className="flex items-center justify-between gap-1.5 pt-1 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {POST_SHORTCUTS.map((shortcut) => {
+                const IconComponent = shortcut.icon;
+                return (
+                  <button
+                    key={shortcut.id}
+                    type="button"
+                    onClick={() => handleExpand(shortcut.prefix)}
+                    className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition active:scale-95 ${shortcut.colorClass}`}
+                  >
+                    <IconComponent className="h-3.5 w-3.5" />
+                    <span>{shortcut.label}</span>
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsExpanded(true);
+                  setTimeout(() => fileInputRef.current?.click(), 100);
+                }}
+                aria-label="Add photo to new post"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-[#3C65F5] hover:border-blue-200 transition active:scale-95"
+              >
+                <ImageIcon className="h-3.5 w-3.5 text-[#3C65F5]" />
+                <span>Photo</span>
+              </button>
+            </div>
 
             <button
               type="button"
-              onClick={handleExpand}
+              onClick={() => handleExpand()}
               aria-label="Create a post"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-[#3C65F5] hover:bg-blue-100 transition"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#3C65F5] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#3457D5] transition shrink-0"
             >
               <PlusCircle className="h-3.5 w-3.5" />
-              <span>Create Post</span>
+              <span>Post</span>
             </button>
           </div>
         </div>
@@ -291,12 +369,23 @@ export default function CreatePostForm() {
                 size="md"
               />
               <div className="min-w-0">
-                <span className="text-xs sm:text-sm font-semibold text-slate-900 block truncate">
-                  {user?.name || "You"}
-                </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                    {user?.name || "You"}
+                  </span>
+                  {user?.role && (
+                    <span
+                      className={`inline-block rounded-md border px-2 py-0.5 text-[10px] font-semibold capitalize ${getRoleBadgeClasses(
+                        user.role
+                      )}`}
+                    >
+                      {user.role}
+                    </span>
+                  )}
+                </div>
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 mt-0.5">
                   <Sparkles className="h-3 w-3 text-[#3C65F5]" />
-                  Posting to JobBox Community
+                  Posting to JobBox Professional Network
                 </span>
               </div>
             </div>
@@ -313,6 +402,27 @@ export default function CreatePostForm() {
             </button>
           </div>
 
+          {/* Quick Tag Insertion Toolbar */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-medium text-slate-400 mr-1">
+              Add Tag:
+            </span>
+            {POST_SHORTCUTS.map((shortcut) => {
+              const IconComponent = shortcut.icon;
+              return (
+                <button
+                  key={shortcut.id}
+                  type="button"
+                  onClick={() => handleApplyShortcut(shortcut.prefix)}
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition active:scale-95 ${shortcut.colorClass}`}
+                >
+                  <IconComponent className="h-3 w-3" />
+                  <span>{shortcut.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Textarea Input */}
           <div className="space-y-1.5">
             <label htmlFor="post-composer-input" className="sr-only">
@@ -327,7 +437,7 @@ export default function CreatePostForm() {
                 textareaRef.current = e;
               }}
               onKeyDown={handleKeyDown}
-              placeholder="What's on your mind? Share career milestones, hiring advice, or industry insights..."
+              placeholder="What's on your mind? Share career milestones, job search learnings, or industry insights..."
               disabled={isBusy}
               className="w-full resize-none rounded-xl border border-slate-200/90 bg-slate-50/50 p-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition duration-150 hover:bg-slate-50/80 focus:border-[#3C65F5] focus:bg-white focus:ring-2 focus:ring-[#3C65F5]/10 disabled:cursor-not-allowed disabled:opacity-60 leading-relaxed"
             />
@@ -405,7 +515,7 @@ export default function CreatePostForm() {
                 disabled={isBusy}
                 aria-label="Add an image to post"
                 title="Add photo (JPG, PNG, WebP, GIF up to 5MB)"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ImageIcon className="h-3.5 w-3.5 text-[#3C65F5]" />
                 <span>{selectedFile ? "Change Image" : "Add Image"}</span>
@@ -416,7 +526,7 @@ export default function CreatePostForm() {
                   isOverLimit
                     ? "text-red-600 font-semibold"
                     : isNearLimit
-                      ? "text-amber-600"
+                      ? "text-amber-600 font-medium"
                       : "text-slate-400"
                 }`}
               >

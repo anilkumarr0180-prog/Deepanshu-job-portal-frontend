@@ -58,13 +58,13 @@ export default function PostComments({ postId }: PostCommentsProps) {
           <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-rose-600">
             <AlertCircle className="h-4 w-4" />
           </div>
-          <p className="mt-2 text-xs font-semibold text-slate-800">
+          <p className="mt-2 text-xs font-bold text-slate-800">
             Failed to load comments
           </p>
           <button
             type="button"
             onClick={() => void refetch()}
-            className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20"
+            className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             <span>Retry Comments</span>
@@ -74,13 +74,13 @@ export default function PostComments({ postId }: PostCommentsProps) {
 
       {/* Empty State */}
       {!isLoading && !isError && comments.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
           <MessageSquare className="mx-auto h-6 w-6 text-slate-300" />
-          <p className="mt-2 text-xs font-semibold text-slate-700">
+          <p className="mt-2 text-xs font-bold text-slate-700">
             No comments yet
           </p>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            Be the first to share your thoughts!
+            Be the first to share your thoughts and join the discussion!
           </p>
         </div>
       )}
