@@ -1,9 +1,290 @@
 @import "tailwindcss";
 
-/* Sleek Enterprise Custom Scrollbar */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
+
+:root {
+  --app-bg: #f8fafc;
+  --surface-header: #ffffff;
+  --surface-sidebar: #ffffff;
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --border-subtle: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent-primary: #3c65f5;
+  --accent-tint: rgba(60, 101, 245, 0.08);
+}
+
+html.dark,
+body.dark,
+[data-theme="dark"] {
+  --app-bg: #0B1220;
+  --surface-header: #111A2B;
+  --surface-sidebar: #111A2B;
+  --surface-primary: #151F32;
+  --surface-secondary: #1B2639;
+  --surface-hover: #202D43;
+  --border-subtle: #2A3850;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --accent-primary: #5E81FF;
+  --accent-tint: rgba(94, 129, 255, 0.15);
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: var(--text-primary);
+    background-color: var(--app-bg);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* ==========================================================================
+   JOBBOX SAAS DARK THEME SYSTEM TOKENS & SURFACE MAPPINGS
+   ========================================================================== */
+
+/* 1. Shell & Base Backgrounds */
+html.dark,
+body.dark,
+[data-theme="dark"],
+html.dark body {
+  background-color: #0B1220 !important;
+  color: #F1F5F9 !important;
+}
+
+html.dark .bg-\[\#F8FAFC\],
+html.dark .bg-\[\#f8fafc\],
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/40,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/90 {
+  background-color: #0B1220 !important;
+}
+
+/* 2. Header, Sidebar & Shell Frames */
+html.dark header,
+html.dark .sticky.top-0 {
+  background-color: rgba(17, 26, 43, 0.95) !important;
+  border-color: #2A3850 !important;
+}
+
+html.dark aside,
+html.dark aside > div,
+html.dark .fixed.h-screen {
+  background-color: #111A2B !important;
+  border-color: #2A3850 !important;
+}
+
+/* 3. Primary Surfaces (Cards, Panels, Modals, Popovers, Drawers, Dropdowns) */
+html.dark .bg-white,
+html.dark .bg-white\/95,
+html.dark .bg-white\/90,
+html.dark [role="menu"],
+html.dark [role="dialog"],
+html.dark .modal {
+  background-color: #151F32 !important;
+}
+
+/* 4. Secondary Surfaces (Nested cards, inputs, search bars, tabs container) */
+html.dark .bg-slate-100,
+html.dark .bg-slate-100\/90,
+html.dark .bg-slate-100\/80,
+html.dark .bg-slate-100\/70,
+html.dark .bg-slate-100\/50 {
+  background-color: #1B2639 !important;
+}
+
+/* Gradients in Dark Mode */
+html.dark [class*="bg-gradient-to-"][class*="from-slate-50"],
+html.dark [class*="bg-gradient-to-"][class*="to-white"],
+html.dark [class*="bg-gradient-to-"][class*="to-slate-50"],
+html.dark .bg-gradient-to-r.from-slate-50.to-blue-50\/60,
+html.dark .bg-gradient-to-b.from-slate-50.to-white {
+  background-image: none !important;
+  background-color: #151F32 !important;
+}
+
+/* 5. Hover Surfaces (Interactive elements, table rows, button hovers) */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-white\/50:hover,
+html.dark .hover\:bg-white\/60:hover,
+html.dark .hover\:bg-blue-50\/40:hover,
+html.dark .hover\:bg-blue-50\/60:hover,
+html.dark .hover\:bg-blue-50\/70:hover {
+  background-color: #202D43 !important;
+}
+
+html.dark .bg-slate-200 {
+  background-color: #202D43 !important;
+}
+
+/* 6. Subtle Borders */
+html.dark .border-slate-200,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/70,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-100,
+html.dark .border-slate-300 {
+  border-color: #2A3850 !important;
+}
+
+html.dark .hover\:border-slate-300:hover,
+html.dark .hover\:border-slate-200:hover {
+  border-color: #384A68 !important;
+}
+
+/* 7. Semantic Typography */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-\[\#05264E\] {
+  color: #F1F5F9 !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500 {
+  color: #94A3B8 !important;
+}
+
+html.dark .text-slate-400 {
+  color: #64748B !important;
+}
+
+/* 8. Form Inputs, Selects, and Textareas */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #1B2639 !important;
+  border-color: #2A3850 !important;
+  color: #F1F5F9 !important;
+}
+
+html.dark input:disabled,
+html.dark select:disabled,
+html.dark textarea:disabled {
+  background-color: #151F32 !important;
+  border-color: #2A3850 !important;
+  color: #64748B !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* 9. Balanced Translucent Tints & Badges */
+html.dark .bg-blue-50,
+html.dark .bg-blue-50\/40,
+html.dark .bg-blue-50\/70,
+html.dark .bg-blue-50\/80,
+html.dark .bg-blue-50\/90 {
+  background-color: rgba(94, 129, 255, 0.14) !important;
+}
+
+html.dark .border-blue-100,
+html.dark .border-blue-200,
+html.dark .border-blue-200\/60,
+html.dark .border-blue-200\/70 {
+  border-color: rgba(94, 129, 255, 0.3) !important;
+}
+
+html.dark .text-blue-600,
+html.dark .text-blue-700,
+html.dark .text-\[\#3C65F5\] {
+  color: #7AA2FF !important;
+}
+
+html.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+}
+html.dark .border-emerald-100,
+html.dark .border-emerald-200,
+html.dark .border-emerald-200\/60 {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+html.dark .text-emerald-600,
+html.dark .text-emerald-700 {
+  color: #34D399 !important;
+}
+
+html.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+html.dark .border-amber-100,
+html.dark .border-amber-200,
+html.dark .border-amber-200\/60 {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+html.dark .text-amber-600,
+html.dark .text-amber-700,
+html.dark .text-amber-800 {
+  color: #FBBF24 !important;
+}
+
+html.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.14) !important;
+}
+html.dark .border-purple-100,
+html.dark .border-purple-200,
+html.dark .border-purple-200\/70 {
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+html.dark .text-purple-600,
+html.dark .text-purple-700 {
+  color: #C084FC !important;
+}
+
+html.dark .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.14) !important;
+}
+html.dark .border-rose-100,
+html.dark .border-rose-200 {
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+html.dark .text-rose-600,
+html.dark .text-rose-500 {
+  color: #FB7185 !important;
+}
+
+/* 10. Depth & Elevation Shadows */
+html.dark .shadow-xs,
+html.dark .shadow-sm,
+html.dark .shadow-2xs,
+html.dark .shadow-md {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 11. Sleek Enterprise Custom Scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(203, 213, 225, 0.7) transparent;
+}
+
+html.dark .custom-scrollbar {
+  scrollbar-color: #2A3850 transparent !important;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -20,6 +301,14 @@
   transition: background-color 0.2s ease;
 }
 
+html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #2A3850 !important;
+}
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(148, 163, 184, 0.9);
+}
+
+html.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #384A68 !important;
 }

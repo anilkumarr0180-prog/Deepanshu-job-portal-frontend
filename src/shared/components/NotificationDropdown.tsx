@@ -32,7 +32,7 @@ const getNotificationIcon = (type: NotificationType, title?: string) => {
     return <Crown className="w-4 h-4 text-amber-500" />;
   }
 
-    switch (type) {
+  switch (type) {
     case "CONNECTION_REQUEST":
       return <UserPlus className="w-4 h-4 text-[#3C65F5]" />;
     case "CONNECTION_ACCEPTED":
@@ -107,13 +107,14 @@ export const NotificationDropdown: React.FC = () => {
   const handleNotificationClick = async (
     id: string,
     link?: string,
-    isRead?: boolean
+    isRead?: boolean,
+    type?: string
   ) => {
     if (!isRead) {
       await markAsRead(id);
     }
     setIsOpen(false);
-    const targetLink = normalizeNotificationLink(link, user?.role);
+    const targetLink = normalizeNotificationLink(link, user?.role, type);
     if (targetLink) {
       navigate(targetLink);
     }
@@ -223,7 +224,7 @@ export const NotificationDropdown: React.FC = () => {
                   <div
                     key={itemId}
                     onClick={() =>
-                      handleNotificationClick(itemId, item.link, isRead)
+                      handleNotificationClick(itemId, item.link, isRead, item.type)
                     }
                     className={`flex items-start gap-3 p-3.5 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
                       !isRead ? "bg-blue-50/30" : ""

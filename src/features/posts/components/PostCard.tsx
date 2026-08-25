@@ -17,6 +17,9 @@ import {
   Trash2,
   X,
   ExternalLink,
+  Link2,
+  Flag,
+  Bookmark,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuth from "@/features/auth/hooks/useAuth";
@@ -27,6 +30,7 @@ import {
   useUnlikePost,
   useUpdatePost,
   useDeletePost,
+  useToggleSavePost,
 } from "../hooks";
 import {
   formatPostTimestamp,
@@ -36,6 +40,7 @@ import { useUserProfileModal } from "../context/UserProfileContext";
 import PostComments from "./PostComments";
 import RepostModal from "./RepostModal";
 import SharePostModal from "./SharePostModal";
+import ReportModal from "./ReportModal";
 import type { Post, PostAuthor } from "../types/post.types";
 
 const MAX_POST_LENGTH = 5000;
@@ -62,7 +67,7 @@ function renderFormattedContent(text: string) {
       return (
         <span
           key={idx}
-          className="font-semibold text-[#3C65F5] hover:underline cursor-pointer"
+          className="font-semibold text-blue-600 hover:underline cursor-pointer"
         >
           {part}
         </span>
@@ -119,8 +124,12 @@ export default function PostCard({ post }: PostCardProps) {
 
   const isLiked = Boolean(post.isLiked);
   const isReposted = Boolean(post.isReposted);
+  const isSaved = Boolean(post.isSaved);
   const isLikePending = likeMutation.isPending || unlikeMutation.isPending;
   const isBusySaving = isUpdating || isUploading;
+
+  const toggleSaveMutation = useToggleSavePost();
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Repost info
   const isRepost = Boolean(post.originalPostId);
@@ -274,6 +283,39 @@ export default function PostCard({ post }: PostCardProps) {
     setIsShareModalOpen(true);
   };
 
+  const handleCopyLink = () => {
+    setIsMenuOpen(false);
+    const postUrl = `${window.location.origin}/posts/${post._id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(postUrl);
+      toast.success("Post link copied to clipboard!");
+    } else {
+      toast.success("Post link ready to share.");
+    }
+  };
+
+  const handleToggleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.error("Please log in to bookmark posts.");
+      return;
+    }
+    toggleSaveMutation.mutate({
+      postId: post._id,
+      isCurrentlySaved: isSaved,
+    });
+  };
+
+  const handleReportPost = () => {
+    setIsMenuOpen(false);
+    if (!isAuthenticated) {
+      toast.error("Please log in to report a post.");
+      return;
+    }
+    setIsReportModalOpen(true);
+  };
+
   const getAuthorDetails = (authorId: PostAuthor | string) => {
     if (typeof authorId === "object" && authorId !== null) {
       return {
@@ -336,11 +378,11 @@ export default function PostCard({ post }: PostCardProps) {
         {/* REPOST HEADER BANNER */}
         {isRepost && (
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-slate-500 border-b border-slate-100 pb-2.5">
-            <Repeat className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <Repeat className="h-3.5 w-3.5 text-blue-600" />
             <button
               type="button"
               onClick={handleOpenAuthorProfile}
-              className="hover:text-[#3C65F5] hover:underline font-bold text-slate-800 transition"
+              className="hover:text-blue-600 hover:underline font-bold text-slate-800 transition"
             >
               {author.name}
             </button>
@@ -364,7 +406,7 @@ export default function PostCard({ post }: PostCardProps) {
                 <button
                   type="button"
                   onClick={handleOpenAuthorProfile}
-                  className="font-bold text-slate-900 text-sm sm:text-base truncate leading-snug hover:text-[#3C65F5] hover:underline cursor-pointer transition text-left"
+                  className="font-bold text-slate-900 text-sm sm:text-base truncate leading-snug hover:text-blue-600 hover:underline cursor-pointer transition text-left"
                   title={"View " + author.name + "'s profile"}
                 >
                   {author.name}
@@ -382,7 +424,7 @@ export default function PostCard({ post }: PostCardProps) {
                 <Link
                   to={"/posts/" + post._id}
                   title={exactTimestamp}
-                  className="hover:text-[#3C65F5] hover:underline transition-colors"
+                  className="hover:text-blue-600 hover:underline transition-colors"
                 >
                   {relativeTimestamp}
                 </Link>
@@ -401,44 +443,99 @@ export default function PostCard({ post }: PostCardProps) {
             </div>
           </div>
 
-          {/* Right: Clean 3-Dot Options Dropdown */}
-          <div className="relative shrink-0" ref={menuRef}>
+          {/* Right Header Actions: Quick Bookmark + 3-Dot Options Dropdown */}
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              aria-expanded={isMenuOpen}
-              aria-label="Post actions menu"
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+              onClick={handleToggleSave}
+              disabled={toggleSaveMutation.isPending}
+              title={isSaved ? "Remove from bookmarks" : "Save post"}
+              aria-label={isSaved ? "Remove from bookmarks" : "Save post"}
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition cursor-pointer disabled:opacity-50 ${
+                isSaved
+                  ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              }`}
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <Bookmark className={`h-4 w-4 ${isSaved ? "fill-blue-600 text-blue-600" : ""}`} />
             </button>
 
-            {isMenuOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-150"
+            <div className="relative shrink-0" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                aria-expanded={isMenuOpen}
+                aria-label="Post actions menu"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
               >
-                <Link
-                  to={"/posts/" + post._id}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Open Post View</span>
-                </Link>
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
 
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    handleOpenShareModal();
-                  }}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+              {isMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-150"
                 >
-                  <Share2 className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Share Post</span>
-                </button>
+                  <Link
+                    to={"/posts/" + post._id}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+                    <span>Open Post View</span>
+                  </Link>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => {
+                      setIsMenuOpen(false);
+                      handleToggleSave(e);
+                    }}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
+                  >
+                    <Bookmark
+                      className={`h-3.5 w-3.5 ${
+                        isSaved ? "fill-blue-600 text-blue-600" : "text-slate-400"
+                      }`}
+                    />
+                    <span>{isSaved ? "Remove from Saved" : "Save Post"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleCopyLink}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
+                  >
+                    <Link2 className="h-3.5 w-3.5 text-slate-400" />
+                    <span>Copy Link</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      handleOpenShareModal();
+                    }}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
+                  >
+                    <Share2 className="h-3.5 w-3.5 text-slate-400" />
+                    <span>Share Post</span>
+                  </button>
+
+                {!isOwnPost && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleReportPost}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-rose-600 transition cursor-pointer"
+                  >
+                    <Flag className="h-3.5 w-3.5 text-slate-400" />
+                    <span>Report Post</span>
+                  </button>
+                )}
 
                 {isOwnPost && (
                   <>
@@ -447,9 +544,9 @@ export default function PostCard({ post }: PostCardProps) {
                       type="button"
                       role="menuitem"
                       onClick={handleStartEdit}
-                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
                     >
-                      <Pencil className="h-3.5 w-3.5 text-[#3C65F5]" />
+                      <Pencil className="h-3.5 w-3.5 text-blue-600" />
                       <span>Edit Post</span>
                     </button>
                     <button
@@ -459,7 +556,7 @@ export default function PostCard({ post }: PostCardProps) {
                         setIsMenuOpen(false);
                         setIsConfirmingDelete(true);
                       }}
-                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                     >
                       <Trash2 className="h-3.5 w-3.5 text-rose-600" />
                       <span>Delete Post</span>
@@ -468,6 +565,7 @@ export default function PostCard({ post }: PostCardProps) {
                 )}
               </div>
             )}
+            </div>
           </div>
         </div>
 
@@ -495,8 +593,8 @@ export default function PostCard({ post }: PostCardProps) {
               >
                 {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                 <span>Delete</span>
-              </button
-            ></div>
+              </button>
+            </div>
           </div>
         )}
 
@@ -509,7 +607,7 @@ export default function PostCard({ post }: PostCardProps) {
               {...register("content")}
               onKeyDown={handleEditKeyDown}
               disabled={isBusySaving}
-              className="w-full resize-none rounded-xl border border-slate-200/90 bg-white p-3.5 text-sm text-slate-800 outline-none transition focus:border-[#3C65F5] focus:ring-2 focus:ring-[#3C65F5]/10 disabled:opacity-60 leading-relaxed"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white p-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:opacity-60 leading-relaxed"
             />
             {errors.content && <p className="text-xs font-medium text-red-600">{errors.content.message}</p>}
 
@@ -527,7 +625,7 @@ export default function PostCard({ post }: PostCardProps) {
                 <button
                   type="submit"
                   disabled={!isValidEdit}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#3C65F5] px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#3457D5] transition disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition disabled:opacity-50"
                 >
                   {isBusySaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                   <span>Save Changes</span>
@@ -543,7 +641,7 @@ export default function PostCard({ post }: PostCardProps) {
                 <button
                   type="button"
                   onClick={() => setIsExpandedText((prev) => !prev)}
-                  className="ml-1.5 text-xs font-semibold text-[#3C65F5] hover:underline cursor-pointer"
+                  className="ml-1.5 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                 >
                   {isExpandedText ? "Show less" : "See more"}
                 </button>
@@ -642,8 +740,8 @@ export default function PostCard({ post }: PostCardProps) {
 
               {(post.repostsCount || 0) > 0 && (
                 <span className="flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-[#3C65F5] border border-blue-100">
-                    <Repeat className="h-3 w-3 text-[#3C65F5]" />
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                    <Repeat className="h-3 w-3 text-blue-600" />
                   </span>
                   <span className="font-bold text-slate-800">{post.repostsCount}</span>
                 </span>
@@ -703,14 +801,14 @@ export default function PostCard({ post }: PostCardProps) {
             className={
               "group inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 transition-all duration-150 active:scale-95 " +
               (showComments
-                ? "bg-blue-50 text-[#3C65F5] font-bold hover:bg-blue-100"
-                : "hover:bg-slate-50 hover:text-[#3C65F5] text-slate-600")
+                ? "bg-blue-50 text-blue-600 font-bold hover:bg-blue-100"
+                : "hover:bg-slate-50 hover:text-blue-600 text-slate-600")
             }
           >
             <MessageSquare
               className={
                 "h-4 w-4 transition-transform duration-200 group-hover:scale-110 " +
-                (showComments ? "text-[#3C65F5]" : "text-slate-400 group-hover:text-[#3C65F5]")
+                (showComments ? "text-blue-600" : "text-slate-400 group-hover:text-blue-600")
               }
             />
             <span className="hidden sm:inline">Comment</span>
@@ -798,6 +896,13 @@ export default function PostCard({ post }: PostCardProps) {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         post={post}
+      />
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType="post"
+        targetId={post._id}
+        targetTitle={post.content ? (post.content.slice(0, 80) + "...") : undefined}
       />
     </>
   );

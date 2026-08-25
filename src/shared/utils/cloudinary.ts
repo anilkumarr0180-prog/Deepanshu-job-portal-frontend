@@ -21,6 +21,11 @@ export function getOptimizedImageUrl(
     return url;
   }
 
+  // Prevent double-applying transformations
+  if (url.includes("/upload/c_") || url.includes("/upload/w_")) {
+    return url;
+  }
+
   const { width = 200, height = 200, crop = "fill", quality = "auto" } = options || {};
 
   const transformSegment = `c_${crop},w_${width},h_${height},g_face,q_${quality},f_auto`;

@@ -2,9 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { getPosts } from "../api/postApi";
 import type { GetPostsParams, PostsResponse } from "../types/post.types";
 
-export function usePosts(params?: GetPostsParams) {
+export function usePosts(
+  params?: GetPostsParams,
+  options?: { enabled?: boolean }
+) {
   return useQuery<PostsResponse["data"]>({
     queryKey: ["posts", params],
     queryFn: () => getPosts(params),
+    enabled: options?.enabled ?? true,
   });
 }

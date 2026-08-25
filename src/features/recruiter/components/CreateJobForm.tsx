@@ -47,6 +47,28 @@ const initialState: CreateJobFormState = {
   maxSalary: "",
 };
 
+const getInitialStateWithDefaults = (): CreateJobFormState => {
+  let defaultType = "Full Time";
+  try {
+    const saved = localStorage.getItem("jobbox_recruiter_hiring_defaults");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.defaultEmploymentType === "full-time") defaultType = "Full Time";
+      else if (parsed.defaultEmploymentType === "part-time") defaultType = "Part Time";
+      else if (parsed.defaultEmploymentType === "contract") defaultType = "Contract";
+      else if (parsed.defaultEmploymentType === "internship") defaultType = "Internship";
+      else if (parsed.defaultWorkMode === "remote") defaultType = "Remote";
+    }
+  } catch {
+    // Fallback to default
+  }
+
+  return {
+    ...initialState,
+    employmentType: defaultType,
+  };
+};
+
 export default function CreateJobForm({
   onCancel,
   initialValues,
@@ -57,7 +79,10 @@ export default function CreateJobForm({
   onSubmit,
   onSaveDraft,
 }: CreateJobFormProps) {
-  const initialFormState = useMemo<CreateJobFormState>(() => ({ ...initialState, ...initialValues }), [initialValues]);
+  const initialFormState = useMemo<CreateJobFormState>(
+    () => ({ ...getInitialStateWithDefaults(), ...initialValues }),
+    [initialValues]
+  );
   const [form, setForm] = useState<CreateJobFormState>(initialFormState);
 
   const updateField = <K extends keyof CreateJobFormState>(field: K, value: CreateJobFormState[K]) => {

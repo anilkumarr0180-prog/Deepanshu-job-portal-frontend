@@ -140,7 +140,7 @@ export default function CommentForm({
           <label htmlFor={`comment-content-${postId}-${parentCommentId || "root"}`} className="sr-only">
             {isReply ? "Write a reply" : "Write a comment"}
           </label>
-          <textarea
+            <textarea
             id={`comment-content-${postId}-${parentCommentId || "root"}`}
             rows={isReply ? 2 : 2}
             {...register("content")}
@@ -151,7 +151,7 @@ export default function CommentForm({
                 : "Write a constructive comment or reaction... (Ctrl+Enter to post)"
             }
             disabled={isPending}
-            className="w-full resize-none rounded-xl border border-slate-200/90 bg-slate-50/60 p-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 outline-none transition hover:bg-slate-50/90 focus:border-[#3C65F5] focus:bg-white focus:ring-2 focus:ring-[#3C65F5]/10 disabled:cursor-not-allowed disabled:opacity-60 leading-relaxed"
+            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 outline-none transition hover:bg-slate-50/90 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 leading-relaxed"
             autoFocus={isReply}
           />
         </div>
@@ -191,7 +191,7 @@ export default function CommentForm({
           <button
             type="submit"
             disabled={!isValidComment}
-            className="inline-flex min-h-[32px] items-center justify-center gap-1.5 rounded-xl bg-[#3C65F5] px-3.5 py-1 text-xs font-semibold text-white shadow-xs transition hover:bg-[#3457D5] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-[32px] items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? (
               <>

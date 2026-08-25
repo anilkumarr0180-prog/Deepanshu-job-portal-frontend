@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   AlertCircle,
   ChevronLeft,
@@ -10,7 +10,6 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import useAuth from "@/features/auth/hooks/useAuth";
 import { usePosts } from "../hooks/usePosts";
 import PostCard from "./PostCard";
 import type { Post } from "../types/post.types";
@@ -28,7 +27,6 @@ export default function PostFeed({
   limit = 10,
   onPageChange,
 }: PostFeedProps) {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
 
   const { data, isLoading, isError, refetch, isFetching } = usePosts({
@@ -41,43 +39,15 @@ export default function PostFeed({
   const rawPosts: Post[] = data?.items || data?.posts || [];
   const pagination = data?.pagination;
 
-  // Filter or sort posts based on active tab
-  const currentUserId = user?._id || user?.id;
-
-  const displayPosts = useMemo(() => {
-    if (!rawPosts || rawPosts.length === 0) return [];
-
-    if (activeTab === "for-you") {
-      // Sort by engagement score (likes + comments) while preserving freshness
-      return [...rawPosts].sort((a, b) => {
-        const scoreA = (a.likesCount || 0) * 2 + (a.commentsCount || 0) * 3;
-        const scoreB = (b.likesCount || 0) * 2 + (b.commentsCount || 0) * 3;
-        if (scoreB !== scoreA) {
-          return scoreB - scoreA;
-        }
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+  const handleTabChange = (tab: FeedTab) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      onPageChange?.(1);
     }
+  };
 
-    if (activeTab === "my-network") {
-      // Show posts by current user or recruiter posts
-      if (!currentUserId) return rawPosts;
-      return rawPosts.filter((p) => {
-        const authorId =
-          typeof p.authorId === "object" && p.authorId !== null
-            ? p.authorId._id
-            : p.authorId;
-        const role =
-          typeof p.authorId === "object" && p.authorId !== null
-            ? p.authorId.role
-            : undefined;
-        return String(authorId) === String(currentUserId) || role === "recruiter";
-      });
-    }
-
-    // Default "recent": newest first
-    return rawPosts;
-  }, [rawPosts, activeTab, currentUserId]);
+  // Server provides deterministic ranking and strict chronological sorting per tab
+  const displayPosts = rawPosts;
 
   if (isLoading) {
     return (
@@ -171,20 +141,20 @@ export default function PostFeed({
         <div
           role="tablist"
           aria-label="Feed content filters"
-          className="flex items-center gap-1 rounded-2xl bg-slate-100/80 p-1 border border-slate-200/60"
+          className="flex items-center gap-1 rounded-2xl bg-slate-100/90 p-1 border border-slate-200/80"
         >
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === "for-you"}
-            onClick={() => setActiveTab("for-you")}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+            onClick={() => handleTabChange("for-you")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 ${
               activeTab === "for-you"
-                ? "bg-white text-[#3C65F5] shadow-xs"
+                ? "bg-white text-blue-600 shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
             }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
             <span>For You</span>
           </button>
 
@@ -192,14 +162,14 @@ export default function PostFeed({
             type="button"
             role="tab"
             aria-selected={activeTab === "recent"}
-            onClick={() => setActiveTab("recent")}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+            onClick={() => handleTabChange("recent")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 ${
               activeTab === "recent"
-                ? "bg-white text-[#3C65F5] shadow-xs"
+                ? "bg-white text-blue-600 shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
             }`}
           >
-            <Clock className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <Clock className="h-3.5 w-3.5 text-blue-600" />
             <span>Recent</span>
           </button>
 
@@ -207,14 +177,14 @@ export default function PostFeed({
             type="button"
             role="tab"
             aria-selected={activeTab === "my-network"}
-            onClick={() => setActiveTab("my-network")}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+            onClick={() => handleTabChange("my-network")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 ${
               activeTab === "my-network"
-                ? "bg-white text-[#3C65F5] shadow-xs"
+                ? "bg-white text-blue-600 shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
             }`}
           >
-            <Users className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <Users className="h-3.5 w-3.5 text-blue-600" />
             <span>My Network</span>
           </button>
         </div>
@@ -222,12 +192,12 @@ export default function PostFeed({
 
       {/* EMPTY STATE */}
       {displayPosts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-10 sm:p-14 text-center shadow-xs">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-xs border border-slate-200/60">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 sm:p-14 text-center shadow-xs">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-xs border border-blue-100">
             {activeTab === "my-network" ? (
-              <Users className="h-7 w-7 text-[#3C65F5]" />
+              <Users className="h-7 w-7 text-blue-600" />
             ) : (
-              <MessageSquareDashed className="h-7 w-7 text-[#3C65F5]" />
+              <MessageSquareDashed className="h-7 w-7 text-blue-600" />
             )}
           </div>
           <h3 className="mt-4 text-base font-bold text-slate-900">
@@ -238,13 +208,13 @@ export default function PostFeed({
           <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
             {activeTab === "my-network"
               ? "Discussions from your recruiters and your own posts will appear here. Switch to 'For You' or 'Recent' to explore the full community."
-              : "Be the pioneer! Share a career milestone, hiring advice, or industry question with the JobBox community above."}
+              : "Be the first to share a career milestone, hiring advice, or industry insight with the JobBox community above."}
           </p>
           {activeTab === "my-network" && (
             <button
               type="button"
               onClick={() => setActiveTab("for-you")}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#3C65F5] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#3457D5] transition"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition"
             >
               <Compass className="h-3.5 w-3.5" />
               <span>Explore Community Feed</span>
@@ -273,7 +243,7 @@ export default function PostFeed({
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             disabled={page <= 1 || isFetching}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
             aria-label="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -290,9 +260,9 @@ export default function PostFeed({
                 }}
                 disabled={isFetching}
                 aria-current={p === page ? "page" : undefined}
-                className={`inline-flex h-9 min-w-[36px] items-center justify-center rounded-xl border px-3 text-xs sm:text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30 ${
+                className={`inline-flex h-9 min-w-[36px] items-center justify-center rounded-xl border px-3 text-xs sm:text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 ${
                   p === page
-                    ? "border-[#3C65F5] bg-[#3C65F5] text-white shadow-xs font-semibold"
+                    ? "border-blue-600 bg-blue-600 text-white shadow-xs font-semibold"
                     : "border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50"
                 }`}
               >
@@ -308,7 +278,7 @@ export default function PostFeed({
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             disabled={page >= totalPages || isFetching}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
             aria-label="Next page"
           >
             <ChevronRight className="h-4 w-4" />

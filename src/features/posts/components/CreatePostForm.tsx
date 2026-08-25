@@ -273,7 +273,7 @@ export default function CreatePostForm() {
   return (
     <section
       aria-label="Create a post composer"
-      className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-200 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100"
+      className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100"
     >
       {/* Hidden File Input (Always in DOM for trigger) */}
       <input
@@ -301,12 +301,12 @@ export default function CreatePostForm() {
               onClick={() => handleExpand()}
               aria-expanded={false}
               aria-label="Open post composer"
-              className="flex-1 flex items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/70 px-4 py-2.5 sm:py-3 text-left text-xs sm:text-sm text-slate-500 hover:bg-slate-100/70 hover:border-slate-300 transition-all duration-150 cursor-text shadow-2xs group"
+              className="flex-1 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-2.5 sm:py-3 text-left text-xs sm:text-sm text-slate-500 hover:bg-slate-100/70 hover:border-slate-300 transition-all duration-150 cursor-text shadow-2xs group"
             >
               <span className="truncate group-hover:text-slate-700">
                 Share a career milestone, insight, or advice...
               </span>
-              <Sparkles className="h-4 w-4 text-[#3C65F5] opacity-70 shrink-0 ml-2 group-hover:opacity-100 transition" />
+              <Sparkles className="h-4 w-4 text-blue-600 opacity-70 shrink-0 ml-2 group-hover:opacity-100 transition" />
             </button>
           </div>
 
@@ -335,9 +335,9 @@ export default function CreatePostForm() {
                   setTimeout(() => fileInputRef.current?.click(), 100);
                 }}
                 aria-label="Add photo to new post"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-[#3C65F5] hover:border-blue-200 transition active:scale-95"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition active:scale-95"
               >
-                <ImageIcon className="h-3.5 w-3.5 text-[#3C65F5]" />
+                <ImageIcon className="h-3.5 w-3.5 text-blue-600" />
                 <span>Photo</span>
               </button>
             </div>
@@ -346,7 +346,7 @@ export default function CreatePostForm() {
               type="button"
               onClick={() => handleExpand()}
               aria-label="Create a post"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#3C65F5] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#3457D5] transition shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition shrink-0"
             >
               <PlusCircle className="h-3.5 w-3.5" />
               <span>Post</span>
@@ -384,7 +384,7 @@ export default function CreatePostForm() {
                   )}
                 </div>
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 mt-0.5">
-                  <Sparkles className="h-3 w-3 text-[#3C65F5]" />
+                  <Sparkles className="h-3 w-3 text-blue-600" />
                   Posting to JobBox Professional Network
                 </span>
               </div>
@@ -396,7 +396,7 @@ export default function CreatePostForm() {
               disabled={isBusy}
               aria-label="Collapse post composer"
               title="Close composer (Esc)"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30 disabled:opacity-40"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:opacity-40"
             >
               <X className="h-4 w-4" />
             </button>
@@ -439,7 +439,7 @@ export default function CreatePostForm() {
               onKeyDown={handleKeyDown}
               placeholder="What's on your mind? Share career milestones, job search learnings, or industry insights..."
               disabled={isBusy}
-              className="w-full resize-none rounded-xl border border-slate-200/90 bg-slate-50/50 p-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition duration-150 hover:bg-slate-50/80 focus:border-[#3C65F5] focus:bg-white focus:ring-2 focus:ring-[#3C65F5]/10 disabled:cursor-not-allowed disabled:opacity-60 leading-relaxed"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition duration-150 hover:bg-slate-50/80 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 leading-relaxed"
             />
           </div>
 
@@ -452,7 +452,7 @@ export default function CreatePostForm() {
 
           {/* Selected Image Preview Card */}
           {previewUrl && selectedFile && (
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 p-2 group/preview">
+            <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 group/preview">
               <div className="relative max-h-72 w-full overflow-hidden rounded-lg bg-slate-900/5 flex items-center justify-center">
                 <img
                   src={previewUrl}
@@ -469,7 +469,7 @@ export default function CreatePostForm() {
                     </span>
                     <div className="mt-2.5 h-1.5 w-48 overflow-hidden rounded-full bg-white/30">
                       <div
-                        className="h-full bg-[#3C65F5] transition-all duration-150"
+                        className="h-full bg-blue-600 transition-all duration-150"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -515,9 +515,9 @@ export default function CreatePostForm() {
                 disabled={isBusy}
                 aria-label="Add an image to post"
                 title="Add photo (JPG, PNG, WebP, GIF up to 5MB)"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <ImageIcon className="h-3.5 w-3.5 text-[#3C65F5]" />
+                <ImageIcon className="h-3.5 w-3.5 text-blue-600" />
                 <span>{selectedFile ? "Change Image" : "Add Image"}</span>
               </button>
 
@@ -555,7 +555,7 @@ export default function CreatePostForm() {
               <button
                 type="submit"
                 disabled={!isValidToPost}
-                className="inline-flex min-h-[38px] items-center justify-center gap-2 rounded-xl bg-[#3C65F5] px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all duration-150 hover:bg-[#3457D5] hover:shadow-sm active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-[38px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all duration-150 hover:bg-blue-700 hover:shadow-sm active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isUploading ? (
                   <>

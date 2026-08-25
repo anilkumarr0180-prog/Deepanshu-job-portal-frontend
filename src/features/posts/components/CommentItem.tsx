@@ -7,6 +7,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Flag,
   Loader2,
   MessageSquare,
   Pencil,
@@ -20,6 +21,7 @@ import { useUpdatePostComment } from "../hooks/useUpdatePostComment";
 import { useDeletePostComment } from "../hooks/useDeletePostComment";
 import { usePostComments } from "../hooks/usePostComments";
 import CommentForm from "./CommentForm";
+import ReportModal from "./ReportModal";
 import {
   formatPostTimestamp,
   formatExactTimestamp,
@@ -58,6 +60,7 @@ export default function CommentItem({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const { mutate: updateComment, isPending: isUpdating } =
     useUpdatePostComment();
@@ -256,7 +259,7 @@ export default function CommentItem({
                 <button
                   type="button"
                   onClick={handleOpenCommenterProfile}
-                  className="font-bold text-xs sm:text-sm truncate text-slate-900 hover:text-[#3C65F5] hover:underline cursor-pointer transition text-left"
+                  className="font-bold text-xs sm:text-sm truncate text-slate-900 hover:text-blue-600 hover:underline cursor-pointer transition text-left"
                   title={`View ${author.name}'s profile`}
                 >
                   {author.name}
@@ -290,7 +293,7 @@ export default function CommentItem({
                     onClick={handleStartEdit}
                     aria-label="Edit comment"
                     title="Edit comment"
-                    className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3C65F5]/30"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 cursor-pointer"
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
@@ -299,11 +302,29 @@ export default function CommentItem({
                     onClick={() => setIsConfirmingDelete(true)}
                     aria-label="Delete comment"
                     title="Delete comment"
-                    className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/30"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/30 cursor-pointer"
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
+              )}
+
+              {/* Report action for other users' comments */}
+              {!isOwnComment && !isDeleted && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      return;
+                    }
+                    setIsReportModalOpen(true);
+                  }}
+                  aria-label="Report comment"
+                  title="Report comment"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 opacity-0 group-hover/item:opacity-70 hover:!opacity-100 hover:bg-rose-50 hover:text-rose-600 transition focus:opacity-100 cursor-pointer"
+                >
+                  <Flag className="h-3 w-3" />
+                </button>
               )}
             </div>
           </div>
@@ -361,7 +382,7 @@ export default function CommentItem({
                 {...register("content")}
                 onKeyDown={handleEditKeyDown}
                 disabled={isUpdating}
-                className="w-full resize-none rounded-xl border border-slate-200/90 bg-white p-2.5 text-xs sm:text-sm text-slate-800 outline-none transition focus:border-[#3C65F5] focus:ring-2 focus:ring-[#3C65F5]/10 disabled:cursor-not-allowed disabled:opacity-60 leading-relaxed"
+                className="w-full resize-none rounded-xl border border-slate-200 bg-white p-2.5 text-xs sm:text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 leading-relaxed"
               />
 
               {errors.content && (
@@ -396,7 +417,7 @@ export default function CommentItem({
                   <button
                     type="submit"
                     disabled={!isValidEdit}
-                    className="inline-flex items-center gap-1 rounded-lg bg-[#3C65F5] px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-[#3457D5] transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-blue-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isUpdating ? (
                       <>
@@ -435,8 +456,8 @@ export default function CommentItem({
                   <button
                     type="button"
                     onClick={() => setIsReplying((prev) => !prev)}
-                    className={`inline-flex items-center gap-1 font-bold transition hover:text-[#3C65F5] ${
-                      isReplying ? "text-[#3C65F5]" : "text-slate-500"
+                    className={`inline-flex items-center gap-1 font-semibold transition hover:text-blue-600 ${
+                      isReplying ? "text-blue-600" : "text-slate-500"
                     }`}
                   >
                     <Reply className="h-3 w-3" />
@@ -449,7 +470,7 @@ export default function CommentItem({
                   <button
                     type="button"
                     onClick={() => setShowReplies((prev) => !prev)}
-                    className="inline-flex items-center gap-1 font-bold text-[#3C65F5] hover:text-[#3457D5] transition"
+                    className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700 transition"
                   >
                     <MessageSquare className="h-3 w-3" />
                     <span>
@@ -472,7 +493,7 @@ export default function CommentItem({
 
       {/* Inline Reply Form (Top-Level Only) */}
       {!isReply && isReplying && (
-        <div className="ml-9 sm:ml-10 mt-2.5 pl-3 border-l-2 border-[#3C65F5]/40 animate-in fade-in duration-150">
+        <div className="ml-9 sm:ml-10 mt-2.5 pl-3 border-l-2 border-blue-400 animate-in fade-in duration-150">
           <CommentForm
             postId={postId}
             parentCommentId={comment._id}
@@ -488,10 +509,10 @@ export default function CommentItem({
 
       {/* Nested Replies List */}
       {!isReply && showReplies && (
-        <div className="ml-9 sm:ml-10 mt-3 pl-3 border-l-2 border-slate-200/80 space-y-2.5 animate-in fade-in duration-150">
+        <div className="ml-9 sm:ml-10 mt-3 pl-3 border-l-2 border-slate-200 space-y-2.5 animate-in fade-in duration-150">
           {isLoadingReplies && (
             <div className="flex items-center gap-2 py-2 text-xs text-slate-400">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-[#3C65F5]" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
               <span>Loading replies...</span>
             </div>
           )}
@@ -511,6 +532,15 @@ export default function CommentItem({
             ))}
         </div>
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType="comment"
+        targetId={comment._id}
+        targetTitle={comment.content ? (comment.content.slice(0, 60) + "...") : undefined}
+      />
     </div>
   );
 }

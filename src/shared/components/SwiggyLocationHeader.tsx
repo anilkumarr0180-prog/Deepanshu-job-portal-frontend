@@ -53,7 +53,7 @@ export const SwiggyLocationHeader: React.FC<{ className?: string }> = ({
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className="group flex items-center gap-2.5 rounded-2xl border border-slate-200/90 bg-gradient-to-b from-slate-50 to-white px-3.5 py-1.5 shadow-2xs transition-all hover:border-[#3C65F5]/40 hover:shadow-xs"
+        className="group flex items-center gap-2.5 rounded-2xl border border-slate-200/90 bg-white dark:bg-[#151F32] dark:border-[#2A3850] px-3.5 py-1.5 shadow-2xs transition-all hover:border-[#3C65F5]/40 hover:shadow-xs cursor-pointer"
       >
         <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-[#3C65F5] transition-colors group-hover:bg-[#3C65F5] group-hover:text-white">
           <MapPin className="h-4 w-4" />

@@ -213,10 +213,6 @@ export const routes: RouteObject[] = [
         element: <PostDetailsPage />,
       },
       {
-        path: "posts/:id",
-        element: <PostDetailsPage />,
-      },
-      {
         path: "saved",
         element: <CandidateSavedJobsPage />,
       },
@@ -300,6 +296,10 @@ export const routes: RouteObject[] = [
       {
         path: "networking",
         element: <NetworkingPage />,
+      },
+      {
+        path: "posts/:id",
+        element: <PostDetailsPage />,
       },
       {
         path: "company",

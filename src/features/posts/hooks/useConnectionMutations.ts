@@ -16,6 +16,7 @@ export function useConnectionMutations() {
     void queryClient.invalidateQueries({ queryKey: ["connection-status"] });
     void queryClient.invalidateQueries({ queryKey: ["people-suggestions"] });
     void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    void queryClient.invalidateQueries({ queryKey: ["posts"] });
   };
 
   const sendRequest = useMutation({

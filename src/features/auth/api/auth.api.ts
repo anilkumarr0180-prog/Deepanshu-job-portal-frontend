@@ -60,3 +60,11 @@ export async function googleAuthApi(payload: {
 }) {
   return axiosInstance.post("/auth/google", payload);
 }
+
+export async function changePasswordApi(payload: {
+  currentPassword?: string;
+  newPassword?: string;
+}) {
+  return axiosInstance.patch("/auth/change-password", payload);
+}
+
