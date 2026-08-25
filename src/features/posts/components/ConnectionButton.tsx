@@ -100,7 +100,7 @@ export default function ConnectionButton({
           sendRequest.mutate(targetUserId);
         }}
         disabled={isPendingMutation}
-        className={`inline-flex items-center justify-center font-bold bg-[#3C65F5] text-white shadow-xs hover:bg-[#3457D5] transition active:scale-95 disabled:opacity-50 ${sizeClasses} ${className}`}
+        className={`inline-flex items-center justify-center font-semibold bg-blue-600 text-white shadow-xs hover:bg-blue-700 transition active:scale-95 disabled:opacity-50 cursor-pointer ${sizeClasses} ${className}`}
       >
         {sendRequest.isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -122,7 +122,7 @@ export default function ConnectionButton({
             setIsDropdownOpen((prev) => !prev);
           }}
           disabled={isPendingMutation}
-          className={`inline-flex items-center justify-center font-semibold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition ${sizeClasses} ${className}`}
+          className={`inline-flex items-center justify-center font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition cursor-pointer ${sizeClasses} ${className}`}
           title="Pending connection request - Click to manage"
         >
           {cancel.isPending ? (
@@ -143,7 +143,7 @@ export default function ConnectionButton({
                 setIsDropdownOpen(false);
                 if (connectionId) cancel.mutate(connectionId);
               }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition cursor-pointer"
             >
               <UserX className="h-3.5 w-3.5" />
               <span>Withdraw Request</span>
@@ -164,7 +164,7 @@ export default function ConnectionButton({
             if (connectionId) accept.mutate(connectionId);
           }}
           disabled={isPendingMutation}
-          className={`inline-flex items-center justify-center font-bold bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 transition active:scale-95 disabled:opacity-50 ${sizeClasses}`}
+          className={`inline-flex items-center justify-center font-semibold bg-blue-600 text-white shadow-xs hover:bg-blue-700 transition active:scale-95 disabled:opacity-50 cursor-pointer ${sizeClasses}`}
         >
           {accept.isPending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -180,7 +180,7 @@ export default function ConnectionButton({
             if (connectionId) reject.mutate(connectionId);
           }}
           disabled={isPendingMutation}
-          className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition"
+          className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition cursor-pointer"
           title="Decline request"
         >
           {reject.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Ignore"}
@@ -200,7 +200,7 @@ export default function ConnectionButton({
               setIsDropdownOpen((prev) => !prev);
             }}
             disabled={isPendingMutation}
-            className={`inline-flex items-center justify-center font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition ${sizeClasses}`}
+            className={`inline-flex items-center justify-center font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-pointer ${sizeClasses}`}
           >
             {remove.isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -220,7 +220,7 @@ export default function ConnectionButton({
                   setIsDropdownOpen(false);
                   if (connectionId) remove.mutate(connectionId);
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition cursor-pointer"
               >
                 <UserX className="h-3.5 w-3.5" />
                 <span>Remove Connection</span>
@@ -233,9 +233,9 @@ export default function ConnectionButton({
           <button
             type="button"
             onClick={handleMessageClick}
-            className={`inline-flex items-center justify-center font-bold border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 transition active:scale-95 ${sizeClasses}`}
+            className={`inline-flex items-center justify-center font-semibold border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-blue-600 transition active:scale-95 cursor-pointer ${sizeClasses}`}
           >
-            <MessageSquare className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <MessageSquare className="h-3.5 w-3.5 text-blue-600" />
             <span>Message</span>
           </button>
         )}

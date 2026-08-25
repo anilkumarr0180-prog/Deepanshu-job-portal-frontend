@@ -6,6 +6,6 @@ export function useConnections(params?: GetConnectionsParams) {
   return useQuery({
     queryKey: ["connections", params],
     queryFn: () => getUserConnections(params),
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 30, // 30 seconds
   });
 }

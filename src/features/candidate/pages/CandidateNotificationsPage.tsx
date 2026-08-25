@@ -9,13 +9,40 @@ import {
   FileText,
   MessageSquare,
   AlertCircle,
+  UserPlus,
+  UserCheck,
+  Repeat,
+  Heart,
+  Crown,
 } from "lucide-react";
 import { useNotifications } from "@/shared/context/NotificationContext";
 import type { NotificationType } from "@/shared/types/notification";
 import { normalizeNotificationLink } from "@/shared/utils/normalizeRoute";
 
-const getNotificationIcon = (type: NotificationType) => {
+const getNotificationIcon = (type: NotificationType, title?: string) => {
+  const lowerTitle = (title || "").toLowerCase();
+  if (
+    lowerTitle.includes("subscription") ||
+    lowerTitle.includes("premium") ||
+    lowerTitle.includes("plan") ||
+    lowerTitle.includes("payment") ||
+    lowerTitle.includes("invoice")
+  ) {
+    return <Crown className="h-5 w-5 text-amber-500" />;
+  }
+
   switch (type) {
+    case "CONNECTION_REQUEST":
+      return <UserPlus className="h-5 w-5 text-[#3C65F5]" />;
+    case "CONNECTION_ACCEPTED":
+      return <UserCheck className="h-5 w-5 text-emerald-600" />;
+    case "POST_REPOSTED":
+      return <Repeat className="h-5 w-5 text-indigo-600" />;
+    case "POST_LIKED":
+      return <Heart className="h-5 w-5 text-rose-500" />;
+    case "POST_COMMENTED":
+    case "COMMENT_REPLIED":
+      return <MessageSquare className="h-5 w-5 text-blue-600" />;
     case "JOB_ALERT":
       return <Briefcase className="h-5 w-5 text-blue-600" />;
     case "APPLICATION_UPDATE":
@@ -39,6 +66,15 @@ const formatTimeAgo = (dateStr: string) => {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
   return `${Math.floor(diffInSeconds / 86400)}d ago`;
 };
+
+const NETWORKING_TYPES: NotificationType[] = [
+  "POST_LIKED",
+  "POST_COMMENTED",
+  "COMMENT_REPLIED",
+  "POST_REPOSTED",
+  "CONNECTION_REQUEST",
+  "CONNECTION_ACCEPTED",
+];
 
 export default function CandidateNotificationsPage() {
   const navigate = useNavigate();
@@ -64,15 +100,25 @@ export default function CandidateNotificationsPage() {
   const filteredNotifications = notifications.filter((item) => {
     const isRead = item.is_read || item.isRead;
     if (activeTab === "UNREAD") return !isRead;
+    if (activeTab === "NETWORKING") return NETWORKING_TYPES.includes(item.type);
     if (activeTab !== "ALL") return item.type === activeTab;
     return true;
   });
 
-  const handleItemClick = async (id: string, link?: string, isRead?: boolean) => {
+  const networkingCount = notifications.filter((n) =>
+    NETWORKING_TYPES.includes(n.type)
+  ).length;
+
+  const handleItemClick = async (
+    id: string,
+    link?: string,
+    isRead?: boolean,
+    type?: string
+  ) => {
     if (!isRead) {
       await markAsRead(id);
     }
-    const targetLink = normalizeNotificationLink(link, "candidate");
+    const targetLink = normalizeNotificationLink(link, "candidate", type);
     if (targetLink) {
       navigate(targetLink);
     }
@@ -81,7 +127,7 @@ export default function CandidateNotificationsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* Header Banner */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
@@ -89,7 +135,7 @@ export default function CandidateNotificationsPage() {
               Notifications
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Track your application updates, job alerts, and real-time activity.
+              Track your networking activities, application updates, and job alerts.
             </p>
           </div>
 
@@ -98,7 +144,7 @@ export default function CandidateNotificationsPage() {
               <button
                 type="button"
                 onClick={markAllAsRead}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition"
               >
                 <CheckCheck className="w-4 h-4 text-blue-600" />
                 Mark all read
@@ -108,7 +154,7 @@ export default function CandidateNotificationsPage() {
               <button
                 type="button"
                 onClick={clearAllRead}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 shadow-xs transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 shadow-2xs transition"
               >
                 <Trash2 className="w-4 h-4 text-red-500" />
                 Clear read items
@@ -125,6 +171,7 @@ export default function CandidateNotificationsPage() {
           {[
             { id: "ALL", label: `All (${notifications.length})` },
             { id: "UNREAD", label: `Unread (${unreadCount})` },
+            { id: "NETWORKING", label: `Networking (${networkingCount})` },
             { id: "APPLICATION_UPDATE", label: "Applications" },
             { id: "JOB_ALERT", label: "Job Alerts" },
             { id: "SYSTEM_ALERT", label: "System Alerts" },
@@ -134,7 +181,7 @@ export default function CandidateNotificationsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`rounded-xl px-3.5 py-2 transition-all ${
                 activeTab === tab.id
-                  ? "bg-blue-600 text-white shadow-sm"
+                  ? "bg-blue-600 text-white shadow-2xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -146,7 +193,7 @@ export default function CandidateNotificationsPage() {
 
       {/* Notifications Feed */}
       {isLoading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-xs">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
           <p className="mt-3 text-sm font-medium text-slate-500">Loading your notifications...</p>
         </div>
@@ -156,21 +203,40 @@ export default function CandidateNotificationsPage() {
             const itemId = notification.id || notification._id || "";
             const isRead = notification.is_read || notification.isRead;
             const createdAt = notification.created_at || notification.createdAt;
+            const sender =
+              typeof notification.senderId === "object"
+                ? notification.senderId
+                : typeof notification.sender_id === "object"
+                ? notification.sender_id
+                : null;
 
             return (
               <div
                 key={itemId}
                 onClick={() =>
-                  handleItemClick(itemId, notification.link, isRead)
+                  handleItemClick(itemId, notification.link, isRead, notification.type)
                 }
-                className={`group flex items-start gap-4 rounded-2xl border p-5 shadow-xs transition-all cursor-pointer ${
+                className={`group flex items-start gap-4 rounded-2xl border p-5 shadow-2xs transition-all cursor-pointer ${
                   !isRead
                     ? "border-blue-200 bg-blue-50/40 hover:bg-blue-50"
                     : "border-slate-200 bg-white hover:bg-slate-50"
                 }`}
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-xs border border-slate-100">
-                  {getNotificationIcon(notification.type)}
+                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-2xs border border-slate-100 overflow-hidden">
+                  {sender?.profilePicture ? (
+                    <img
+                      src={sender.profilePicture}
+                      alt={sender.name || "User"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    getNotificationIcon(notification.type, notification.title)
+                  )}
+                  {sender?.profilePicture && (
+                    <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-xs border border-slate-100">
+                      {getNotificationIcon(notification.type, notification.title)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -200,7 +266,7 @@ export default function CandidateNotificationsPage() {
 
                   <div className="mt-3 flex items-center justify-between">
                     <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                      <span>{notification.type.replace("_", " ")}</span>
+                      <span>{notification.type.replaceAll("_", " ")}</span>
                     </span>
 
                     <button
@@ -221,7 +287,7 @@ export default function CandidateNotificationsPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center shadow-xs">
           <BellRing className="mx-auto h-10 w-10 text-slate-300 mb-3" />
           <h3 className="text-base font-bold text-slate-800">No Notifications</h3>
           <p className="mt-1 text-sm text-slate-500">

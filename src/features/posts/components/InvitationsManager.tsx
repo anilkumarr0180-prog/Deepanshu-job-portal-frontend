@@ -43,7 +43,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
       <div className="border-b border-slate-200/80 px-5 pt-4 pb-0 bg-slate-50/50">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#3C65F5]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
               <Inbox className="h-5 w-5" />
             </div>
             <div>
@@ -58,15 +58,15 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
           <button
             type="button"
             onClick={() => setSubTab("received")}
-            className={`flex items-center gap-2 pb-3 text-xs sm:text-sm font-bold border-b-2 transition ${
+            className={`flex items-center gap-2 pb-3 text-xs sm:text-sm font-semibold border-b-2 transition cursor-pointer ${
               subTab === "received"
-                ? "border-[#3C65F5] text-[#3C65F5]"
+                ? "border-blue-600 text-blue-600"
                 : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             <span>Received</span>
             {receivedItems.length > 0 && (
-              <span className="rounded-full bg-[#3C65F5] px-2 py-0.5 text-[10px] font-bold text-white">
+              <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
                 {receivedItems.length}
               </span>
             )}
@@ -75,9 +75,9 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
           <button
             type="button"
             onClick={() => setSubTab("sent")}
-            className={`flex items-center gap-2 pb-3 text-xs sm:text-sm font-bold border-b-2 transition ${
+            className={`flex items-center gap-2 pb-3 text-xs sm:text-sm font-semibold border-b-2 transition cursor-pointer ${
               subTab === "sent"
-                ? "border-[#3C65F5] text-[#3C65F5]"
+                ? "border-blue-600 text-blue-600"
                 : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -136,7 +136,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition truncate">
                           {peer.name}
                         </h4>
                         <span
@@ -161,7 +161,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
                       type="button"
                       onClick={() => reject.mutate(item._id)}
                       disabled={reject.isPending}
-                      className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition disabled:opacity-50"
+                      className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition disabled:opacity-50 cursor-pointer"
                     >
                       Ignore
                     </button>
@@ -169,7 +169,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
                       type="button"
                       onClick={() => accept.mutate(item._id)}
                       disabled={accept.isPending}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
                     >
                       <Check className="h-3.5 w-3.5" />
                       <span>Accept</span>
@@ -180,7 +180,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
             })
           ) : (
             <div className="py-10 text-center space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#3C65F5]">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                 <UserPlus className="h-6 w-6" />
               </div>
               <h3 className="text-sm font-bold text-slate-800">No pending invitations</h3>
@@ -191,7 +191,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
                 <button
                   type="button"
                   onClick={onExploreSuggestions}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#3C65F5] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#3457D5] transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition cursor-pointer"
                 >
                   <span>Discover People</span>
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -242,7 +242,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
+                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition truncate">
                         {item.peerUser.name}
                       </h4>
                       <span
@@ -267,7 +267,7 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
                     type="button"
                     onClick={() => cancel.mutate(item._id)}
                     disabled={cancel.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition disabled:opacity-50 cursor-pointer"
                   >
                     <Clock className="h-3.5 w-3.5 text-amber-600" />
                     <span>Withdraw</span>

@@ -6,11 +6,11 @@ import { useUserProfileModal } from "../context/UserProfileContext";
 import ConnectionButton from "./ConnectionButton";
 
 const COVER_GRADIENTS = [
-  "from-blue-600 via-indigo-600 to-sky-500",
-  "from-indigo-600 via-purple-600 to-blue-500",
-  "from-slate-800 via-blue-900 to-indigo-900",
-  "from-cyan-600 via-blue-600 to-indigo-700",
-  "from-blue-700 via-teal-600 to-emerald-600",
+  "from-blue-600 via-blue-700 to-indigo-800",
+  "from-slate-700 via-slate-800 to-blue-900",
+  "from-indigo-600 via-blue-600 to-slate-800",
+  "from-blue-800 via-indigo-700 to-slate-900",
+  "from-sky-700 via-blue-700 to-indigo-900",
 ];
 
 const TEST_ACCOUNT_REGEX = /auth_[0-9a-z_]+|recruiter_unauth|candidate_auth|_unauth|test_user|test_\d+|test candidate|polar candidate|hardening candidate|recruiter teammate|recruiter owner|polar recruiter/i;
@@ -49,12 +49,12 @@ export default function GrowNetworkGrid() {
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-[#3C65F5]">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
                 <UserPlus className="h-4 w-4" />
               </span>
               <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                People You May Know
+                Discover & Grow Your Network
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -70,20 +70,20 @@ export default function GrowNetworkGrid() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, role, skills..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-9 pr-3.5 py-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:border-[#3C65F5] focus:bg-white focus:outline-none transition shadow-2xs"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-9 pr-3.5 py-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition shadow-2xs"
             />
           </div>
         </div>
 
         {/* Filter Pills */}
         <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => setRoleFilter("all")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
                 roleFilter === "all"
-                  ? "bg-[#3C65F5] text-white shadow-xs"
+                  ? "bg-blue-600 text-white shadow-xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -92,9 +92,9 @@ export default function GrowNetworkGrid() {
             <button
               type="button"
               onClick={() => setRoleFilter("candidate")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
                 roleFilter === "candidate"
-                  ? "bg-[#3C65F5] text-white shadow-xs"
+                  ? "bg-blue-600 text-white shadow-xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -103,9 +103,9 @@ export default function GrowNetworkGrid() {
             <button
               type="button"
               onClick={() => setRoleFilter("recruiter")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
                 roleFilter === "recruiter"
-                  ? "bg-[#3C65F5] text-white shadow-xs"
+                  ? "bg-blue-600 text-white shadow-xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -119,7 +119,7 @@ export default function GrowNetworkGrid() {
         </div>
       </div>
 
-      {/* LinkedIn Member Cards Grid */}
+      {/* Member Cards Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -159,7 +159,7 @@ export default function GrowNetworkGrid() {
                 className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
               >
                 <div>
-                  {/* LinkedIn Cover Banner */}
+                  {/* Subtle Cover Banner */}
                   <div className={`relative h-20 w-full bg-gradient-to-r ${gradientClass} opacity-90 transition-opacity group-hover:opacity-100`}>
                     <div className="absolute inset-0 bg-black/10" />
                     {/* Role Pill in banner */}
@@ -196,7 +196,7 @@ export default function GrowNetworkGrid() {
                       onClick={handleCardClick}
                       className="cursor-pointer text-center w-full"
                     >
-                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate max-w-full">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition truncate max-w-full">
                         {person.name}
                       </h3>
                     </button>
@@ -242,7 +242,7 @@ export default function GrowNetworkGrid() {
                   <button
                     type="button"
                     onClick={handleCardClick}
-                    className="w-full text-center text-[11px] font-bold text-slate-500 hover:text-[#3C65F5] transition py-0.5 cursor-pointer"
+                    className="w-full text-center text-[11px] font-semibold text-slate-500 hover:text-blue-600 transition py-0.5 cursor-pointer"
                   >
                     View Full Profile
                   </button>
@@ -253,7 +253,7 @@ export default function GrowNetworkGrid() {
         </div>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center space-y-3 shadow-xs">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#3C65F5]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
             <Users className="h-7 w-7" />
           </div>
           <h3 className="text-base font-bold text-slate-800">No member suggestions found</h3>

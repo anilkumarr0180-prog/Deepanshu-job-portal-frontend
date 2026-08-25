@@ -63,9 +63,19 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [unreadCount]);
 
-  // Enterprise Web Audio Sound Chime
+  // Enterprise Web Audio Sound Chime (Checks user preference)
   const playNotificationSound = useCallback(() => {
     try {
+      const audioEnabled = (() => {
+        try {
+          const val = localStorage.getItem("jobbox_audio_notifications_enabled");
+          return val !== null ? JSON.parse(val) : true;
+        } catch {
+          return true;
+        }
+      })();
+      if (!audioEnabled) return;
+
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
@@ -175,14 +185,23 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
       setUnreadCount((prev) => prev + 1);
       playNotificationSound();
 
-      // Automatically refresh live application caches in real-time
-      void queryClient.invalidateQueries({ queryKey: ["applications"] });
-      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      // Target query invalidation based on notification type rather than flooding every query
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      void queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      void queryClient.invalidateQueries({ queryKey: ["mySubscription"] });
-      void queryClient.invalidateQueries({ queryKey: ["profile"] });
+      const nType = (newNotif.type || "").toUpperCase();
+      if (nType.includes("CONNECTION")) {
+        void queryClient.invalidateQueries({ queryKey: ["connections"] });
+        void queryClient.invalidateQueries({ queryKey: ["connection-status"] });
+        void queryClient.invalidateQueries({ queryKey: ["people-suggestions"] });
+      } else if (nType.includes("POST") || nType.includes("COMMENT") || nType.includes("REPOST")) {
+        void queryClient.invalidateQueries({ queryKey: ["posts"] });
+      } else if (nType.includes("APPLICATION")) {
+        void queryClient.invalidateQueries({ queryKey: ["applications"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      } else if (nType.includes("JOB")) {
+        void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      } else if (nType.includes("SUBSCRIPTION") || nType.includes("PAYMENT")) {
+        void queryClient.invalidateQueries({ queryKey: ["mySubscription"] });
+      }
 
       // Trigger modern toast notification
       toast.custom(
@@ -227,7 +246,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
     return () => {
       socketInstance.disconnect();
     };
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, playNotificationSound, queryClient]);
 
   const markAsRead = async (id: string) => {
     try {

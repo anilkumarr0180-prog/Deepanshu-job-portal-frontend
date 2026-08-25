@@ -1,21 +1,55 @@
 /**
- * Normalizes legacy or misconfigured route links to ensure click navigation never 404s.
+ * Normalizes legacy or misconfigured route links to ensure click navigation never 404s
+ * and always keeps the user in their role-appropriate dashboard context.
  */
 export const normalizeNotificationLink = (
   link?: string,
-  userRole?: string
+  userRole?: string,
+  type?: string
 ): string | null => {
+  const role = userRole?.toLowerCase() === "recruiter" ? "recruiter" : "candidate";
+
+  // Type-first normalization for high-fidelity routing
+  if (type === "CONNECTION_REQUEST") {
+    return `/${role}/networking?tab=invitations`;
+  }
+  if (type === "CONNECTION_ACCEPTED") {
+    return `/${role}/networking?tab=connections`;
+  }
+  if (
+    type === "POST_LIKED" ||
+    type === "POST_COMMENTED" ||
+    type === "COMMENT_REPLIED" ||
+    type === "POST_REPOSTED"
+  ) {
+    if (link) {
+      const postMatch = link.match(/\/posts(?:#post-|\/)([a-f0-9]{24}|\w+)/i);
+      if (postMatch && postMatch[1]) {
+        return `/${role}/posts/${postMatch[1]}`;
+      }
+    }
+    return `/${role}/networking`;
+  }
+
   if (!link || link.trim() === "") return null;
 
-  let cleanLink = link.trim();
+  const cleanLink = link.trim();
 
-  // Normalize connection requests to invitations tab
-  if (cleanLink === "/candidate/networking" || cleanLink === "/recruiter/networking" || cleanLink.includes("/networking")) {
-    if (cleanLink.includes("connection")) {
-      return userRole?.toLowerCase() === "recruiter"
-        ? "/recruiter/networking?tab=invitations"
-        : "/candidate/networking?tab=invitations";
+  // Post detail deep links (e.g., /posts#post-123 or /posts/123)
+  const postMatch = cleanLink.match(/^\/?posts(?:#post-|\/)([a-f0-9]{24}|\w+)/i);
+  if (postMatch && postMatch[1]) {
+    return `/${role}/posts/${postMatch[1]}`;
+  }
+
+  // Networking tab normalization
+  if (cleanLink.includes("/networking") || cleanLink === "/candidate/networking" || cleanLink === "/recruiter/networking") {
+    if (cleanLink.includes("tab=invitations") || cleanLink.includes("invitation")) {
+      return `/${role}/networking?tab=invitations`;
     }
+    if (cleanLink.includes("tab=connections") || cleanLink.includes("connection")) {
+      return `/${role}/networking?tab=connections`;
+    }
+    return `/${role}/networking`;
   }
 
   // Normalize recruiter applications link to applicants route
@@ -34,10 +68,11 @@ export const normalizeNotificationLink = (
 
   // Handle generic /applications fallback based on role
   if (cleanLink === "/applications") {
-    return userRole?.toLowerCase() === "recruiter"
+    return role === "recruiter"
       ? "/recruiter/applicants"
       : "/candidate/applied";
   }
 
   return cleanLink;
 };
+

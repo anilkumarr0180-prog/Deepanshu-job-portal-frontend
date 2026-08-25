@@ -5,6 +5,7 @@ export function usePeopleSuggestions(limit: number = 6) {
   return useQuery({
     queryKey: ["people-suggestions", limit],
     queryFn: () => getPeopleSuggestions(limit),
-    staleTime: 1000 * 60 * 3,
+    staleTime: 1000 * 30,
+    refetchOnMount: true,
   });
 }

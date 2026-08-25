@@ -1,17 +1,15 @@
-import { useState, useMemo } from "react";
-import { Users, UserPlus, Clock, Loader2 } from "lucide-react";
+import { useMemo } from "react";
+import { Users } from "lucide-react";
 import { UserAvatar } from "@/shared/components/UserAvatar";
 import { usePeopleSuggestions } from "../hooks/usePeopleSuggestions";
-import { useConnectionMutations } from "../hooks/useConnectionMutations";
 import { useUserProfileModal } from "../context/UserProfileContext";
+import ConnectionButton from "./ConnectionButton";
 
 const TEST_ACCOUNT_REGEX = /auth_[0-9a-z_]+|recruiter_unauth|candidate_auth|_unauth|test_user|test_\d+|test candidate|polar candidate|hardening candidate|recruiter teammate|recruiter owner|polar recruiter/i;
 
 export default function PeopleSuggestionsWidget() {
   const { data: suggestions, isLoading } = usePeopleSuggestions(10);
-  const { sendRequest } = useConnectionMutations();
   const { openUserProfile } = useUserProfileModal();
-  const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
 
   // Filter out automated test accounts so genuine registered users appear
   const genuineSuggestions = useMemo(() => {
@@ -20,15 +18,6 @@ export default function PeopleSuggestionsWidget() {
       .filter((p) => !TEST_ACCOUNT_REGEX.test(p.name) && !TEST_ACCOUNT_REGEX.test(p.email || ""))
       .slice(0, 5);
   }, [suggestions]);
-
-  const handleConnect = (e: React.MouseEvent, user: { _id: string }) => {
-    e.stopPropagation();
-    sendRequest.mutate(user._id, {
-      onSuccess: () => {
-        setRequestedIds((prev) => new Set(prev).add(user._id));
-      },
-    });
-  };
 
   const getRoleBadgeClasses = (role?: string) => {
     switch (role?.toLowerCase()) {
@@ -45,7 +34,7 @@ export default function PeopleSuggestionsWidget() {
     <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-3.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-[#3C65F5]">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
             <Users className="h-4 w-4" />
           </div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
@@ -69,10 +58,6 @@ export default function PeopleSuggestionsWidget() {
       ) : genuineSuggestions.length > 0 ? (
         <div className="space-y-3 pt-1">
           {genuineSuggestions.map((person) => {
-            const isRequested =
-              requestedIds.has(person._id) ||
-              person.connectionStatus === "pending_sent";
-            const isPending = sendRequest.isPending && sendRequest.variables === person._id;
             const headline = person.headline || (person.role === "recruiter" ? "Recruiter" : "JobBox Member");
 
             return (
@@ -100,7 +85,7 @@ export default function PeopleSuggestionsWidget() {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h5 className="text-xs font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
+                    <h5 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition truncate">
                       {person.name}
                     </h5>
                     <p className="text-[11px] text-slate-500 truncate leading-tight mt-0.5">
@@ -117,32 +102,14 @@ export default function PeopleSuggestionsWidget() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={(e) => handleConnect(e, person)}
-                  disabled={isRequested || isPending}
-                  className={
-                    "shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition shadow-2xs " +
-                    (isRequested
-                      ? "bg-slate-100 text-slate-500 border border-slate-200 cursor-default"
-                      : "bg-[#3C65F5] text-white hover:bg-[#3457D5]")
-                  }
-                  title={isRequested ? "Request Sent" : "Connect"}
-                >
-                  {isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : isRequested ? (
-                    <>
-                      <Clock className="h-3 w-3" />
-                      <span>Pending</span>
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-3 w-3" />
-                      <span>Connect</span>
-                    </>
-                  )}
-                </button>
+                <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <ConnectionButton
+                    targetUserId={person._id}
+                    initialStatus={person.connectionStatus as any}
+                    initialConnectionId={person.connectionId}
+                    size="sm"
+                  />
+                </div>
               </div>
             );
           })}

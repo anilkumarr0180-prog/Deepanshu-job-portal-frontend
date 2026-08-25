@@ -24,6 +24,8 @@ export interface Post {
   updatedAt: string;
   isLiked?: boolean;
   isReposted?: boolean;
+  isSaved?: boolean;
+  savedAt?: string;
 }
 
 export interface PostsPagination {
@@ -125,3 +127,54 @@ export interface PostCommentsResponse {
   items: PostComment[];
   pagination: PostCommentsPagination;
 }
+
+export type ReportTargetType = "post" | "comment" | "user";
+
+export type ReportReason =
+  | "spam"
+  | "harassment"
+  | "inappropriate"
+  | "hate_speech"
+  | "misinformation"
+  | "impersonation"
+  | "other";
+
+export interface CreateReportPayload {
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: ReportReason;
+  description?: string;
+}
+
+export interface ReportItem {
+  _id: string;
+  reporterId: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: ReportReason;
+  description?: string;
+  status: "pending" | "reviewed" | "resolved" | "dismissed";
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ReportResponse {
+  success: boolean;
+  message: string;
+  data: ReportItem;
+}
+
+export interface GetSavedPostsParams {
+  page?: number;
+  limit?: number;
+  sort?: "newest" | "oldest";
+}
+
+export interface SavedPostsResponse {
+  success: boolean;
+  data: {
+    items: Post[];
+    pagination: PostsPagination;
+  };
+}
+

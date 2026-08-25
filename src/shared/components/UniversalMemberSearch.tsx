@@ -7,7 +7,21 @@ import { UserAvatar } from "@/shared/components/UserAvatar";
 import ConnectionButton from "@/features/posts/components/ConnectionButton";
 import useDebounce from "@/shared/hooks/useDebounce";
 
-export default function UniversalMemberSearch() {
+interface UniversalMemberSearchProps {
+  autoFocus?: boolean;
+  onSelect?: () => void;
+  className?: string;
+  inputClassName?: string;
+  placeholder?: string;
+}
+
+export default function UniversalMemberSearch({
+  autoFocus = false,
+  onSelect,
+  className = "w-full max-w-xs md:max-w-sm lg:max-w-md",
+  inputClassName = "",
+  placeholder = "Search members, skills, roles...",
+}: UniversalMemberSearchProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
@@ -53,23 +67,25 @@ export default function UniversalMemberSearch() {
       city: member.location,
     });
     setIsOpen(false);
+    if (onSelect) onSelect();
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-xs md:max-w-sm lg:max-w-md">
+    <div ref={containerRef} className={`relative ${className}`}>
       {/* Search Input Box */}
       <div className="relative flex items-center">
         <Search className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
         <input
           type="text"
           value={query}
+          autoFocus={autoFocus}
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          placeholder="Search members, skills, roles..."
-          className="h-10 w-full rounded-2xl border border-slate-200/90 bg-slate-50/80 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#3C65F5] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all shadow-2xs"
+          placeholder={placeholder}
+          className={`h-10 w-full rounded-2xl border border-slate-200 bg-slate-50/80 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs ${inputClassName}`}
         />
         {query && (
           <button
@@ -78,7 +94,7 @@ export default function UniversalMemberSearch() {
               setQuery("");
               setIsOpen(false);
             }}
-            className="absolute right-2.5 rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+            className="absolute right-2.5 rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition cursor-pointer"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -87,13 +103,13 @@ export default function UniversalMemberSearch() {
 
       {/* Floating Instant Results Panel */}
       {isOpen && query.trim().length >= 2 && (
-        <div className="absolute left-0 top-full mt-2 w-full min-w-[320px] sm:min-w-[380px] rounded-2xl border border-slate-200 bg-white p-2.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute left-0 right-0 sm:right-auto top-full mt-2 w-full sm:min-w-[380px] rounded-2xl border border-slate-200 bg-white p-2.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-slate-100 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-[#3C65F5]" />
+              <Users className="h-3.5 w-3.5 text-blue-600" />
               Members & Professionals
             </span>
-            {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-[#3C65F5]" />}
+            {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />}
           </div>
 
           {isLoading ? (
@@ -131,14 +147,14 @@ export default function UniversalMemberSearch() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <h5 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
+                          <h5 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition truncate">
                             {userObj.name}
                           </h5>
                           <span
                             className={`rounded px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wide border shrink-0 ${
                               isRecruiter
                                 ? "bg-purple-50 text-purple-700 border-purple-200"
-                                : "bg-blue-50 text-[#3C65F5] border-blue-200"
+                                : "bg-blue-50 text-blue-700 border-blue-200"
                             }`}
                           >
                             {role}
