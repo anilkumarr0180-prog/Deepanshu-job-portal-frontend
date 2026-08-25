@@ -218,13 +218,6 @@ export default function PostFeed({
             <span>My Network</span>
           </button>
         </div>
-
-        {/* Post Count Badge */}
-        {pagination?.totalItems !== undefined && (
-          <span className="hidden sm:inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 border border-slate-200/60">
-            {pagination.totalItems} {pagination.totalItems === 1 ? "Discussion" : "Discussions"}
-          </span>
-        )}
       </div>
 
       {/* EMPTY STATE */}

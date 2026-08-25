@@ -1,18 +1,27 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Users, UserPlus, Clock, Loader2 } from "lucide-react";
 import { UserAvatar } from "@/shared/components/UserAvatar";
 import { usePeopleSuggestions } from "../hooks/usePeopleSuggestions";
 import { useConnectionMutations } from "../hooks/useConnectionMutations";
 import { useUserProfileModal } from "../context/UserProfileContext";
-import type { PeopleSuggestion } from "../types/connection.types";
+
+const TEST_ACCOUNT_REGEX = /auth_[0-9a-z_]+|recruiter_unauth|candidate_auth|_unauth|test_user|test_\d+|test candidate|polar candidate|hardening candidate|recruiter teammate|recruiter owner|polar recruiter/i;
 
 export default function PeopleSuggestionsWidget() {
-  const { data: suggestions, isLoading } = usePeopleSuggestions(5);
+  const { data: suggestions, isLoading } = usePeopleSuggestions(10);
   const { sendRequest } = useConnectionMutations();
   const { openUserProfile } = useUserProfileModal();
   const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
 
-  const handleConnect = (e: React.MouseEvent, user: PeopleSuggestion) => {
+  // Filter out automated test accounts so genuine registered users appear
+  const genuineSuggestions = useMemo(() => {
+    const raw = suggestions || [];
+    return raw
+      .filter((p) => !TEST_ACCOUNT_REGEX.test(p.name) && !TEST_ACCOUNT_REGEX.test(p.email || ""))
+      .slice(0, 5);
+  }, [suggestions]);
+
+  const handleConnect = (e: React.MouseEvent, user: { _id: string }) => {
     e.stopPropagation();
     sendRequest.mutate(user._id, {
       onSuccess: () => {
@@ -24,11 +33,11 @@ export default function PeopleSuggestionsWidget() {
   const getRoleBadgeClasses = (role?: string) => {
     switch (role?.toLowerCase()) {
       case "recruiter":
-        return "bg-purple-50 text-purple-700 border-purple-200/70";
+        return "bg-purple-50 text-purple-700 border-purple-200/80";
       case "candidate":
-        return "bg-blue-50 text-blue-700 border-blue-200/70";
+        return "bg-blue-50 text-blue-700 border-blue-200/80";
       default:
-        return "bg-slate-100 text-slate-700 border-slate-200/70";
+        return "bg-slate-100 text-slate-700 border-slate-200/80";
     }
   };
 
@@ -57,13 +66,14 @@ export default function PeopleSuggestionsWidget() {
             </div>
           ))}
         </div>
-      ) : suggestions && suggestions.length > 0 ? (
+      ) : genuineSuggestions.length > 0 ? (
         <div className="space-y-3 pt-1">
-          {suggestions.map((person) => {
+          {genuineSuggestions.map((person) => {
             const isRequested =
               requestedIds.has(person._id) ||
               person.connectionStatus === "pending_sent";
             const isPending = sendRequest.isPending && sendRequest.variables === person._id;
+            const headline = person.headline || (person.role === "recruiter" ? "Recruiter" : "JobBox Member");
 
             return (
               <div
@@ -75,22 +85,26 @@ export default function PeopleSuggestionsWidget() {
                     role: person.role,
                     email: person.email,
                     profilePicture: person.profilePicture,
+                    headline: person.headline,
+                    city: person.location,
                   })
                 }
                 className="flex items-start justify-between gap-2.5 rounded-xl border border-slate-100 p-2.5 transition hover:border-blue-200 hover:bg-blue-50/20 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <UserAvatar
-                    src={person.profilePicture}
-                    name={person.name}
-                    size="md"
-                  />
+                  <div className="ring-2 ring-white rounded-full shadow-xs">
+                    <UserAvatar
+                      src={person.profilePicture}
+                      name={person.name}
+                      size="md"
+                    />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <h5 className="text-xs font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
                       {person.name}
                     </h5>
                     <p className="text-[11px] text-slate-500 truncate leading-tight mt-0.5">
-                      {person.headline || (person.role === "recruiter" ? "Hiring Partner" : "Professional Member")}
+                      {headline}
                     </p>
                     <span
                       className={

@@ -22,8 +22,9 @@ export default function MyConnectionsList() {
 
   const connections = connectionsData?.items || [];
   const filteredConnections = connections.filter((conn) => {
-    const name = conn.peerUser?.name?.toLowerCase() || "";
-    const headline = conn.peerUser?.headline?.toLowerCase() || "";
+    const peer = conn.peerUser || {};
+    const name = (peer.name || "").toLowerCase();
+    const headline = (peer.headline || "").toLowerCase();
     const q = searchTerm.toLowerCase();
     return name.includes(q) || headline.includes(q);
   });
@@ -83,6 +84,8 @@ export default function MyConnectionsList() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {filteredConnections.map((conn) => {
             const isMenuOpen = activeMenuId === conn._id;
+            const peer = conn.peerUser || {};
+            const headline = peer.headline || (peer.role === "recruiter" ? "Recruiter" : "JobBox Member");
 
             return (
               <div
@@ -92,37 +95,39 @@ export default function MyConnectionsList() {
                 <div
                   onClick={() =>
                     openUserProfile({
-                      _id: conn.peerUser._id,
-                      name: conn.peerUser.name,
-                      role: conn.peerUser.role,
-                      email: conn.peerUser.email,
-                      profilePicture: conn.peerUser.profilePicture,
-                      headline: conn.peerUser.headline,
-                      city: conn.peerUser.location,
+                      _id: peer._id,
+                      name: peer.name,
+                      role: peer.role,
+                      email: peer.email,
+                      profilePicture: peer.profilePicture,
+                      headline: peer.headline,
+                      city: peer.location,
                     })
                   }
                   className="flex items-start gap-3 min-w-0 flex-1 cursor-pointer"
                 >
-                  <UserAvatar
-                    src={conn.peerUser.profilePicture}
-                    name={conn.peerUser.name}
-                    size="lg"
-                  />
+                  <div className="ring-2 ring-white rounded-full shadow-xs">
+                    <UserAvatar
+                      src={peer.profilePicture}
+                      name={peer.name}
+                      size="lg"
+                    />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
-                        {conn.peerUser.name}
+                        {peer.name}
                       </h4>
                       <span
                         className={`rounded px-1.5 py-0.2 text-[10px] font-semibold capitalize border ${getRoleBadgeClasses(
-                          conn.peerUser.role
+                          peer.role
                         )}`}
                       >
-                        {conn.peerUser.role}
+                        {peer.role}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                      {conn.peerUser.headline || "JobBox Community Member"}
+                      {headline}
                     </p>
                     <span className="text-[10px] text-slate-400 mt-1 block">
                       Connected {conn.acceptedAt ? formatPostTimestamp(conn.acceptedAt) : "Recently"}
@@ -133,12 +138,12 @@ export default function MyConnectionsList() {
                 <div className="flex items-center gap-1.5 shrink-0 self-start">
                   <button
                     type="button"
-                    onClick={() => handleMessage(conn.peerUser._id)}
+                    onClick={() => handleMessage(peer._id)}
                     className="inline-flex items-center gap-1 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-bold text-[#3C65F5] hover:bg-blue-100 transition"
                     title="Send message"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Message</span>
+                    <span>Message</span>
                   </button>
 
                   <div className="relative">

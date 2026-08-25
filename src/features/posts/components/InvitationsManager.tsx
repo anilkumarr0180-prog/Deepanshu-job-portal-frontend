@@ -105,73 +105,79 @@ export default function InvitationsManager({ onExploreSuggestions }: Invitations
               ))}
             </div>
           ) : receivedItems.length > 0 ? (
-            receivedItems.map((item) => (
-              <div
-                key={item._id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3.5 group hover:bg-slate-50/60 rounded-xl px-2 transition"
-              >
+            receivedItems.map((item) => {
+              const peer = item.peerUser || {};
+              const headline = peer.headline || (peer.role === "recruiter" ? "Recruiter" : "JobBox Member");
+              return (
                 <div
-                  onClick={() =>
-                    openUserProfile({
-                      _id: item.peerUser._id,
-                      name: item.peerUser.name,
-                      role: item.peerUser.role,
-                      email: item.peerUser.email,
-                      profilePicture: item.peerUser.profilePicture,
-                      headline: item.peerUser.headline,
-                      city: item.peerUser.location,
-                    })
-                  }
-                  className="flex items-start gap-3.5 cursor-pointer min-w-0 flex-1"
+                  key={item._id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3.5 group hover:bg-slate-50/60 rounded-xl px-2 transition"
                 >
-                  <UserAvatar
-                    src={item.peerUser.profilePicture}
-                    name={item.peerUser.name}
-                    size="lg"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
-                        {item.peerUser.name}
-                      </h4>
-                      <span
-                        className={`rounded px-1.5 py-0.2 text-[10px] font-semibold capitalize border ${getRoleBadgeClasses(
-                          item.peerUser.role
-                        )}`}
-                      >
-                        {item.peerUser.role}
+                  <div
+                    onClick={() =>
+                      openUserProfile({
+                        _id: peer._id,
+                        name: peer.name,
+                        role: peer.role,
+                        email: peer.email,
+                        profilePicture: peer.profilePicture,
+                        headline: peer.headline,
+                        city: peer.location,
+                      })
+                    }
+                    className="flex items-start gap-3.5 cursor-pointer min-w-0 flex-1"
+                  >
+                    <div className="ring-2 ring-white rounded-full shadow-xs">
+                      <UserAvatar
+                        src={peer.profilePicture}
+                        name={peer.name}
+                        size="lg"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#3C65F5] transition truncate">
+                          {peer.name}
+                        </h4>
+                        <span
+                          className={`rounded px-1.5 py-0.2 text-[10px] font-semibold capitalize border ${getRoleBadgeClasses(
+                            peer.role
+                          )}`}
+                        >
+                          {peer.role}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                        {headline}
+                      </p>
+                      <span className="text-[11px] text-slate-400 mt-1 block">
+                        Received {formatPostTimestamp(item.createdAt)}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
-                      {item.peerUser.headline || "JobBox Community Member"}
-                    </p>
-                    <span className="text-[11px] text-slate-400 mt-1 block">
-                      Received {formatPostTimestamp(item.createdAt)}
-                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => reject.mutate(item._id)}
+                      disabled={reject.isPending}
+                      className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition disabled:opacity-50"
+                    >
+                      Ignore
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => accept.mutate(item._id)}
+                      disabled={accept.isPending}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition disabled:opacity-50"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      <span>Accept</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                  <button
-                    type="button"
-                    onClick={() => reject.mutate(item._id)}
-                    disabled={reject.isPending}
-                    className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition disabled:opacity-50"
-                  >
-                    Ignore
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => accept.mutate(item._id)}
-                    disabled={accept.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition disabled:opacity-50"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    <span>Accept</span>
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="py-10 text-center space-y-3">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#3C65F5]">

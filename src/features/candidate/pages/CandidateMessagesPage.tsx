@@ -15,7 +15,10 @@ import ChatWindow from "@/features/chat/components/ChatWindow";
 import type { ChatConversation } from "@/features/chat/types/chat.types";
 import { getUserIdString } from "@/features/chat/types/chat.types";
 
-export default function CandidateMessagesPage() {
+import { UserProfileProvider } from "@/features/posts/context/UserProfileContext";
+import UserProfileDrawer from "@/features/posts/components/UserProfileDrawer";
+
+function CandidateMessagesContent() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialConvId = searchParams.get("conversationId");
   const jobIdParam = searchParams.get("jobId");
@@ -99,17 +102,17 @@ export default function CandidateMessagesPage() {
                 },
                 recruiterId: {
                   _id: userIdParam,
-                  name: nameParam || "User",
+                  name: nameParam || "Recruiter",
                   email: "",
-                  role: (roleParam as any) || "candidate",
+                  role: (roleParam as any) || "recruiter",
                   profilePicture: avatarParam || undefined,
                 },
-                jobId: jobIdParam ? { _id: jobIdParam, title: "Direct Discussion" } : undefined,
+                jobId: jobIdParam ? ({ _id: jobIdParam, title: "Direct Networking" } as any) : undefined,
                 createdAt: new Date().toISOString(),
-                unreadCount: 0,
+                updatedAt: new Date().toISOString(),
               };
               setDraftConversation(draft);
-              setActiveConversationId(draft._id);
+              setActiveConversationId(`draft_${userIdParam}`);
               setShowMobileChat(true);
             }
           },
@@ -119,48 +122,53 @@ export default function CandidateMessagesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userIdParam, jobIdParam, user, isLoadingConversations, conversations]);
 
-  // Combine draft conversation with conversation list
+  // Combine real conversations with local draft session if active
   const allConversations = useMemo(() => {
     if (draftConversation && !conversations.some((c) => (c._id || c.id) === draftConversation._id)) {
       return [draftConversation, ...conversations];
     }
     return conversations;
-  }, [draftConversation, conversations]);
+  }, [conversations, draftConversation]);
 
-  // Auto-select first conversation on desktop when none is active and no query params
-  useEffect(() => {
-    if (!activeConversationId && allConversations.length > 0 && !jobIdParam && !userIdParam && !initialConvId) {
-      const firstId = allConversations[0]._id || allConversations[0].id || "";
-      setActiveConversationId(firstId);
+  // Active conversation object
+  const activeConversation = useMemo(() => {
+    if (draftConversation && activeConversationId === draftConversation._id) {
+      return draftConversation;
     }
-  }, [allConversations, activeConversationId, jobIdParam, userIdParam, initialConvId]);
+    return allConversations.find((c) => (c._id || c.id) === activeConversationId) || null;
+  }, [allConversations, activeConversationId, draftConversation]);
 
+  // Sync with URL params
+  const handleSelectConversation = (conversationId: string) => {
+    setActiveConversationId(conversationId);
+    setShowMobileChat(true);
+    setSearchParams({ conversationId });
+  };
+
+  // Chat real-time hooks
   const isRealConversationId = Boolean(activeConversationId && !activeConversationId.startsWith("draft_"));
-  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(isRealConversationId ? activeConversationId : null);
-  const messages = messagesData?.messages || [];
 
-  const { sendMessage, editMessage, deleteMessage, startTyping, stopTyping } = useChatSocket(isRealConversationId ? activeConversationId : null);
+  const { data: messagesData, isLoading: isLoadingMessages } = useMessages(
+    isRealConversationId ? activeConversationId : null
+  );
+  const messages = isRealConversationId ? (messagesData?.messages || []) : [];
 
-  const activeConversation =
-    allConversations.find((c) => (c._id || c.id) === activeConversationId) || null;
+  const { sendMessage, editMessage, deleteMessage, startTyping, stopTyping } = useChatSocket(
+    isRealConversationId ? activeConversationId : null
+  );
 
-  const currentTypingUsers = (activeConversationId && isRealConversationId)
+  const currentTypingUsers = activeConversationId
     ? typingUsersByConversation[activeConversationId] || []
     : [];
 
-  const handleSelectConversation = (convId: string) => {
-    setActiveConversationId(convId);
-    setShowMobileChat(true);
-    setSearchParams({ conversationId: convId }, { replace: true });
-  };
-
   const handleSendMessage = async (
     messageText: string,
-    messageType = "text",
-    attachments: Record<string, unknown>[] = []
+    messageType: string = "text",
+    attachments: any[] = []
   ) => {
     if (!activeConversationId) return;
 
+    // If sending from a draft conversation, trigger real backend creation first
     if (activeConversationId.startsWith("draft_")) {
       try {
         const newConv = await createConversation.mutateAsync({
@@ -222,5 +230,14 @@ export default function CandidateMessagesPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function CandidateMessagesPage() {
+  return (
+    <UserProfileProvider>
+      <CandidateMessagesContent />
+      <UserProfileDrawer />
+    </UserProfileProvider>
   );
 }

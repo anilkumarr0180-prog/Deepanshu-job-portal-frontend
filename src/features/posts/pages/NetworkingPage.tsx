@@ -20,7 +20,6 @@ import {
 import useAuth from "@/features/auth/hooks/useAuth";
 import { UserAvatar } from "@/shared/components/UserAvatar";
 import { useJobs } from "@/features/candidate/hooks/useJobs";
-import { usePosts } from "@/features/posts/hooks/usePosts";
 import CreatePostForm from "../components/CreatePostForm";
 import PostFeed from "../components/PostFeed";
 import PeopleSuggestionsWidget from "../components/PeopleSuggestionsWidget";
@@ -61,19 +60,12 @@ function NetworkingContent() {
     sort: "newest",
   });
 
-  // Fetch real posts to extract top active discussions count
-  const { data: postsData } = usePosts({
-    limit: 5,
-    sort: "newest",
-  });
-
   const isCandidate = user?.role === "candidate";
   const profileRoute = isCandidate ? "/candidate/profile" : "/recruiter/profile";
   const jobsRoute = isCandidate ? "/candidate/jobs" : "/recruiter/jobs";
   const messagesRoute = isCandidate ? "/candidate/messages" : "/recruiter/messages";
 
   const recommendedJobs = jobsData?.jobs || [];
-  const totalPostsCount = postsData?.pagination?.totalItems;
 
   const getRoleBadgeClasses = (role?: string) => {
     switch (role?.toLowerCase()) {
@@ -101,8 +93,8 @@ function NetworkingContent() {
 
   return (
     <div className="flex flex-col lg:h-[calc(100vh-7.5rem)] lg:overflow-hidden gap-5">
-      {/* Page Header - Fixed at the top of the networking view */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-4 shrink-0">
+      {/* LinkedIn-Style Page Header & Global Navigation */}
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 border-b border-slate-200/80 pb-4 shrink-0">
         <div>
           <div className="flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#3C65F5] shadow-2xs">
@@ -116,59 +108,51 @@ function NetworkingContent() {
             </span>
           </div>
           <p className="mt-1.5 text-sm text-slate-500 max-w-2xl">
-            Connect with peers, share career milestones, exchange advice, and engage with the JobBox community.
+            Connect with peers, share career milestones, exchange advice, and build your professional community.
           </p>
         </div>
 
-        {totalPostsCount !== undefined && totalPostsCount > 0 && (
-          <div className="hidden sm:flex items-center gap-2 rounded-2xl bg-white border border-slate-200/80 px-3.5 py-2 shadow-2xs">
-            <div className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-semibold text-slate-700">
-              {totalPostsCount} Active Discussions
-            </span>
-          </div>
-        )}
-        {/* Global Network Navigation Tabs */}
-        <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto custom-scrollbar pt-2">
+        {/* Global Network Navigation Tabs - LinkedIn Interactive Segmented Control */}
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs overflow-x-auto custom-scrollbar shrink-0">
           <button
             type="button"
             onClick={() => handleTabChange("feed")}
-            className={`flex items-center gap-2 pb-2.5 px-2 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               activeTab === "feed"
-                ? "border-[#3C65F5] text-[#3C65F5]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "bg-white text-[#3C65F5] shadow-xs border border-slate-200/80"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
             }`}
           >
-            <Globe className="h-4 w-4" />
+            <Globe className="h-4 w-4 text-[#3C65F5]" />
             <span>Feed & Discussions</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTabChange("grow")}
-            className={`flex items-center gap-2 pb-2.5 px-2 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               activeTab === "grow"
-                ? "border-[#3C65F5] text-[#3C65F5]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "bg-white text-[#3C65F5] shadow-xs border border-slate-200/80"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
             }`}
           >
-            <UserPlus className="h-4 w-4" />
+            <UserPlus className="h-4 w-4 text-[#3C65F5]" />
             <span>Grow Network</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTabChange("invitations")}
-            className={`flex items-center gap-2 pb-2.5 px-2 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               activeTab === "invitations"
-                ? "border-[#3C65F5] text-[#3C65F5]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "bg-white text-[#3C65F5] shadow-xs border border-slate-200/80"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
             }`}
           >
-            <Inbox className="h-4 w-4" />
+            <Inbox className="h-4 w-4 text-[#3C65F5]" />
             <span>Invitations</span>
             {pendingRequestsCount > 0 && (
-              <span className="rounded-full bg-rose-600 px-2 py-0.2 text-[10px] font-bold text-white animate-pulse">
+              <span className="rounded-full bg-rose-600 px-2 py-0.2 text-[10px] font-bold text-white shadow-xs animate-pulse">
                 {pendingRequestsCount}
               </span>
             )}
@@ -177,13 +161,13 @@ function NetworkingContent() {
           <button
             type="button"
             onClick={() => handleTabChange("connections")}
-            className={`flex items-center gap-2 pb-2.5 px-2 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               activeTab === "connections"
-                ? "border-[#3C65F5] text-[#3C65F5]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "bg-white text-[#3C65F5] shadow-xs border border-slate-200/80"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
             }`}
           >
-            <Users className="h-4 w-4" />
+            <Users className="h-4 w-4 text-[#3C65F5]" />
             <span>My Connections</span>
           </button>
         </div>
@@ -255,6 +239,9 @@ function NetworkingContent() {
               </div>
             </div>
           )}
+
+          {/* People You May Know Widget (Real DB Connections) */}
+          <PeopleSuggestionsWidget />
 
           {/* Recommended Jobs Widget (Using Real Jobs API) */}
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-3.5">

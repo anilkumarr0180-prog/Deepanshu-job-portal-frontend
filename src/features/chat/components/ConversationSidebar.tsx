@@ -214,30 +214,21 @@ export default function ConversationSidebar({
                       )}
                     </div>
 
-                    {/* Job title pill */}
-                    <div className="flex items-center gap-1 mb-0.5">
-                      {conv.jobId?.title ? (
-                        <>
-                          <Briefcase className="h-3 w-3 shrink-0 text-[#3C65F5]" />
-                          <span className="text-[11px] font-semibold text-[#3C65F5] truncate">
-                            {conv.jobId.title}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <UserIcon className="h-3 w-3 shrink-0 text-slate-400" />
-                          <span className="text-[11px] font-medium text-slate-500 truncate">
-                            Direct Message
-                          </span>
-                        </>
-                      )}
-                    </div>
+                    {/* Job title pill (if job-related chat) */}
+                    {conv.jobId?.title && (
+                      <div className="flex items-center gap-1 mb-1">
+                        <Briefcase className="h-3 w-3 shrink-0 text-[#3C65F5]" />
+                        <span className="text-[11px] font-semibold text-[#3C65F5] truncate max-w-[200px]">
+                          {conv.jobId.title}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Last message + unread badge */}
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 mt-0.5">
                       <p
                         className={`text-xs truncate ${
-                          unreadCount > 0 ? "font-semibold text-slate-700" : "text-slate-400"
+                          unreadCount > 0 ? "font-semibold text-slate-800" : "text-slate-500"
                         }`}
                       >
                         {isLastMsgImage
@@ -247,7 +238,7 @@ export default function ConversationSidebar({
                           : lastMsg || "Start the conversation"}
                       </p>
                       {unreadCount > 0 && (
-                        <span className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#3C65F5] px-1.5 text-[10px] font-extrabold text-white shadow-sm">
+                        <span className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#3C65F5] px-1.5 text-[10px] font-extrabold text-white shadow-xs">
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
                       )}
