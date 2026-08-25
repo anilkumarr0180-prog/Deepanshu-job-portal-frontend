@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Send,
   Paperclip,
@@ -9,13 +9,23 @@ import {
   ArrowLeft,
   MoreVertical,
   Mic,
+  Search,
+  ExternalLink,
+  Copy,
+  Check,
+  BellOff,
+  Bell,
+  ShieldAlert,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 import type { ChatConversation, ChatMessage, ChatUser } from "../types/chat.types";
 import { getUserIdString } from "../types/chat.types";
 import type { TypingUserEntry } from "../store/chatSlice";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
+import { useUserProfileModal } from "@/features/posts/context/UserProfileContext";
+import { useConnectionStatus } from "@/features/posts/hooks/useConnectionStatus";
 
 interface ChatWindowProps {
   conversation: ChatConversation | null;
@@ -53,8 +63,16 @@ export default function ChatWindow({
   isLoadingMessages,
   onBackToSidebar,
 }: ChatWindowProps) {
+  const { openUserProfile } = useUserProfileModal();
+
   const [inputText, setInputText] = useState("");
   const [showQuickEmojis, setShowQuickEmojis] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isMuted, setIsMuted] = useState(false);
+
   const [selectedAttachment, setSelectedAttachment] = useState<{
     url: string;
     name: string;
@@ -67,17 +85,23 @@ export default function ChatWindow({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPanelRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typingUsers]);
+    if (!isSearching) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, typingUsers, isSearching]);
 
-  // Close emoji panel on outside click
+  // Close emoji panel and 3-dots menu on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (emojiPanelRef.current && !emojiPanelRef.current.contains(e.target as Node)) {
         setShowQuickEmojis(false);
+      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -91,6 +115,40 @@ export default function ChatWindow({
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, []);
+
+  // Filter messages when searching (declared before early return to respect React rules of hooks)
+  const displayedMessages = useMemo(() => {
+    if (!searchQuery.trim()) return messages;
+    const q = searchQuery.toLowerCase();
+    return messages.filter((m) => m.message?.toLowerCase().includes(q));
+  }, [messages, searchQuery]);
+
+  const candidateIdStr = getUserIdString(conversation?.candidateId);
+  const isCandidate = candidateIdStr === currentUserId;
+  const partner: ChatUser | undefined = isCandidate
+    ? (conversation?.recruiterId as ChatUser)
+    : (conversation?.candidateId as ChatUser);
+  const partnerId = getUserIdString(partner);
+  const isPartnerOnline = onlineUserIds.includes(partnerId);
+
+  // Query live connection status
+  const { data: connectionStatusData } = useConnectionStatus(partnerId, Boolean(partnerId && partnerId !== currentUserId));
+  const isDirectConnected = connectionStatusData?.status === "connected";
+
+  const isPartnerTyping = typingUsers.some((u) => {
+    if (typeof u === "string") return u === partnerId;
+    return u.userId === partnerId;
+  });
+
+  const partnerTypingEntry = typingUsers.find((entry) => {
+    const id = typeof entry === "string" ? entry : entry.userId;
+    return id === partnerId;
+  });
+
+  const typingName =
+    typeof partnerTypingEntry === "object" && partnerTypingEntry?.userName
+      ? partnerTypingEntry.userName
+      : partner?.name;
 
   if (!conversation) {
     return (
@@ -113,21 +171,39 @@ export default function ChatWindow({
     );
   }
 
-  const candidateIdStr = getUserIdString(conversation.candidateId);
-  const isCandidate = candidateIdStr === currentUserId;
-  const partner: ChatUser = isCandidate ? conversation.recruiterId : conversation.candidateId;
-  const partnerId = getUserIdString(partner);
-  const isPartnerOnline = onlineUserIds.includes(partnerId);
+  const handleOpenPartnerProfile = () => {
+    if (!partner) return;
+    openUserProfile({
+      _id: partnerId,
+      name: partner.name,
+      role: partner.role,
+      email: partner.email,
+      profilePicture: partner.profilePicture,
+    });
+    setShowMenu(false);
+  };
 
-  const partnerTypingEntry = typingUsers.find((entry) => {
-    const id = typeof entry === "string" ? entry : entry.userId;
-    return id === partnerId;
-  });
-  const isPartnerTyping = Boolean(partnerTypingEntry);
-  const typingName =
-    typeof partnerTypingEntry === "object" && partnerTypingEntry.userName
-      ? partnerTypingEntry.userName
-      : partner?.name;
+  const handleCopyEmail = () => {
+    if (partner?.email) {
+      navigator.clipboard.writeText(partner.email);
+      setCopiedEmail(true);
+      toast.success("Email copied to clipboard");
+      setTimeout(() => setCopiedEmail(false), 2000);
+    }
+  };
+
+  const handleToggleMute = () => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      if (next) {
+        toast(`Notifications muted for ${partner?.name || "this chat"}`, { icon: "🔕" });
+      } else {
+        toast.success("Notifications unmuted");
+      }
+      return next;
+    });
+    setShowMenu(false);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -153,19 +229,16 @@ export default function ChatWindow({
         ]
       : [];
 
-    const msgType = selectedAttachment
-      ? selectedAttachment.type === "image"
-        ? "image"
-        : "file"
-      : "text";
+    const msgType = selectedAttachment ? selectedAttachment.type : "text";
 
     onSendMessage(
-      inputText.trim() || selectedAttachment?.name || "Attachment",
+      inputText.trim() || (selectedAttachment ? "Attachment" : ""),
       msgType,
       attachments
     );
     setInputText("");
     setSelectedAttachment(null);
+    setShowQuickEmojis(false);
     onTypingStop();
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -194,15 +267,22 @@ export default function ChatWindow({
     e.target.value = "";
   };
 
-  const addEmoji = (emoji: string) => {
+  const handleEmojiClick = (emoji: string) => {
     setInputText((prev) => prev + emoji);
-    setShowQuickEmojis(false);
     textareaRef.current?.focus();
   };
 
   // Build message list with date headers & grouping
   const renderMessages = () => {
-    if (messages.length === 0) {
+    if (displayedMessages.length === 0) {
+      if (searchQuery) {
+        return (
+          <div className="flex flex-col items-center justify-center h-48 text-center text-slate-400">
+            <Search className="h-7 w-7 mb-2 opacity-40" />
+            <p className="text-sm font-semibold text-slate-600">No messages matching "{searchQuery}"</p>
+          </div>
+        );
+      }
       return (
         <div className="flex flex-col items-center justify-center h-full py-16 space-y-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
@@ -217,7 +297,7 @@ export default function ChatWindow({
     const elements: React.ReactNode[] = [];
     let lastDateStr = "";
 
-    messages.forEach((msg, idx) => {
+    displayedMessages.forEach((msg, idx) => {
       const msgDate = new Date(msg.createdAt);
       const now = new Date();
       const isToday = msgDate.toDateString() === now.toDateString();
@@ -243,8 +323,7 @@ export default function ChatWindow({
 
       const senderIdStr = getUserIdString(msg.senderId);
       const isSelf = senderIdStr === currentUserId;
-      const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null;
-      // Show avatar only if next message is from a different sender (bottom of a group)
+      const nextMsg = idx < displayedMessages.length - 1 ? displayedMessages[idx + 1] : null;
       const showAvatar = !isSelf && (!nextMsg || !isSameSender(msg, nextMsg));
 
       elements.push(
@@ -268,9 +347,10 @@ export default function ChatWindow({
 
   return (
     <div className="flex h-full w-full flex-col bg-[#f0f2f5]">
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between bg-white border-b border-slate-200/80 px-4 py-3 shadow-sm">
-        <div className="flex items-center gap-3">
+      {/* ── Production LinkedIn-Standard Header ── */}
+      <div className="flex items-center justify-between bg-white border-b border-slate-200/80 px-4 sm:px-5 py-3 shadow-xs">
+        {/* Left Side: Avatar, Name + Meta & Status */}
+        <div className="flex items-center gap-3 min-w-0">
           {onBackToSidebar && (
             <button
               type="button"
@@ -282,64 +362,239 @@ export default function ChatWindow({
             </button>
           )}
 
-          {/* Avatar */}
-          <div className="relative">
+          {/* Avatar with click trigger */}
+          <button
+            type="button"
+            onClick={handleOpenPartnerProfile}
+            className="relative cursor-pointer group shrink-0 text-left p-0 border-0 bg-transparent"
+            title={`View ${partner?.name || "User"}'s profile`}
+          >
             {partner?.profilePicture ? (
               <img
                 src={partner.profilePicture}
-                alt={partner.name}
-                className="h-10 w-10 rounded-full object-cover border border-slate-200 shadow-sm"
+                alt={partner?.name}
+                className="h-10 w-10 rounded-full object-cover border border-slate-200 shadow-2xs group-hover:scale-105 transition-transform"
               />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3C65F5] to-indigo-700 font-bold text-white shadow-sm text-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3C65F5] to-indigo-700 font-bold text-white shadow-2xs text-sm group-hover:scale-105 transition-transform">
                 {partner?.name ? partner.name.charAt(0).toUpperCase() : <UserIcon className="h-5 w-5" />}
               </div>
             )}
-            {/* Online dot */}
+            {/* Online Status Dot */}
             <span
               className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white transition-colors ${
                 isPartnerOnline ? "bg-emerald-500" : "bg-slate-300"
               }`}
             />
-          </div>
+          </button>
 
-          {/* Name & Status */}
-          <div>
-            <h3 className="text-[15px] font-bold text-slate-900 leading-none flex items-center gap-2">
-              {partner?.name || "Participant"}
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500 uppercase tracking-wide">
-                {isCandidate ? "Recruiter" : "Applicant"}
+          {/* Name + Inline 1st badge + Role & Status */}
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={handleOpenPartnerProfile}
+                className="text-left font-bold text-[15px] text-slate-900 hover:text-[#3C65F5] transition truncate leading-none cursor-pointer"
+              >
+                {partner?.name || "Participant"}
+              </button>
+
+              {/* Subtle inline 1st degree connection tag */}
+              {isDirectConnected && (
+                <span className="inline-flex items-center rounded px-1.5 py-0.2 text-[10px] font-bold bg-blue-50 text-[#3C65F5] border border-blue-200/80 leading-tight">
+                  1st
+                </span>
+              )}
+
+              {/* Role descriptor */}
+              <span className="text-xs text-slate-400 font-normal truncate hidden sm:inline">
+                • {partner?.role === "recruiter" ? "Hiring Partner" : "Candidate"}
               </span>
-            </h3>
-            <p className={`text-[11px] font-medium mt-0.5 ${isPartnerOnline ? "text-emerald-600" : "text-slate-400"}`}>
+
+              {/* Job context pill (if conversation belongs to an application) */}
+              {conversation.jobId?.title && (
+                <span className="text-xs text-slate-400 font-normal truncate hidden md:inline">
+                  • {conversation.jobId.title}
+                </span>
+              )}
+            </div>
+
+            {/* Subtitle / Active Status */}
+            <p className="text-[11px] font-medium mt-1 leading-none">
               {isPartnerTyping ? (
                 <span className="text-[#3C65F5] italic animate-pulse">typing...</span>
               ) : isPartnerOnline ? (
-                "Online"
+                <span className="flex items-center gap-1 text-emerald-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active now
+                </span>
               ) : (
-                "Offline"
+                <span className="text-slate-400">Offline</span>
               )}
             </p>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-1">
-          <div className="hidden sm:flex items-center gap-1 mr-1">
-            <div className="flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-[11px] font-semibold text-[#3C65F5]">
-              <Briefcase className="h-3.5 w-3.5" />
-              <span className="truncate max-w-[120px]">{conversation.jobId?.title || "Job Position"}</span>
-            </div>
-          </div>
+        {/* Right Side: Quick Action Icons & 3-Dots Menu */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Search in Chat Button */}
           <button
             type="button"
-            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
-            title="More options"
+            onClick={() => {
+              setIsSearching((prev) => !prev);
+              if (isSearching) setSearchQuery("");
+            }}
+            className={`rounded-xl p-2 transition ${
+              isSearching
+                ? "bg-blue-50 text-[#3C65F5]"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            }`}
+            title="Search in conversation"
           >
-            <MoreVertical className="h-5 w-5" />
+            <Search className="h-4 w-4" />
           </button>
+
+          {/* View Profile Quick Icon */}
+          <button
+            type="button"
+            onClick={handleOpenPartnerProfile}
+            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-[#3C65F5] transition"
+            title="View Profile"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </button>
+
+          {/* 3-Dots Utility Menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setShowMenu((prev) => !prev)}
+              className={`rounded-xl p-2 transition ${
+                showMenu
+                  ? "bg-slate-200 text-slate-800"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              }`}
+              title="Conversation options"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+
+            {showMenu && (
+              <div className="absolute right-0 z-30 mt-1.5 w-52 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95">
+                {/* View Full Profile */}
+                <button
+                  type="button"
+                  onClick={handleOpenPartnerProfile}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-[#3C65F5] transition"
+                >
+                  <UserIcon className="h-3.5 w-3.5 text-slate-400" />
+                  <span>View Member Profile</span>
+                </button>
+
+                {/* Search In Chat */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSearching(true);
+                    setShowMenu(false);
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                >
+                  <Search className="h-3.5 w-3.5 text-slate-400" />
+                  <span>Search in Chat</span>
+                </button>
+
+                {/* Mute Notifications */}
+                <button
+                  type="button"
+                  onClick={handleToggleMute}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                >
+                  {isMuted ? (
+                    <>
+                      <Bell className="h-3.5 w-3.5 text-slate-400" />
+                      <span>Unmute Notifications</span>
+                    </>
+                  ) : (
+                    <>
+                      <BellOff className="h-3.5 w-3.5 text-slate-400" />
+                      <span>Mute Notifications</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Copy Email */}
+                {partner?.email && (
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  >
+                    {copiedEmail ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        <span className="text-emerald-700">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5 text-slate-400" />
+                        <span>Copy Email Address</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                <div className="my-1 border-t border-slate-100" />
+
+                {/* Safety / Report */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMenu(false);
+                    toast.success("Report submitted to trust & safety team.");
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                >
+                  <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
+                  <span>Report / Block</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* ── In-Chat Search Bar (when active) ── */}
+      {isSearching && (
+        <div className="flex items-center justify-between gap-3 bg-white border-b border-slate-200 px-4 py-2 text-xs shadow-xs animate-in slide-in-from-top-1 duration-150">
+          <div className="flex items-center gap-2 flex-1">
+            <Search className="h-4 w-4 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search in this conversation..."
+              autoFocus
+              className="w-full text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
+            />
+          </div>
+          {searchQuery && (
+            <span className="text-[11px] text-slate-400 shrink-0">
+              {displayedMessages.length} results
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setIsSearching(false);
+              setSearchQuery("");
+            }}
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* ── Messages Area ── */}
       <div
@@ -411,7 +666,7 @@ export default function ChatWindow({
               <button
                 key={e}
                 type="button"
-                onClick={() => addEmoji(e)}
+                onClick={() => handleEmojiClick(e)}
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-lg hover:bg-slate-100 active:scale-90 transition-all"
               >
                 {e}

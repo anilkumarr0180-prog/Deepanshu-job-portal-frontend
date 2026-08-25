@@ -35,15 +35,15 @@ export const fetchConversationsApi = async (page = 1, limit = 20) => {
 };
 
 export const createOrGetConversationApi = async (
-  jobId: string,
+  jobId?: string,
   targetUserId?: string
 ) => {
   const response = await axiosInstance.post<{
     success: boolean;
     data: ChatConversation;
   }>("/chat/conversations", {
-    jobId,
-    targetUserId,
+    jobId: jobId || undefined,
+    targetUserId: targetUserId || undefined,
   });
 
   return response.data.data;

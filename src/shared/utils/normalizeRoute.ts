@@ -9,6 +9,15 @@ export const normalizeNotificationLink = (
 
   let cleanLink = link.trim();
 
+  // Normalize connection requests to invitations tab
+  if (cleanLink === "/candidate/networking" || cleanLink === "/recruiter/networking" || cleanLink.includes("/networking")) {
+    if (cleanLink.includes("connection")) {
+      return userRole?.toLowerCase() === "recruiter"
+        ? "/recruiter/networking?tab=invitations"
+        : "/candidate/networking?tab=invitations";
+    }
+  }
+
   // Normalize recruiter applications link to applicants route
   if (cleanLink === "/recruiter/applications" || cleanLink.startsWith("/recruiter/applications/")) {
     return "/recruiter/applicants";

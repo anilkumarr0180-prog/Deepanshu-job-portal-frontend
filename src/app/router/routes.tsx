@@ -29,6 +29,7 @@ const RegisterPage = withSuspense(lazy(() => import("@/features/auth/pages/Regis
 const PricingPage = withSuspense(lazy(() => import("@/features/subscription/pages/PricingPage")));
 const BillingSettingsPage = withSuspense(lazy(() => import("@/features/subscription/pages/BillingSettingsPage")));
 const PostsPage = withSuspense(lazy(() => import("@/features/posts/pages/PostsPage")));
+const PostDetailsPage = withSuspense(lazy(() => import("@/features/posts/pages/PostDetailsPage")));
 const NetworkingPage = withSuspense(lazy(() => import("@/features/posts/pages/NetworkingPage")));
 
 // Admin Pages
@@ -120,6 +121,10 @@ export const routes: RouteObject[] = [
         element: <PostsPage />,
       },
       {
+        path: "posts/:id",
+        element: <PostDetailsPage />,
+      },
+      {
         path: "login",
         element: (
           <GuestRoute>
@@ -202,6 +207,14 @@ export const routes: RouteObject[] = [
       {
         path: "networking",
         element: <NetworkingPage />,
+      },
+      {
+        path: "posts/:id",
+        element: <PostDetailsPage />,
+      },
+      {
+        path: "posts/:id",
+        element: <PostDetailsPage />,
       },
       {
         path: "saved",

@@ -13,6 +13,7 @@ import {
 import { useJobs } from "@/features/jobs/hooks/useJobs";
 import PublicJobCard from "@/features/jobs/components/PublicJobCard";
 import JobCardSkeleton from "@/features/jobs/components/JobCardSkeleton";
+import ConnectionButton from "@/features/posts/components/ConnectionButton";
 
 export default function RecruiterDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -161,7 +162,14 @@ export default function RecruiterDetailsPage() {
                 </div>
               </div>
 
-              <div className="shrink-0">
+              <div className="shrink-0 flex items-center gap-3">
+                {recruiter?._id && (
+                  <ConnectionButton
+                    targetUserId={recruiter._id}
+                    size="sm"
+                    showDirectMessage={true}
+                  />
+                )}
                 <span className="inline-flex items-center gap-2 rounded-2xl bg-[#EEF3FF] px-4 py-2 text-xs font-bold text-[#3C65F5]">
                   <Briefcase className="h-4 w-4" />
                   {companyJobs.length} {companyJobs.length === 1 ? "Open Position" : "Open Positions"}

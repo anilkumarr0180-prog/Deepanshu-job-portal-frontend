@@ -2,7 +2,13 @@ export type NotificationType =
   | "JOB_ALERT"
   | "APPLICATION_UPDATE"
   | "NEW_MESSAGE"
-  | "SYSTEM_ALERT";
+  | "SYSTEM_ALERT"
+  | "POST_LIKED"
+  | "POST_COMMENTED"
+  | "COMMENT_REPLIED"
+  | "CONNECTION_REQUEST"
+  | "CONNECTION_ACCEPTED"
+  | "POST_REPOSTED";
 
 export interface NotificationItem {
   id: string;

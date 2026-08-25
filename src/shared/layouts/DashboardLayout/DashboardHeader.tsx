@@ -19,6 +19,7 @@ import { SwiggyLocationHeader } from "@/shared/components/SwiggyLocationHeader";
 import { UserAvatar } from "@/shared/components/UserAvatar";
 import { PremiumBadge } from "@/shared/components/PremiumBadge";
 import { fetchMySubscription, type UserSubscription } from "@/features/subscription/api/subscriptionApi";
+import UniversalMemberSearch from "@/shared/components/UniversalMemberSearch";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -36,7 +37,7 @@ export default function DashboardHeader() {
     }
   }, [user]);
 
-  const displayName = user?.name ?? "User";
+  const displayName = (user?.name ?? "User").replace(/\s+(Recruiter|Candidate|Admin)$/i, "").trim();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -94,18 +95,18 @@ export default function DashboardHeader() {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setDropdownOpen(false);
-    logout();
+    await logout();
   };
 
   return (
     <>
-      <header className="sticky top-0 z-30 h-[72px] bg-white/95 backdrop-blur-md px-4 border-b border-slate-200/80 shadow-sm sm:px-6 lg:px-8">
-        <div className="flex h-full items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 h-[72px] bg-white/95 backdrop-blur-md px-4 border-b border-slate-200/80 shadow-xs sm:px-6 lg:px-8">
+        <div className="flex h-full items-center justify-between gap-3 lg:gap-6">
 
           {/* Left */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
 
             <button
               type="button"
@@ -122,7 +123,7 @@ export default function DashboardHeader() {
 
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <p className="text-base font-semibold text-[#05264E] sm:text-lg">
+                <p className="text-sm sm:text-base font-bold text-[#05264E]">
                   {(() => {
                     const hour = new Date().getHours();
                     const timeGreeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
@@ -135,15 +136,23 @@ export default function DashboardHeader() {
                 )}
               </div>
 
-              <p className="hidden text-xs text-slate-500 sm:block sm:text-sm">
+              <p className="hidden text-xs text-slate-500 sm:block">
                 Manage your hiring workflow efficiently.
               </p>
             </div>
 
           </div>
 
+          {/* Center: Universal LinkedIn-Style Member Search */}
+          <div className="hidden md:flex flex-1 justify-center max-w-md mx-2">
+            <UniversalMemberSearch />
+          </div>
+
           {/* Right */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="md:hidden">
+              <UniversalMemberSearch />
+            </div>
 
             <SwiggyLocationHeader />
 

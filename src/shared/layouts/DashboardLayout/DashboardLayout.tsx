@@ -4,6 +4,9 @@ import DashboardHeader from "./DashboardHeader.tsx";
 import DashboardSidebar from "./DashboardSidebar.tsx";
 import { useUnreadChatCount } from "@/features/chat/hooks/useChat";
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
+import { UserProfileProvider } from "@/features/posts/context/UserProfileContext";
+import UserProfileDrawer from "@/features/posts/components/UserProfileDrawer";
+import FloatingMessagingDock from "@/features/chat/components/FloatingMessagingDock";
 
 export default function DashboardLayout() {
   // Fetch unread chat count globally so the badge is active anywhere in the dashboard
@@ -13,18 +16,27 @@ export default function DashboardLayout() {
   useChatSocket();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
-      <DashboardSidebar />
+    <UserProfileProvider>
+      <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
+        <DashboardSidebar />
 
-      <div className="flex h-screen flex-1 flex-col overflow-hidden lg:ml-[260px]">
-        <DashboardHeader />
+        <div className="flex h-screen flex-1 flex-col overflow-hidden lg:ml-[260px]">
+          <DashboardHeader />
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl space-y-6">
-            <Outlet />
-          </div>
-        </main>
+          <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl space-y-6">
+              <Outlet />
+            </div>
+          </main>
+        </div>
+
+        {/* Global Slide-Out LinkedIn Profile Drawer */}
+        <UserProfileDrawer />
+
+        {/* Global Bottom-Right Docked LinkedIn Messenger */}
+        <FloatingMessagingDock />
       </div>
-    </div>
+    </UserProfileProvider>
   );
 }
+

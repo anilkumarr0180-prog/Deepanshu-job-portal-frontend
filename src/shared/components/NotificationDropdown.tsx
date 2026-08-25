@@ -7,16 +7,43 @@ import {
   FileText,
   MessageSquare,
   AlertCircle,
+  Crown,
   X,
   ExternalLink,
+  UserPlus,
+  UserCheck,
+  Repeat,
+  Heart,
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import type { NotificationType } from "../types/notification";
 import useAuth from "@/features/auth/hooks/useAuth";
 import { normalizeNotificationLink } from "../utils/normalizeRoute";
 
-const getNotificationIcon = (type: NotificationType) => {
-  switch (type) {
+const getNotificationIcon = (type: NotificationType, title?: string) => {
+  const lowerTitle = (title || "").toLowerCase();
+  if (
+    lowerTitle.includes("subscription") ||
+    lowerTitle.includes("premium") ||
+    lowerTitle.includes("plan") ||
+    lowerTitle.includes("payment") ||
+    lowerTitle.includes("invoice")
+  ) {
+    return <Crown className="w-4 h-4 text-amber-500" />;
+  }
+
+    switch (type) {
+    case "CONNECTION_REQUEST":
+      return <UserPlus className="w-4 h-4 text-[#3C65F5]" />;
+    case "CONNECTION_ACCEPTED":
+      return <UserCheck className="w-4 h-4 text-emerald-600" />;
+    case "POST_REPOSTED":
+      return <Repeat className="w-4 h-4 text-indigo-600" />;
+    case "POST_LIKED":
+      return <Heart className="w-4 h-4 text-rose-500" />;
+    case "POST_COMMENTED":
+    case "COMMENT_REPLIED":
+      return <MessageSquare className="w-4 h-4 text-blue-600" />;
     case "JOB_ALERT":
       return <Briefcase className="w-4 h-4 text-blue-600" />;
     case "APPLICATION_UPDATE":
@@ -203,7 +230,7 @@ export const NotificationDropdown: React.FC = () => {
                     }`}
                   >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                      {getNotificationIcon(item.type)}
+                      {getNotificationIcon(item.type, item.title)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">

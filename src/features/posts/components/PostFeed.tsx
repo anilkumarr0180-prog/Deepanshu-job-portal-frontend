@@ -1,14 +1,21 @@
+import { useState, useMemo } from "react";
 import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
   Clock,
+  Compass,
   MessageSquareDashed,
   RefreshCw,
+  Sparkles,
+  Users,
 } from "lucide-react";
+import useAuth from "@/features/auth/hooks/useAuth";
 import { usePosts } from "../hooks/usePosts";
 import PostCard from "./PostCard";
 import type { Post } from "../types/post.types";
+
+type FeedTab = "for-you" | "recent" | "my-network";
 
 interface PostFeedProps {
   page?: number;
@@ -21,22 +28,65 @@ export default function PostFeed({
   limit = 10,
   onPageChange,
 }: PostFeedProps) {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
+
   const { data, isLoading, isError, refetch, isFetching } = usePosts({
     page,
     limit,
     sort: "newest",
+    feedType: activeTab,
   });
 
-  const posts: Post[] = data?.items || data?.posts || [];
+  const rawPosts: Post[] = data?.items || data?.posts || [];
   const pagination = data?.pagination;
+
+  // Filter or sort posts based on active tab
+  const currentUserId = user?._id || user?.id;
+
+  const displayPosts = useMemo(() => {
+    if (!rawPosts || rawPosts.length === 0) return [];
+
+    if (activeTab === "for-you") {
+      // Sort by engagement score (likes + comments) while preserving freshness
+      return [...rawPosts].sort((a, b) => {
+        const scoreA = (a.likesCount || 0) * 2 + (a.commentsCount || 0) * 3;
+        const scoreB = (b.likesCount || 0) * 2 + (b.commentsCount || 0) * 3;
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA;
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
+
+    if (activeTab === "my-network") {
+      // Show posts by current user or recruiter posts
+      if (!currentUserId) return rawPosts;
+      return rawPosts.filter((p) => {
+        const authorId =
+          typeof p.authorId === "object" && p.authorId !== null
+            ? p.authorId._id
+            : p.authorId;
+        const role =
+          typeof p.authorId === "object" && p.authorId !== null
+            ? p.authorId.role
+            : undefined;
+        return String(authorId) === String(currentUserId) || role === "recruiter";
+      });
+    }
+
+    // Default "recent": newest first
+    return rawPosts;
+  }, [rawPosts, activeTab, currentUserId]);
 
   if (isLoading) {
     return (
       <div className="space-y-4" role="status" aria-label="Loading posts feed">
-        {/* Toolbar Skeleton */}
-        <div className="flex items-center justify-between px-1 py-1 animate-pulse">
-          <div className="h-4 w-28 rounded-md bg-slate-200" />
-          <div className="h-6 w-24 rounded-lg bg-slate-100" />
+        {/* Tab Skeleton */}
+        <div className="flex items-center gap-2 p-1 bg-slate-100/70 rounded-2xl animate-pulse">
+          <div className="h-9 w-28 rounded-xl bg-slate-200" />
+          <div className="h-9 w-24 rounded-xl bg-slate-200" />
+          <div className="h-9 w-28 rounded-xl bg-slate-200" />
         </div>
 
         {Array.from({ length: 3 }).map((_, idx) => (
@@ -66,6 +116,9 @@ export default function PostFeed({
               <div className="h-4 w-3/4 rounded bg-slate-200" />
             </div>
 
+            {/* Media Box Skeleton */}
+            <div className="h-48 w-full rounded-2xl bg-slate-100" />
+
             {/* Engagement Summary Skeleton */}
             <div className="flex items-center justify-between border-t border-slate-100 pt-3">
               <div className="h-3 w-16 rounded bg-slate-100" />
@@ -74,9 +127,9 @@ export default function PostFeed({
 
             {/* Action Bar Skeleton */}
             <div className="flex items-center justify-between gap-2 border-t border-slate-100/60 pt-2">
-              <div className="h-8 flex-1 rounded-xl bg-slate-100" />
-              <div className="h-8 flex-1 rounded-xl bg-slate-100" />
-              <div className="h-8 flex-1 rounded-xl bg-slate-100" />
+              <div className="h-9 flex-1 rounded-xl bg-slate-100" />
+              <div className="h-9 flex-1 rounded-xl bg-slate-100" />
+              <div className="h-9 flex-1 rounded-xl bg-slate-100" />
             </div>
           </div>
         ))}
@@ -90,7 +143,7 @@ export default function PostFeed({
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
           <AlertCircle className="h-6 w-6" />
         </div>
-        <h3 className="mt-3.5 text-base font-semibold text-slate-900">
+        <h3 className="mt-3.5 text-base font-bold text-slate-900">
           Failed to load community feed
         </h3>
         <p className="mt-1 text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
@@ -99,7 +152,7 @@ export default function PostFeed({
         <button
           type="button"
           onClick={() => void refetch()}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs sm:text-sm font-medium text-white shadow-xs transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
         >
           <RefreshCw className="h-4 w-4" />
           <span>Retry Feed</span>
@@ -108,51 +161,106 @@ export default function PostFeed({
     );
   }
 
-  if (posts.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-10 sm:p-14 text-center shadow-xs">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-xs border border-slate-200/60">
-          <MessageSquareDashed className="h-7 w-7 text-[#3C65F5]" />
-        </div>
-        <h3 className="mt-4 text-base font-semibold text-slate-900">
-          No discussions yet
-        </h3>
-        <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-          Be the pioneer! Share a career milestone, hiring advice, or industry question with the JobBox community above.
-        </p>
-      </div>
-    );
-  }
-
   const totalPages = pagination?.totalPages ?? pagination?.pages ?? 1;
 
   return (
     <div className="space-y-4">
-      {/* Feed Toolbar with "Recent" Sorting */}
-      <div className="flex items-center justify-between px-1 text-xs text-slate-500">
-        <div className="flex items-center gap-1.5">
-          <span className="font-semibold text-slate-700">Recent Discussions</span>
-          {pagination?.totalItems !== undefined && (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-              {pagination.totalItems} {pagination.totalItems === 1 ? "post" : "posts"}
-            </span>
+      {/* FEED TABS NAVIGATION */}
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+        {/* Tab Pills */}
+        <div
+          role="tablist"
+          aria-label="Feed content filters"
+          className="flex items-center gap-1 rounded-2xl bg-slate-100/80 p-1 border border-slate-200/60"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "for-you"}
+            onClick={() => setActiveTab("for-you")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+              activeTab === "for-you"
+                ? "bg-white text-[#3C65F5] shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <span>For You</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "recent"}
+            onClick={() => setActiveTab("recent")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+              activeTab === "recent"
+                ? "bg-white text-[#3C65F5] shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+            }`}
+          >
+            <Clock className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <span>Recent</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "my-network"}
+            onClick={() => setActiveTab("my-network")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+              activeTab === "my-network"
+                ? "bg-white text-[#3C65F5] shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+            }`}
+          >
+            <Users className="h-3.5 w-3.5 text-[#3C65F5]" />
+            <span>My Network</span>
+          </button>
+        </div>
+      </div>
+
+      {/* EMPTY STATE */}
+      {displayPosts.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-10 sm:p-14 text-center shadow-xs">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-xs border border-slate-200/60">
+            {activeTab === "my-network" ? (
+              <Users className="h-7 w-7 text-[#3C65F5]" />
+            ) : (
+              <MessageSquareDashed className="h-7 w-7 text-[#3C65F5]" />
+            )}
+          </div>
+          <h3 className="mt-4 text-base font-bold text-slate-900">
+            {activeTab === "my-network"
+              ? "No network activity yet"
+              : "No discussions found"}
+          </h3>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+            {activeTab === "my-network"
+              ? "Discussions from your recruiters and your own posts will appear here. Switch to 'For You' or 'Recent' to explore the full community."
+              : "Be the pioneer! Share a career milestone, hiring advice, or industry question with the JobBox community above."}
+          </p>
+          {activeTab === "my-network" && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("for-you")}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#3C65F5] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#3457D5] transition"
+            >
+              <Compass className="h-3.5 w-3.5" />
+              <span>Explore Community Feed</span>
+            </button>
           )}
         </div>
-
-        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-2xs">
-          <Clock className="h-3.5 w-3.5 text-[#3C65F5]" />
-          <span>Sort: <strong className="font-semibold text-slate-900">Recent</strong></span>
+      ) : (
+        /* POSTS LISTING */
+        <div className="space-y-4">
+          {displayPosts.map((post) => (
+            <PostCard key={post._id} post={post} />
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Posts Listing */}
-      <div className="space-y-4">
-        {posts.map((post) => (
-          <PostCard key={post._id} post={post} />
-        ))}
-      </div>
-
-      {/* Pagination Navigation */}
+      {/* PAGINATION NAVIGATION */}
       {totalPages > 1 && onPageChange && (
         <nav
           aria-label="Feed pagination"

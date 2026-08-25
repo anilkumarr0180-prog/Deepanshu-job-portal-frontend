@@ -14,13 +14,16 @@ export interface Post {
   content: string;
   mediaUrl?: string;
   mediaPublicId?: string;
+  originalPostId?: Post | string;
   isPublished: boolean;
   isDeleted: boolean;
   likesCount: number;
   commentsCount: number;
+  repostsCount?: number;
   createdAt: string;
   updatedAt: string;
   isLiked?: boolean;
+  isReposted?: boolean;
 }
 
 export interface PostsPagination {
@@ -51,6 +54,7 @@ export interface GetPostsParams {
   isPublished?: boolean;
   search?: string;
   sort?: "newest" | "oldest";
+  feedType?: "for-you" | "recent" | "my-network";
 }
 
 export interface CreatePostPayload {
@@ -59,6 +63,11 @@ export interface CreatePostPayload {
   mediaPublicId?: string;
   isPublished?: boolean;
 }
+
+export interface RepostPayload {
+  content?: string;
+}
+
 
 export interface UpdatePostPayload {
   content?: string;
@@ -70,9 +79,11 @@ export interface UpdatePostPayload {
 export interface PostComment {
   _id: string;
   postId: string;
+  parentCommentId?: string | null;
   authorId: PostAuthor | string;
   content: string;
   isDeleted?: boolean;
+  replyCount?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -89,10 +100,12 @@ export interface GetPostCommentsParams {
   page?: number;
   limit?: number;
   sort?: "newest" | "oldest";
+  parentCommentId?: string | null;
 }
 
 export interface CreatePostCommentPayload {
   content: string;
+  parentCommentId?: string | null;
 }
 
 export interface UpdatePostCommentPayload {
