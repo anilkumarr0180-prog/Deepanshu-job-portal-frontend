@@ -11,12 +11,12 @@ interface ApplicationRowProps {
 }
 
 const statusStyles: Record<string, { bg: string; text: string }> = {
-  Applied: { bg: "bg-amber-50", text: "text-amber-700" },
-  "Under Review": { bg: "bg-blue-50", text: "text-blue-700" },
-  Shortlisted: { bg: "bg-emerald-50", text: "text-emerald-700" },
-  Interview: { bg: "bg-purple-50 border border-purple-200", text: "text-purple-700" },
-  Rejected: { bg: "bg-rose-50", text: "text-rose-700" },
-  Hired: { bg: "bg-emerald-50", text: "text-emerald-700" },
+  Applied: { bg: "bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20", text: "text-amber-700 dark:text-amber-400" },
+  "Under Review": { bg: "bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20", text: "text-blue-700 dark:text-blue-400" },
+  Shortlisted: { bg: "bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20", text: "text-emerald-700 dark:text-emerald-400" },
+  Interview: { bg: "bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20", text: "text-purple-700 dark:text-purple-400" },
+  Rejected: { bg: "bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20", text: "text-rose-700 dark:text-rose-400" },
+  Hired: { bg: "bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20", text: "text-emerald-700 dark:text-emerald-400" },
 };
 
 export default function ApplicationRow({
@@ -35,28 +35,28 @@ export default function ApplicationRow({
   };
   const statusStyle =
     statusStyles[application.status] ?? {
-      bg: "bg-slate-100",
-      text: "text-slate-700",
+      bg: "bg-slate-100 dark:bg-slate-800",
+      text: "text-slate-700 dark:text-slate-300",
     };
 
   return (
-    <tr className="border-b border-slate-200 transition hover:bg-slate-50">
+    <tr className="border-b border-slate-200 dark:border-slate-800 transition hover:bg-slate-50 dark:hover:bg-slate-800/50">
       <td className="px-4 py-4">
         <div>
-          <div className="font-medium text-slate-900">
+          <div className="font-medium text-slate-900 dark:text-white">
             {job.title}
           </div>
-          <div className="mt-1 text-sm text-slate-600">
+          <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             {job.company}
           </div>
         </div>
       </td>
 
-      <td className="px-4 py-4 text-sm text-slate-600 hidden sm:table-cell">
+      <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400 hidden sm:table-cell">
         {job.employmentType}
       </td>
 
-      <td className="px-4 py-4 text-sm text-slate-600 hidden sm:table-cell">
+      <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400 hidden sm:table-cell">
         ${(job.salaryMin ?? 0).toLocaleString()} - ${(job.salaryMax ?? 0).toLocaleString()}
       </td>
 
@@ -68,7 +68,7 @@ export default function ApplicationRow({
         </span>
       </td>
 
-      <td className="px-4 py-4 text-sm text-slate-600">
+      <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
         {formatRelativeDate(application.createdAt)}
       </td>
 
@@ -78,7 +78,7 @@ export default function ApplicationRow({
             <button
               type="button"
               onClick={() => onOpenDetails?.(application)}
-              className="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700 hover:bg-purple-100 border border-purple-200 transition shadow-2xs"
+              className="inline-flex items-center gap-1 rounded-lg bg-purple-50 dark:bg-purple-500/10 px-2.5 py-1 text-xs font-bold text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-500/20 transition shadow-2xs cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5" />
               Interview Details
@@ -87,14 +87,14 @@ export default function ApplicationRow({
 
           <Link
             to={`/candidate/messages?jobId=${job._id}`}
-            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#3C65F5] hover:bg-blue-100 transition"
+            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-[#3C65F5] dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-500/20 transition"
           >
             Chat
           </Link>
           <button
             type="button"
             onClick={() => onOpenDetails?.(application)}
-            className="text-xs font-semibold text-slate-700 hover:text-slate-900 hover:underline"
+            className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:underline cursor-pointer"
           >
             View Details
           </button>

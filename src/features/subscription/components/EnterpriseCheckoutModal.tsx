@@ -106,7 +106,7 @@ export default function EnterpriseCheckoutModal({
   // Auto-select gateway based on plan defaults
   useEffect(() => {
     if (plan) {
-      if (plan.currency === "USD" || plan.provider === "polar" || plan.providerMappings?.polar?.priceId) {
+      if (plan.provider === "polar" || plan.currency?.toUpperCase() === "USD") {
         setSelectedGateway("polar");
       } else {
         setSelectedGateway("razorpay");
@@ -142,15 +142,50 @@ export default function EnterpriseCheckoutModal({
 
   // ─── Price & Proration Calculations ────────────────────────────────────────
 
+  const isUSD = selectedGateway === "polar";
+  const currencySymbol = isUSD ? "$" : "₹";
+  const rawCurrency = isUSD ? "USD" : "INR";
+
+  // Base plan price based on chosen gateway/currency
+  const subtotal = isUSD
+    ? (plan.usdPrice !== undefined && plan.usdPrice !== null
+        ? plan.usdPrice
+        : plan.currency === "USD"
+        ? plan.price
+        : plan.price > 0
+        ? Math.round(plan.price / 80)
+        : 0)
+    : (plan.currency === "INR"
+        ? plan.price
+        : plan.price > 0
+        ? (plan.usdPrice ? Math.round(plan.usdPrice * 80) : plan.price * 80)
+        : 0);
+
+  // Active plan price for proration calculation
+  const activePlanBasePrice = userSub?.planId
+    ? isUSD
+      ? (userSub.planId.usdPrice !== undefined && userSub.planId.usdPrice !== null
+          ? userSub.planId.usdPrice
+          : userSub.planId.currency === "USD"
+          ? userSub.planId.price
+          : userSub.planId.price > 0
+          ? Math.round(userSub.planId.price / 80)
+          : 0)
+      : (userSub.planId.currency === "INR" || !userSub.planId.currency
+          ? userSub.planId.price
+          : userSub.planId.usdPrice
+          ? Math.round(userSub.planId.usdPrice * 80)
+          : userSub.planId.price * 80)
+    : 0;
+
   let prorationCredit = 0;
   let remainingDays = 0;
 
   if (
     userSub &&
     userSub.planId &&
-    typeof userSub.planId.price === "number" &&
-    userSub.planId.price > 0 &&
-    plan.price > userSub.planId.price
+    activePlanBasePrice > 0 &&
+    subtotal > activePlanBasePrice
   ) {
     const end = new Date(userSub.currentPeriodEnd).getTime();
     const start = new Date(userSub.currentPeriodStart).getTime();
@@ -159,14 +194,13 @@ export default function EnterpriseCheckoutModal({
       const totalMs = end - start;
       const remainingMs = end - now;
       const ratio = Math.max(0, Math.min(1, remainingMs / totalMs));
-      const unadjustedCredit = userSub.planId.price * ratio;
+      const unadjustedCredit = activePlanBasePrice * ratio;
       // Cap proration credit so upgrade subtotal remains at least 1 Rupee/Dollar
-      prorationCredit = Number(Math.min(unadjustedCredit, plan.price - 1).toFixed(2));
+      prorationCredit = Number(Math.min(unadjustedCredit, subtotal - 1).toFixed(2));
       remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
     }
   }
 
-  const subtotal = plan.price;
   const afterProration = Math.max(1, subtotal - prorationCredit);
   const discountAmount = discountPercent ? Number(((afterProration * discountPercent) / 100).toFixed(2)) : 0;
   const afterDiscount = Math.max(1, afterProration - discountAmount);
@@ -343,9 +377,6 @@ export default function EnterpriseCheckoutModal({
     toast.success("Transaction ID copied!");
     setTimeout(() => setCopiedTxn(false), 2000);
   };
-
-  const rawCurrency = (plan?.currency || "INR").toUpperCase();
-  const currencySymbol = rawCurrency === "USD" ? "$" : rawCurrency === "INR" ? "₹" : `${rawCurrency} `;
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -528,36 +559,8 @@ export default function EnterpriseCheckoutModal({
                 </div>
                 <h3 className="text-xl font-black text-white tracking-tight">Complete Payment</h3>
                 <p className="text-slate-400 text-xs mt-1">
-                  Select your preferred payment gateway to complete checkout.
+                  Review your order details and proceed to complete checkout.
                 </p>
-              </div>
-
-              {/* Gateway Switcher Tabs */}
-              <div className="grid grid-cols-2 gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setSelectedGateway("razorpay")}
-                  className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-extrabold transition-all ${
-                    selectedGateway === "razorpay"
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <CreditCard className="w-3.5 h-3.5" />
-                  <span>Razorpay (INR ₹)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedGateway("polar")}
-                  className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-extrabold transition-all ${
-                    selectedGateway === "polar"
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <Zap className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Polar ({rawCurrency})</span>
-                </button>
               </div>
 
               {selectedGateway === "razorpay" ? (
@@ -715,7 +718,7 @@ export default function EnterpriseCheckoutModal({
                       <div className="text-white font-bold text-sm">{plan.name}</div>
                       <div className="text-slate-400 text-[11px] mt-0.5 capitalize">{plan.billingPeriod} billing</div>
                     </div>
-                    <div className="text-white font-black text-lg">{currencySymbol}{plan.price.toLocaleString()}</div>
+                    <div className="text-white font-black text-lg">{currencySymbol}{subtotal.toLocaleString()}</div>
                   </div>
                 </div>
 

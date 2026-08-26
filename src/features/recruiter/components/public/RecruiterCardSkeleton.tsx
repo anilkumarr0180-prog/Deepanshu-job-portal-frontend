@@ -1,23 +1,21 @@
 export default function RecruiterCardSkeleton() {
   return (
-    <div className="flex flex-col rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs">
-      <div className="flex items-start gap-4">
-        <div className="h-16 w-16 shrink-0 animate-pulse rounded-2xl bg-slate-200" />
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="h-5 w-3/4 animate-pulse rounded bg-slate-200" />
-          <div className="h-4 w-1/2 animate-pulse rounded bg-slate-200" />
+    <div className="flex flex-col justify-between rounded-2xl border border-[#E0E6F7] bg-white p-4.5 sm:p-5 dark:border-[#1E293B] dark:bg-[#131D2E]">
+      {/* Top: Logo + Info */}
+      <div className="flex items-start gap-3.5">
+        <div className="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+        <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+          <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="h-3 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
         </div>
       </div>
 
-      <div className="mt-4 space-y-2">
-        <div className="h-4 w-full animate-pulse rounded bg-slate-200" />
-        <div className="h-4 w-5/6 animate-pulse rounded bg-slate-200" />
-      </div>
-
-      <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
-        <div className="h-7 w-24 animate-pulse rounded-xl bg-slate-200" />
-        <div className="h-9 w-28 animate-pulse rounded-xl bg-slate-200" />
+      {/* Bottom: Location + Jobs */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="h-3 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="h-3 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
       </div>
     </div>
   );
 }
+

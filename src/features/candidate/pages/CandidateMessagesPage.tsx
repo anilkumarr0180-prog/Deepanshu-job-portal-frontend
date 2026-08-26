@@ -190,7 +190,7 @@ function CandidateMessagesContent() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex h-[calc(100vh-5rem)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
       {/* Sidebar */}
       <div
         className={`w-full sm:w-80 md:w-96 shrink-0 h-full ${

@@ -44,6 +44,15 @@ export interface BackendApplication {
   resumePublicId?: string;
   resumeFileName?: string;
   coverLetter?: string;
+  interviewDetails?: {
+    mode?: "video" | "in-person" | "phone";
+    date?: string;
+    time?: string;
+    type?: string;
+    locationOrLink?: string;
+    notes?: string;
+    timezone?: string;
+  };
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -56,25 +65,26 @@ export interface BackendApplicationWithJob extends BackendApplication {
 export function normalizeApplicantStatus(
   status: string
 ): RecruiterApplicantStatus {
-  switch (status) {
-    case "Applied":
-    case "Submitted":
-      return "Pending";
-
-    case "Shortlisted":
+  const s = (status || "").trim().toLowerCase();
+  switch (s) {
+    case "applied":
+    case "submitted":
+      return "Applied";
+    case "under review":
+    case "under_review":
+    case "reviewing":
+      return "Under Review";
+    case "shortlisted":
       return "Shortlisted";
-
-    case "Interview":
+    case "interview":
+    case "interviewing":
       return "Interview";
-
-    case "Rejected":
+    case "rejected":
       return "Rejected";
-
-    case "Hired":
+    case "hired":
       return "Hired";
-
     default:
-      return "Pending";
+      return "Applied";
   }
 }
 
@@ -109,6 +119,7 @@ export function mapApplicantRecord(
     skills: application?.relevantSkills || [],
     appliedDate: application?.createdAt ? formatDate(application.createdAt) : "Recently",
     status: normalizeApplicantStatus(application?.status || ""),
+    interviewDetails: application?.interviewDetails,
   };
 }
 

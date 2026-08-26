@@ -125,16 +125,16 @@ export default function FloatingMessagingDock() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-3 rounded-t-2xl bg-white px-5 py-3 border border-b-0 border-slate-200/90 shadow-2xl hover:bg-slate-50 transition cursor-pointer group"
+          className="flex items-center gap-3 rounded-t-2xl bg-white dark:bg-slate-900 px-5 py-3 border border-b-0 border-slate-200/90 dark:border-slate-800 shadow-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer group"
           aria-label="Open Messaging Dock"
         >
           <div className="relative">
             <UserAvatar src={user.profilePicture} name={user.name} size="xs" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-[#3C65F5] transition">
+            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#3C65F5] dark:group-hover:text-blue-400 transition">
               Messaging
             </span>
             {unreadTotal > 0 && (
@@ -144,21 +144,21 @@ export default function FloatingMessagingDock() {
             )}
           </div>
 
-          <ChevronUp className="h-4 w-4 text-slate-400 group-hover:text-slate-600 ml-1 transition" />
+          <ChevronUp className="h-4 w-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 ml-1 transition" />
         </button>
       )}
 
       {/* ── Expanded Window ── */}
       {isOpen && (
-        <div className="w-[330px] sm:w-[360px] h-[460px] bg-white rounded-t-2xl border border-b-0 border-slate-200/90 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
+        <div className="w-[330px] sm:w-[360px] h-[460px] bg-white dark:bg-slate-900 rounded-t-2xl border border-b-0 border-slate-200/90 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100 shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
             {activeConversation ? (
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <button
                   type="button"
                   onClick={() => setActiveConversation(null)}
-                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-600 transition"
+                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
                   title="Back to conversations"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -169,19 +169,19 @@ export default function FloatingMessagingDock() {
                     name={activeOtherUser?.name || "User"}
                     size="xs"
                   />
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white dark:ring-slate-900" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-slate-900 truncate">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {activeOtherUser?.name || "Chat"}
                   </h4>
-                  <span className="text-[10px] font-semibold text-emerald-600">Active</span>
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">Active</span>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2.5">
                 <UserAvatar src={user.profilePicture} name={user.name} size="xs" />
-                <span className="text-xs font-bold text-slate-900">Messaging</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white">Messaging</span>
                 {unreadTotal > 0 && (
                   <span className="rounded-full bg-rose-500 px-1.5 py-0.2 text-[10px] font-bold text-white">
                     {unreadTotal}
@@ -195,7 +195,7 @@ export default function FloatingMessagingDock() {
               <button
                 type="button"
                 onClick={handleOpenFullChat}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-[#3C65F5] hover:bg-blue-50 transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-[#3C65F5] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition"
                 title="Open full page chat"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -203,7 +203,7 @@ export default function FloatingMessagingDock() {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 title="Minimize dock"
               >
                 <ChevronDown className="h-4 w-4" />
@@ -214,7 +214,7 @@ export default function FloatingMessagingDock() {
           {/* Body Content */}
           {activeConversation ? (
             /* ── Mini-Chat Messages Screen ── */
-            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50/50">
+            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-950/60">
               {/* Message List */}
               <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
                 {isLoadingMessages ? (
@@ -224,7 +224,7 @@ export default function FloatingMessagingDock() {
                 ) : messages.length === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center text-center p-4 text-slate-400">
                     <MessageSquare className="h-8 w-8 mb-2 opacity-30" />
-                    <p className="text-xs font-semibold text-slate-600">Start the conversation</p>
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Start the conversation</p>
                     <p className="text-[10px] text-slate-400">Say hello to {activeOtherUser?.name}!</p>
                   </div>
                 ) : (
@@ -239,7 +239,7 @@ export default function FloatingMessagingDock() {
                           className={`max-w-[82%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
                             isMe
                               ? "bg-[#3C65F5] text-white rounded-br-xs shadow-2xs"
-                              : "bg-white text-slate-800 border border-slate-200/80 rounded-bl-xs shadow-2xs"
+                              : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-bl-xs shadow-2xs"
                           }`}
                         >
                           {m.message}
@@ -257,14 +257,14 @@ export default function FloatingMessagingDock() {
               {/* Quick Input Bar */}
               <form
                 onSubmit={handleSend}
-                className="p-2 bg-white border-t border-slate-200/80 flex items-center gap-1.5 shrink-0"
+                className="p-2 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 flex items-center gap-1.5 shrink-0"
               >
                 <input
                   type="text"
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   placeholder="Write a message..."
-                  className="flex-1 rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 border border-transparent focus:border-[#3C65F5] transition"
+                  className="flex-1 rounded-xl bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 border border-transparent focus:border-[#3C65F5] transition"
                 />
                 <button
                   type="submit"
@@ -279,7 +279,7 @@ export default function FloatingMessagingDock() {
             /* ── Conversation List Screen ── */
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Search Bar */}
-              <div className="p-2.5 border-b border-slate-100 bg-slate-50/50">
+              <div className="p-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60">
                 <div className="relative flex items-center">
                   <Search className="absolute left-2.5 h-3.5 w-3.5 text-slate-400" />
                   <input
@@ -287,30 +287,30 @@ export default function FloatingMessagingDock() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search messages..."
-                    className="h-8 w-full rounded-xl bg-white border border-slate-200 pl-8 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#3C65F5]"
+                    className="h-8 w-full rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-8 pr-3 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#3C65F5]"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Conversations */}
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-50">
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/60">
                 {isLoadingConversations ? (
                   <div className="p-4 space-y-3">
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="flex items-center gap-2.5 animate-pulse">
-                        <div className="h-8 w-8 rounded-full bg-slate-200" />
+                        <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800" />
                         <div className="flex-1 space-y-1">
-                          <div className="h-3 w-20 bg-slate-200 rounded" />
-                          <div className="h-2.5 w-32 bg-slate-100 rounded" />
+                          <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
+                          <div className="h-2.5 w-32 bg-slate-100 dark:bg-slate-800/60 rounded" />
                         </div>
                       </div>
                     ))}
@@ -327,8 +327,8 @@ export default function FloatingMessagingDock() {
                       <div
                         key={conv._id}
                         onClick={() => handleOpenConversation(conv)}
-                        className={`flex items-center gap-3 p-3 hover:bg-blue-50/50 transition cursor-pointer group ${
-                          unread ? "bg-blue-50/20" : ""
+                        className={`flex items-center gap-3 p-3 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer group ${
+                          unread ? "bg-blue-50/20 dark:bg-blue-950/20" : ""
                         }`}
                       >
                         <div className="relative shrink-0">
@@ -338,13 +338,13 @@ export default function FloatingMessagingDock() {
                             size="sm"
                           />
                           {unread && (
-                            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#3C65F5] ring-2 ring-white" />
+                            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#3C65F5] ring-2 ring-white dark:ring-slate-900" />
                           )}
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
-                            <h5 className={`text-xs truncate ${unread ? "font-bold text-slate-900" : "font-semibold text-slate-800"}`}>
+                            <h5 className={`text-xs truncate ${unread ? "font-bold text-slate-900 dark:text-white" : "font-semibold text-slate-800 dark:text-slate-200"}`}>
                               {otherUser?.name}
                             </h5>
                             {conv.lastMessageAt && (
@@ -354,7 +354,7 @@ export default function FloatingMessagingDock() {
                             )}
                           </div>
 
-                          <p className={`text-[11px] truncate mt-0.5 ${unread ? "font-semibold text-[#3C65F5]" : "text-slate-500"}`}>
+                          <p className={`text-[11px] truncate mt-0.5 ${unread ? "font-semibold text-[#3C65F5] dark:text-blue-400" : "text-slate-500 dark:text-slate-400"}`}>
                             {conv.lastMessageId?.message || "No messages yet"}
                           </p>
                         </div>
@@ -364,7 +364,7 @@ export default function FloatingMessagingDock() {
                 ) : (
                   <div className="p-8 text-center text-slate-400">
                     <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs font-semibold text-slate-600">No conversations</p>
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">No conversations</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Connect with members to chat directly
                     </p>

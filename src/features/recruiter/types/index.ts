@@ -36,7 +36,7 @@ export interface RecruiterApplicant {
   appliedDate: string;
 }
 
-export type RecruiterApplicantStatus = "Pending" | "Shortlisted" | "Interview" | "Rejected" | "Hired";
+export type RecruiterApplicantStatus = "Applied" | "Under Review" | "Pending" | "Shortlisted" | "Interview" | "Rejected" | "Hired";
 
 export interface RecruiterApplicantRecord {
   id: string;
@@ -46,6 +46,15 @@ export interface RecruiterApplicantRecord {
   skills: string[];
   appliedDate: string;
   status: RecruiterApplicantStatus;
+  interviewDetails?: {
+    mode?: "video" | "in-person" | "phone";
+    date?: string;
+    time?: string;
+    type?: string;
+    locationOrLink?: string;
+    notes?: string;
+    timezone?: string;
+  };
 }
 
 export interface RecruiterApplicantDetails {

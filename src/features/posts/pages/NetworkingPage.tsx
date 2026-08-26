@@ -94,83 +94,81 @@ function NetworkingContent() {
 
   return (
     <div className="flex flex-col lg:h-[calc(100vh-7.5rem)] lg:overflow-hidden gap-5">
-      {/* LinkedIn-Style Page Header & Global Navigation */}
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 border-b border-slate-200/80 pb-4 shrink-0">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 shadow-2xs">
-              <Globe className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-                  Professional Networking
-                </h1>
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200/70">
-                  Community Hub
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs sm:text-sm text-slate-500">
-                Connect with peers, share career milestones, exchange advice, and grow your network.
-              </p>
-            </div>
+      {/* Compact SaaS-Style Page Header & Global Navigation */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20 shadow-2xs">
+            <Globe className="h-4.5 w-4.5" />
+          </div>
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
+              Professional Networking
+            </h1>
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-blue-50 dark:bg-blue-950/70 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-200/70 dark:border-blue-800/70">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Community Hub
+            </span>
           </div>
         </div>
 
-        {/* Global Network Navigation Tabs - Polished Segmented Control */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs overflow-x-auto custom-scrollbar shrink-0">
+        {/* Global Network Navigation Tabs - Sleek Compact Segmented Control */}
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/70 overflow-x-auto custom-scrollbar shrink-0">
           <button
             type="button"
             onClick={() => handleTabChange("feed")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
               activeTab === "feed"
-                ? "bg-white text-blue-600 shadow-xs border border-slate-200/80"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
             }`}
           >
-            <Globe className="h-4 w-4 text-blue-600" />
+            <Globe className={`h-3.5 w-3.5 ${activeTab === "feed" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
             <span>Feed & Discussions</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTabChange("saved")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
               activeTab === "saved"
-                ? "bg-white text-blue-600 shadow-xs border border-slate-200/80"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
             }`}
           >
-            <Bookmark className="h-4 w-4 text-blue-600" />
+            <Bookmark className={`h-3.5 w-3.5 ${activeTab === "saved" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
             <span>Saved Posts</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTabChange("grow")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
               activeTab === "grow"
-                ? "bg-white text-blue-600 shadow-xs border border-slate-200/80"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
             }`}
           >
-            <UserPlus className="h-4 w-4 text-blue-600" />
+            <UserPlus className={`h-3.5 w-3.5 ${activeTab === "grow" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
             <span>Grow Network</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTabChange("invitations")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
               activeTab === "invitations"
-                ? "bg-white text-blue-600 shadow-xs border border-slate-200/80"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
             }`}
           >
-            <Inbox className="h-4 w-4 text-blue-600" />
+            <Inbox className={`h-3.5 w-3.5 ${activeTab === "invitations" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
             <span>Invitations</span>
             {pendingRequestsCount > 0 && (
-              <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs animate-pulse">
+              <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                activeTab === "invitations"
+                  ? "bg-blue-100 text-blue-700 dark:bg-white dark:text-blue-700"
+                  : "bg-blue-600 text-white"
+              }`}>
                 {pendingRequestsCount}
               </span>
             )}
@@ -179,13 +177,13 @@ function NetworkingContent() {
           <button
             type="button"
             onClick={() => handleTabChange("connections")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
               activeTab === "connections"
-                ? "bg-white text-blue-600 shadow-xs border border-slate-200/80"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
             }`}
           >
-            <Users className="h-4 w-4 text-blue-600" />
+            <Users className={`h-3.5 w-3.5 ${activeTab === "connections" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
             <span>My Connections</span>
           </button>
         </div>

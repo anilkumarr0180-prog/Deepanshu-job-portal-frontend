@@ -135,6 +135,8 @@ function RecruiterMessagesContent() {
     return allConversations.find((c) => (c._id || c.id) === activeConversationId) || null;
   }, [allConversations, activeConversationId, draftConversation]);
 
+
+
   const handleSelectConversation = (conversationId: string) => {
     setActiveConversationId(conversationId);
     setShowMobileChat(true);
@@ -163,6 +165,7 @@ function RecruiterMessagesContent() {
   ) => {
     if (!activeConversationId) return;
 
+    // If sending from a draft conversation, trigger real backend creation first
     if (activeConversationId.startsWith("draft_")) {
       try {
         const newConv = await createConversation.mutateAsync({
@@ -184,7 +187,7 @@ function RecruiterMessagesContent() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex h-[calc(100vh-5rem)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
       {/* Sidebar - Conversation List */}
       <div
         className={`w-full sm:w-80 md:w-96 shrink-0 h-full ${

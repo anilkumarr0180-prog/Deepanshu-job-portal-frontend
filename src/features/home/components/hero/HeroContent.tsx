@@ -10,9 +10,9 @@ export default function HeroContent({ onSearchChange, initialFilters }: HeroCont
   return (
     <div className="max-w-[600px]">
       {/* Heading */}
-      <h1 className="text-4xl font-extrabold leading-[1.15] tracking-tight text-[#05264E] sm:text-5xl lg:text-[56px]">
+      <h1 className="text-4xl font-extrabold leading-[1.15] tracking-tight text-[#05264E] dark:text-[#F1F5F9] sm:text-5xl lg:text-[56px]">
         The{" "}
-        <span className="relative inline-block rounded-xl bg-[#3C65F5]/10 px-3 py-0.5 text-[#3C65F5]">
+        <span className="relative inline-block rounded-xl bg-[#3C65F5]/10 dark:bg-[#3C65F5]/20 px-3 py-0.5 text-[#3C65F5] dark:text-[#5E81FF]">
           Easiest Way
         </span>
         <br />
@@ -20,7 +20,7 @@ export default function HeroContent({ onSearchChange, initialFilters }: HeroCont
       </h1>
 
       {/* Description */}
-      <p className="mt-5 max-w-[560px] text-base leading-relaxed text-slate-500 sm:text-lg">
+      <p className="mt-5 max-w-[560px] text-base leading-relaxed text-slate-500 dark:text-slate-400 sm:text-lg">
         Each month, more than 3 million job seekers turn to website in their
         search for work, making over 140,000 applications every single day.
       </p>

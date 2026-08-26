@@ -1,5 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { Video, Building2, PhoneCall, X, MapPin, Link as LinkIcon, Phone } from "lucide-react";
+import {
+  Video,
+  Building2,
+  PhoneCall,
+  X,
+  MapPin,
+  Link as LinkIcon,
+  Phone,
+  Globe,
+} from "lucide-react";
 
 export interface ScheduleInterviewDetails {
   mode: "video" | "in-person" | "phone";
@@ -7,6 +16,7 @@ export interface ScheduleInterviewDetails {
   time: string;
   type: string;
   locationOrLink: string;
+  timezone?: string;
   notes?: string;
 }
 
@@ -25,9 +35,15 @@ export function ScheduleInterviewModal({
   onSchedule,
   isSubmitting = false,
 }: ScheduleInterviewModalProps) {
+  const defaultTz =
+    typeof Intl !== "undefined" && Intl.DateTimeFormat
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone
+      : "UTC";
+
   const [mode, setMode] = useState<"video" | "in-person" | "phone">("video");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");
+  const [timezone, setTimezone] = useState(defaultTz);
   const [interviewType, setInterviewType] = useState("Technical Interview");
   const [locationOrLink, setLocationOrLink] = useState("");
   const [notes, setNotes] = useState("");
@@ -40,6 +56,7 @@ export function ScheduleInterviewModal({
       mode,
       date,
       time,
+      timezone,
       type: interviewType,
       locationOrLink:
         locationOrLink.trim() ||
@@ -127,6 +144,7 @@ export function ScheduleInterviewModal({
             </div>
           </div>
 
+          {/* Format / Stage */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-700">
               Interview Format / Stage
@@ -145,6 +163,7 @@ export function ScheduleInterviewModal({
             </select>
           </div>
 
+          {/* Date & Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-slate-700">
@@ -173,7 +192,24 @@ export function ScheduleInterviewModal({
             </div>
           </div>
 
-          {/* Dynamic Field based on selected Mode */}
+          {/* Timezone */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-700">
+              Timezone
+            </label>
+            <div className="relative flex items-center">
+              <Globe className="absolute left-3.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                placeholder="e.g. Asia/Kolkata or America/New_York"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3.5 text-sm text-slate-900 focus:border-[#3C65F5] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Dynamic Location / URL */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-700">
               {mode === "video"
@@ -198,8 +234,8 @@ export function ScheduleInterviewModal({
                   mode === "video"
                     ? "https://meet.google.com/abc-defg-hij"
                     : mode === "in-person"
-                    ? "e.g. 4th Floor, Sky High HQ, Sector 17, Chandigarh"
-                    : "e.g. Recruiter will call candidate at +91 8219678049"
+                    ? "e.g. 4th Floor, Corporate Tower, Sector 62"
+                    : "e.g. Recruiter will call candidate at +91 9876543210"
                 }
                 className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3.5 text-sm text-slate-900 focus:border-[#3C65F5] focus:outline-none"
               />

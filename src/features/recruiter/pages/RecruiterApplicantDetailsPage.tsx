@@ -1,11 +1,24 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Download, MessageSquareMore, UserRoundCheck, XCircle, Calendar, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  MessageSquareMore,
+  UserRoundCheck,
+  XCircle,
+  Calendar,
+  Sparkles,
+  CheckCircle2,
+  Eye,
+} from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import { useAllApplications } from "../hooks/useAllApplications";
 import { useUpdateApplicationStatus } from "../hooks/useUpdateApplicationStatus";
 import { mapApplicantDetails } from "../utils/applicationMapper";
-import { ScheduleInterviewModal, type ScheduleInterviewDetails } from "../components/applicants/ScheduleInterviewModal";
+import {
+  ScheduleInterviewModal,
+  type ScheduleInterviewDetails,
+} from "../components/applicants/ScheduleInterviewModal";
 import { downloadFile } from "@/shared/utils/fileUtils";
 
 export default function RecruiterApplicantDetailsPage() {
@@ -24,6 +37,7 @@ export default function RecruiterApplicantDetailsPage() {
 
   const application = applications?.find((app) => app._id === id);
 
+  // Automatically transition new "Applied" applications to "Under Review" when recruiter inspects them
   useEffect(() => {
     if (
       id &&
@@ -39,29 +53,35 @@ export default function RecruiterApplicantDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
-        Loading applicant details...
+      <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#3C65F5] border-t-transparent mb-3" />
+        <p className="text-sm font-medium text-slate-500">Loading applicant details...</p>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center text-red-600">
-        Failed to load applicant details.
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center text-red-600 shadow-sm">
+        <p className="font-bold">Failed to load applicant details.</p>
+        <p className="mt-1 text-xs text-red-500">Please check your network and try again.</p>
       </div>
     );
   }
 
   if (!application) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
-        Applicant not found.
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+        <p className="font-bold text-slate-800">Applicant not found.</p>
+        <Link to="/recruiter/applicants" className="mt-3 inline-block text-xs font-bold text-[#3C65F5] hover:underline">
+          &larr; Back to Applicants
+        </Link>
       </div>
     );
   }
 
   const applicant = mapApplicantDetails(application);
+  const currentStatus = application.status;
 
   const handleStatusUpdate = (status: string) => {
     if (!id || updateMutation.isPending) return;
@@ -83,10 +103,6 @@ export default function RecruiterApplicantDetailsPage() {
   const resumeUrl =
     application.resume || application.applicantId?.resumeUrl || "";
 
-  const isShortlisted = application.status === "Shortlisted";
-  const isRejected = application.status === "Rejected";
-  const isInterview = application.status === "Interview";
-
   return (
     <div className="space-y-6">
       {/* Schedule Interview Modal */}
@@ -102,7 +118,10 @@ export default function RecruiterApplicantDetailsPage() {
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
-            <Link to="/recruiter/applicants" className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900">
+            <Link
+              to="/recruiter/applicants"
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            >
               <ArrowLeft className="h-4 w-4" />
               Back to applicants
             </Link>
@@ -115,7 +134,12 @@ export default function RecruiterApplicantDetailsPage() {
                 </span>
               </div>
               <p className="mt-1 text-sm text-slate-500">
-                Applied to <span className="font-semibold text-slate-700">{typeof application.jobId === "object" && application.jobId !== null ? (application.jobId as any).title : "Position"}</span>
+                Applied to{" "}
+                <span className="font-semibold text-slate-700">
+                  {typeof application.jobId === "object" && application.jobId !== null
+                    ? (application.jobId as any).title
+                    : "Position"}
+                </span>
               </p>
             </div>
           </div>
@@ -137,47 +161,130 @@ export default function RecruiterApplicantDetailsPage() {
               <span>Message</span>
             </Link>
 
-            <button
-              type="button"
-              onClick={() => handleStatusUpdate("Shortlisted")}
-              disabled={updateMutation.isPending}
-              className={`rounded-xl px-4 py-2.5 text-xs transition disabled:opacity-50 inline-flex items-center gap-2 ${
-                isShortlisted
-                  ? "bg-emerald-600 text-white font-bold shadow-xs"
-                  : "border border-emerald-200 bg-emerald-50/80 text-emerald-700 hover:bg-emerald-100 font-semibold"
-              }`}
-            >
-              <UserRoundCheck className="h-4 w-4" />
-              <span>{isShortlisted ? "Shortlisted ✓" : "Shortlist"}</span>
-            </button>
+            {/* Legal Status Actions based on ATS State Machine */}
+            {currentStatus === "Applied" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleStatusUpdate("Under Review")}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-amber-300 bg-amber-500 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-amber-600 disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span>Start Review</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStatusUpdate("Rejected")}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span>Reject</span>
+                </button>
+              </>
+            )}
 
-            <button
-              type="button"
-              onClick={() => handleStatusUpdate("Rejected")}
-              disabled={updateMutation.isPending}
-              className={`rounded-xl px-4 py-2.5 text-xs transition disabled:opacity-50 inline-flex items-center gap-2 ${
-                isRejected
-                  ? "bg-red-600 text-white font-bold shadow-xs"
-                  : "border border-red-200 bg-red-50/80 text-red-700 hover:bg-red-100 font-semibold"
-              }`}
-            >
-              <XCircle className="h-4 w-4" />
-              <span>{isRejected ? "Rejected ✓" : "Reject"}</span>
-            </button>
+            {currentStatus === "Under Review" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleStatusUpdate("Shortlisted")}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <UserRoundCheck className="h-4 w-4" />
+                  <span>Shortlist</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsInterviewModalOpen(true)}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-purple-200 bg-purple-50/80 px-4 py-2.5 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>Schedule Interview</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStatusUpdate("Rejected")}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span>Reject</span>
+                </button>
+              </>
+            )}
 
-            <button
-              type="button"
-              onClick={() => setIsInterviewModalOpen(true)}
-              disabled={updateMutation.isPending}
-              className={`rounded-xl px-4 py-2.5 text-xs transition disabled:opacity-50 inline-flex items-center gap-2 ${
-                isInterview
-                  ? "bg-purple-600 text-white font-bold shadow-xs"
-                  : "border border-purple-200 bg-purple-50/80 text-purple-700 hover:bg-purple-100 font-semibold"
-              }`}
-            >
-              <Calendar className="h-4 w-4" />
-              <span>{isInterview ? "Interview Scheduled" : "Schedule Interview"}</span>
-            </button>
+            {currentStatus === "Shortlisted" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsInterviewModalOpen(true)}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-purple-700 disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>Schedule Interview</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStatusUpdate("Rejected")}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span>Reject</span>
+                </button>
+              </>
+            )}
+
+            {currentStatus === "Interview" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleStatusUpdate("Hired")}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Hire Candidate</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsInterviewModalOpen(true)}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-purple-200 bg-purple-50/80 px-4 py-2.5 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>Reschedule</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStatusUpdate("Rejected")}
+                  disabled={updateMutation.isPending}
+                  className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span>Reject</span>
+                </button>
+              </>
+            )}
+
+            {currentStatus === "Hired" && (
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 shadow-xs">
+                <Sparkles className="h-4 w-4 text-emerald-600" />
+                <span>Hired Candidate ✓</span>
+              </span>
+            )}
+
+            {currentStatus === "Rejected" && (
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-600 shadow-xs">
+                <XCircle className="h-4 w-4 text-slate-500" />
+                <span>Application Finalized (Rejected)</span>
+              </span>
+            )}
 
             {resumeUrl ? (
               <button
@@ -309,7 +416,9 @@ export default function RecruiterApplicantDetailsPage() {
 function normalizeStatusLabel(status: string): string {
   switch (status) {
     case "Applied":
-      return "Pending review";
+      return "Applied (Pending Review)";
+    case "Under Review":
+      return "Under Review";
     case "Shortlisted":
       return "Shortlisted";
     case "Interview":
@@ -319,6 +428,6 @@ function normalizeStatusLabel(status: string): string {
     case "Hired":
       return "Hired";
     default:
-      return "Pending review";
+      return status;
   }
 }
