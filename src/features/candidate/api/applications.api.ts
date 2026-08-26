@@ -36,6 +36,7 @@ export interface BackendCandidateApplication {
     type?: string;
     locationOrLink?: string;
     notes?: string;
+    timezone?: string;
   };
   status: string;
   createdAt: string;

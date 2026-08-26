@@ -30,7 +30,7 @@ export default function MessageBubble({
   if (message.messageType === "system") {
     return (
       <div className="flex justify-center my-4">
-        <div className="flex items-center gap-1.5 rounded-full bg-slate-100/80 backdrop-blur-sm px-4 py-1.5 text-[11px] text-slate-500 border border-slate-200/60 shadow-sm">
+        <div className="flex items-center gap-1.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm px-4 py-1.5 text-[11px] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
           <Info className="h-3 w-3 text-blue-400 shrink-0" />
           <span>{message.message}</span>
         </div>
@@ -79,7 +79,7 @@ export default function MessageBubble({
               <img
                 src={senderAvatar}
                 alt={senderName || "User"}
-                className="h-7 w-7 rounded-full object-cover border border-slate-200 shadow-sm"
+                className="h-7 w-7 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-sm"
               />
             ) : (
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-[10px] font-bold text-white shadow-sm">
@@ -104,7 +104,7 @@ export default function MessageBubble({
           className={`relative rounded-2xl text-sm shadow-sm transition-all ${
             isSelf
               ? "bg-[#3C65F5] text-white rounded-tr-md"
-              : "bg-white border border-slate-200/80 text-slate-800 rounded-tl-md"
+              : "bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 rounded-tl-md"
           } ${hasAttachments && isImageOnly ? "p-1 overflow-hidden" : "px-4 py-2.5"}`}
         >
           {/* Tail for self messages */}
@@ -126,7 +126,7 @@ export default function MessageBubble({
               aria-hidden
             >
               <span
-                className="absolute bottom-0 left-0 w-4 h-4 bg-white border-l border-b border-slate-200/80 rounded-br-xl"
+                className="absolute bottom-0 left-0 w-4 h-4 bg-white dark:bg-slate-800 border-l border-b border-slate-200/80 dark:border-slate-700/80 rounded-br-xl"
                 style={{ clipPath: "polygon(0 0, 0 100%, 100% 100%)" }}
               />
             </span>
@@ -160,16 +160,16 @@ export default function MessageBubble({
                       className={`flex items-center gap-3 rounded-xl p-3 text-xs font-medium border transition-colors ${
                         isSelf
                           ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                          : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                          : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}
                     >
                       <div
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                          isSelf ? "bg-white/20" : "bg-blue-50"
+                          isSelf ? "bg-white/20" : "bg-blue-50 dark:bg-blue-950/60"
                         }`}
                       >
                         <FileText
-                          className={`h-4 w-4 ${isSelf ? "text-white" : "text-[#3C65F5]"}`}
+                          className={`h-4 w-4 ${isSelf ? "text-white" : "text-[#3C65F5] dark:text-blue-400"}`}
                         />
                       </div>
                       <span className="truncate flex-1 font-semibold">
@@ -230,7 +230,7 @@ export default function MessageBubble({
                   ? isImageOnly
                     ? "text-white"
                     : "text-blue-100/90"
-                  : "text-slate-400"
+                  : "text-slate-400 dark:text-slate-400"
               }`}
             >
               {message.isEdited && <span className="italic mr-1">(edited)</span>}
@@ -278,16 +278,16 @@ export default function MessageBubble({
             <div className="relative" ref={menuRef}>
               <button 
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-1 rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition shadow-sm bg-white"
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-200 transition shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
               >
                 <MoreVertical className="h-4 w-4" />
               </button>
               
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-44 rounded-xl border border-slate-200 bg-white shadow-lg z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-1 w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg z-50 overflow-hidden">
                   <button 
                     onClick={() => { setIsEditing(true); setShowMenu(false); }}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                   >
                     <Edit2 className="h-4 w-4 text-blue-500" />
                     Edit Message
@@ -297,7 +297,7 @@ export default function MessageBubble({
                       if(onDeleteMessage) onDeleteMessage(message._id || message.id!, false);
                       setShowMenu(false); 
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition border-t border-slate-100"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition border-t border-slate-100 dark:border-slate-800"
                   >
                     <Trash2 className="h-4 w-4 text-slate-500" />
                     Delete for me
@@ -307,7 +307,7 @@ export default function MessageBubble({
                       if(onDeleteMessage) onDeleteMessage(message._id || message.id!, true);
                       setShowMenu(false); 
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition border-t border-slate-100 font-medium"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-rose-950/30 transition border-t border-slate-100 dark:border-slate-800 font-medium"
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete for everyone

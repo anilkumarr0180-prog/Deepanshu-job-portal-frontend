@@ -26,6 +26,8 @@ const CandidatesPage = withSuspense(lazy(() => import("@/features/candidate/page
 const CandidatePublicDetailsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidatePublicDetailsPage")));
 const LoginPage = withSuspense(lazy(() => import("@/features/auth/pages/LoginPage")));
 const RegisterPage = withSuspense(lazy(() => import("@/features/auth/pages/RegisterPage")));
+const ForgotPasswordPage = withSuspense(lazy(() => import("@/features/auth/pages/ForgotPasswordPage")));
+const ResetPasswordPage = withSuspense(lazy(() => import("@/features/auth/pages/ResetPasswordPage")));
 const PricingPage = withSuspense(lazy(() => import("@/features/subscription/pages/PricingPage")));
 const BillingSettingsPage = withSuspense(lazy(() => import("@/features/subscription/pages/BillingSettingsPage")));
 const PostsPage = withSuspense(lazy(() => import("@/features/posts/pages/PostsPage")));
@@ -137,6 +139,22 @@ export const routes: RouteObject[] = [
         element: (
           <GuestRoute>
             <RegisterPage />
+          </GuestRoute>
+        ),
+      },
+      {
+        path: "forgot-password",
+        element: (
+          <GuestRoute>
+            <ForgotPasswordPage />
+          </GuestRoute>
+        ),
+      },
+      {
+        path: "reset-password/:token",
+        element: (
+          <GuestRoute>
+            <ResetPasswordPage />
           </GuestRoute>
         ),
       },

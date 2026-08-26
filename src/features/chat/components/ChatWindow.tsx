@@ -152,18 +152,18 @@ export default function ChatWindow({
 
   if (!conversation) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 p-8 text-center">
+      <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-[#030712] dark:to-slate-900 p-8 text-center">
         <div className="relative mb-6">
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-[#3C65F5] to-indigo-600 shadow-xl shadow-blue-500/30">
             <Briefcase className="h-9 w-9 text-white" />
           </div>
-          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white shadow border-2 border-white">✓</span>
+          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white shadow border-2 border-white dark:border-slate-900">✓</span>
         </div>
-        <h3 className="text-xl font-bold text-slate-900">Select a Conversation</h3>
-        <p className="mt-2 max-w-xs text-sm text-slate-500 leading-relaxed">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Select a Conversation</h3>
+        <p className="mt-2 max-w-xs text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
           Pick a conversation from the sidebar to start messaging. Real-time updates are active.
         </p>
-        <div className="mt-6 flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+        <div className="mt-6 flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           Live Chat Connected
         </div>
@@ -314,7 +314,7 @@ export default function ChatWindow({
         lastDateStr = dateStr;
         elements.push(
           <div key={`date-${dateStr}`} className="flex justify-center my-5">
-            <span className="rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/70 px-4 py-1 text-[11px] font-semibold text-slate-500 shadow-sm">
+            <span className="rounded-full bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/70 dark:border-slate-700/60 px-4 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shadow-sm">
               {dateStr}
             </span>
           </div>
@@ -346,16 +346,16 @@ export default function ChatWindow({
   const canSend = inputText.trim().length > 0 || selectedAttachment !== null;
 
   return (
-    <div className="flex h-full w-full flex-col bg-[#f0f2f5]">
+    <div className="flex h-full w-full flex-col bg-[#f0f2f5] dark:bg-[#030712]">
       {/* ── Production LinkedIn-Standard Header ── */}
-      <div className="flex items-center justify-between bg-white border-b border-slate-200/80 px-4 sm:px-5 py-3 shadow-xs">
+      <div className="flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-4 sm:px-5 py-3 shadow-xs">
         {/* Left Side: Avatar, Name + Meta & Status */}
         <div className="flex items-center gap-3 min-w-0">
           {onBackToSidebar && (
             <button
               type="button"
               onClick={onBackToSidebar}
-              className="sm:hidden rounded-xl p-1.5 text-slate-500 hover:bg-slate-100 transition"
+              className="sm:hidden rounded-xl p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               title="Back"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -373,7 +373,7 @@ export default function ChatWindow({
               <img
                 src={partner.profilePicture}
                 alt={partner?.name}
-                className="h-10 w-10 rounded-full object-cover border border-slate-200 shadow-2xs group-hover:scale-105 transition-transform"
+                className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-105 transition-transform"
               />
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3C65F5] to-indigo-700 font-bold text-white shadow-2xs text-sm group-hover:scale-105 transition-transform">
@@ -382,8 +382,8 @@ export default function ChatWindow({
             )}
             {/* Online Status Dot */}
             <span
-              className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white transition-colors ${
-                isPartnerOnline ? "bg-emerald-500" : "bg-slate-300"
+              className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-slate-900 transition-colors ${
+                isPartnerOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
               }`}
             />
           </button>
@@ -394,14 +394,14 @@ export default function ChatWindow({
               <button
                 type="button"
                 onClick={handleOpenPartnerProfile}
-                className="text-left font-bold text-[15px] text-slate-900 hover:text-[#3C65F5] transition truncate leading-none cursor-pointer"
+                className="text-left font-bold text-[15px] text-slate-900 dark:text-white hover:text-[#3C65F5] dark:hover:text-blue-400 transition truncate leading-none cursor-pointer"
               >
                 {partner?.name || "Participant"}
               </button>
 
               {/* Subtle inline 1st degree connection tag */}
               {isDirectConnected && (
-                <span className="inline-flex items-center rounded px-1.5 py-0.2 text-[10px] font-bold bg-blue-50 text-[#3C65F5] border border-blue-200/80 leading-tight">
+                <span className="inline-flex items-center rounded px-1.5 py-0.2 text-[10px] font-bold bg-blue-50 dark:bg-blue-500/10 text-[#3C65F5] dark:text-blue-400 border border-blue-200/80 dark:border-blue-500/20 leading-tight">
                   1st
                 </span>
               )}
@@ -424,7 +424,7 @@ export default function ChatWindow({
               {isPartnerTyping ? (
                 <span className="text-[#3C65F5] italic animate-pulse">typing...</span>
               ) : isPartnerOnline ? (
-                <span className="flex items-center gap-1 text-emerald-600">
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Active now
                 </span>
@@ -446,8 +446,8 @@ export default function ChatWindow({
             }}
             className={`rounded-xl p-2 transition ${
               isSearching
-                ? "bg-blue-50 text-[#3C65F5]"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                ? "bg-blue-50 dark:bg-blue-500/10 text-[#3C65F5] dark:text-blue-400"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200"
             }`}
             title="Search in conversation"
           >
@@ -458,7 +458,7 @@ export default function ChatWindow({
           <button
             type="button"
             onClick={handleOpenPartnerProfile}
-            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-[#3C65F5] transition"
+            className="rounded-xl p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#3C65F5] dark:hover:text-blue-400 transition"
             title="View Profile"
           >
             <ExternalLink className="h-4 w-4" />
@@ -471,8 +471,8 @@ export default function ChatWindow({
               onClick={() => setShowMenu((prev) => !prev)}
               className={`rounded-xl p-2 transition ${
                 showMenu
-                  ? "bg-slate-200 text-slate-800"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                  ? "bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white"
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200"
               }`}
               title="Conversation options"
             >
@@ -480,12 +480,12 @@ export default function ChatWindow({
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 z-30 mt-1.5 w-52 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 z-30 mt-1.5 w-52 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl animate-in fade-in zoom-in-95">
                 {/* View Full Profile */}
                 <button
                   type="button"
                   onClick={handleOpenPartnerProfile}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-[#3C65F5] transition"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-[#3C65F5] dark:hover:text-blue-400 transition"
                 >
                   <UserIcon className="h-3.5 w-3.5 text-slate-400" />
                   <span>View Member Profile</span>
@@ -498,7 +498,7 @@ export default function ChatWindow({
                     setIsSearching(true);
                     setShowMenu(false);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                 >
                   <Search className="h-3.5 w-3.5 text-slate-400" />
                   <span>Search in Chat</span>
@@ -508,7 +508,7 @@ export default function ChatWindow({
                 <button
                   type="button"
                   onClick={handleToggleMute}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                 >
                   {isMuted ? (
                     <>
@@ -528,12 +528,12 @@ export default function ChatWindow({
                   <button
                     type="button"
                     onClick={handleCopyEmail}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                   >
                     {copiedEmail ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-emerald-600" />
-                        <span className="text-emerald-700">Copied!</span>
+                        <span className="text-emerald-700 dark:text-emerald-400">Copied!</span>
                       </>
                     ) : (
                       <>
@@ -544,7 +544,7 @@ export default function ChatWindow({
                   </button>
                 )}
 
-                <div className="my-1 border-t border-slate-100" />
+                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
                 {/* Safety / Report */}
                 <button
@@ -553,7 +553,7 @@ export default function ChatWindow({
                     setShowMenu(false);
                     toast.success("Report submitted to trust & safety team.");
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
                 >
                   <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
                   <span>Report / Block</span>
@@ -566,7 +566,7 @@ export default function ChatWindow({
 
       {/* ── In-Chat Search Bar (when active) ── */}
       {isSearching && (
-        <div className="flex items-center justify-between gap-3 bg-white border-b border-slate-200 px-4 py-2 text-xs shadow-xs animate-in slide-in-from-top-1 duration-150">
+        <div className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2 text-xs shadow-xs animate-in slide-in-from-top-1 duration-150">
           <div className="flex items-center gap-2 flex-1">
             <Search className="h-4 w-4 text-slate-400 shrink-0" />
             <input
@@ -575,7 +575,7 @@ export default function ChatWindow({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search in this conversation..."
               autoFocus
-              className="w-full text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
+              className="w-full text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 bg-transparent focus:outline-none"
             />
           </div>
           {searchQuery && (
@@ -589,7 +589,7 @@ export default function ChatWindow({
               setIsSearching(false);
               setSearchQuery("");
             }}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition"
           >
             <X className="h-4 w-4" />
           </button>
@@ -598,9 +598,9 @@ export default function ChatWindow({
 
       {/* ── Messages Area ── */}
       <div
-        className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-0.5"
+        className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-0.5 bg-slate-100/60 dark:bg-[#030712]"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.35'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         }}
       >
         {isLoadingMessages ? (
@@ -611,8 +611,8 @@ export default function ChatWindow({
                 className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`h-10 rounded-2xl bg-white/80 animate-pulse shadow-sm ${
-                    i % 2 === 0 ? "w-48 bg-blue-200/50" : "w-56"
+                  className={`h-10 rounded-2xl bg-white/80 dark:bg-slate-800/80 animate-pulse shadow-sm ${
+                    i % 2 === 0 ? "w-48 bg-blue-200/50 dark:bg-blue-900/40" : "w-56"
                   }`}
                 />
               </div>
@@ -628,12 +628,12 @@ export default function ChatWindow({
 
       {/* ── Attachment Preview ── */}
       {selectedAttachment && (
-        <div className="mx-3 mb-2 rounded-2xl border border-[#3C65F5]/30 bg-[#3C65F5]/5 p-3 flex items-center gap-3 shadow-sm">
+        <div className="mx-3 mb-2 rounded-2xl border border-[#3C65F5]/30 bg-[#3C65F5]/5 dark:bg-[#3C65F5]/10 p-3 flex items-center gap-3 shadow-sm">
           {selectedAttachment.type === "image" && selectedAttachment.preview ? (
             <img
               src={selectedAttachment.preview}
               alt="Preview"
-              className="h-12 w-12 rounded-lg object-cover border border-slate-200 shadow-sm"
+              className="h-12 w-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shadow-sm"
             />
           ) : (
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#3C65F5]/10 border border-[#3C65F5]/20">
@@ -641,13 +641,13 @@ export default function ChatWindow({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-800 truncate">{selectedAttachment.name}</p>
-            <p className="text-[10px] text-slate-500 mt-0.5 capitalize">{selectedAttachment.type} attachment</p>
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{selectedAttachment.name}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 capitalize">{selectedAttachment.type} attachment</p>
           </div>
           <button
             type="button"
             onClick={() => setSelectedAttachment(null)}
-            className="rounded-full p-1.5 text-slate-500 hover:bg-slate-200 transition"
+            className="rounded-full p-1.5 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
           >
             <X className="h-4 w-4" />
           </button>
@@ -655,19 +655,19 @@ export default function ChatWindow({
       )}
 
       {/* ── Input Area ── */}
-      <div className="relative bg-white border-t border-slate-200/80 px-3 py-3">
+      <div className="relative bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 px-3 py-3">
         {/* Emoji Panel */}
         {showQuickEmojis && (
           <div
             ref={emojiPanelRef}
-            className="absolute bottom-full left-3 mb-2 z-30 flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl w-[220px]"
+            className="absolute bottom-full left-3 mb-2 z-30 flex flex-wrap gap-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-xl w-[220px]"
           >
             {QUICK_EMOJIS.map((e) => (
               <button
                 key={e}
                 type="button"
                 onClick={() => handleEmojiClick(e)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-lg hover:bg-slate-100 active:scale-90 transition-all"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-lg hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-all"
               >
                 {e}
               </button>
@@ -687,7 +687,7 @@ export default function ChatWindow({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 rounded-2xl p-2.5 text-slate-400 hover:bg-slate-100 hover:text-[#3C65F5] transition"
+            className="shrink-0 rounded-2xl p-2.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#3C65F5] transition"
             title="Attach file"
           >
             <Paperclip className="h-5 w-5" />
@@ -699,8 +699,8 @@ export default function ChatWindow({
             onClick={() => setShowQuickEmojis((v) => !v)}
             className={`shrink-0 rounded-2xl p-2.5 transition ${
               showQuickEmojis
-                ? "text-[#3C65F5] bg-blue-50"
-                : "text-slate-400 hover:bg-slate-100 hover:text-[#3C65F5]"
+                ? "text-[#3C65F5] bg-blue-50 dark:bg-blue-500/10"
+                : "text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#3C65F5]"
             }`}
             title="Emoji"
           >
@@ -716,7 +716,7 @@ export default function ChatWindow({
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Type a message… (Enter to send)"
-              className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-[#3C65F5] focus:bg-white focus:shadow-sm placeholder:text-slate-400 leading-relaxed"
+              className="w-full resize-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 outline-none transition-all focus:border-[#3C65F5] focus:bg-white dark:focus:bg-slate-800 focus:shadow-sm placeholder:text-slate-400 leading-relaxed"
               style={{ minHeight: "42px", maxHeight: "120px" }}
             />
           </div>
@@ -727,7 +727,7 @@ export default function ChatWindow({
             className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-all active:scale-90 ${
               canSend
                 ? "bg-[#3C65F5] text-white shadow-blue-500/30 hover:bg-[#2954ea]"
-                : "bg-slate-200 text-slate-400"
+                : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
             }`}
             title={canSend ? "Send" : "Voice message"}
           >
@@ -739,7 +739,7 @@ export default function ChatWindow({
           </button>
         </form>
 
-        <p className="mt-1.5 text-center text-[10px] text-slate-400 select-none">
+        <p className="mt-1.5 text-center text-[10px] text-slate-400 dark:text-slate-500 select-none">
           🔒 Messages are secured end-to-end for your job application
         </p>
       </div>

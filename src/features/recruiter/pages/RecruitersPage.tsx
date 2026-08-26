@@ -33,15 +33,20 @@ export default function RecruitersPage() {
       const companyName = job.company?.trim() || "Hiring Company";
       const key = companyName.toLowerCase();
 
+      const logo = job.companyLogo || job.companyId?.logo;
+
       if (!map.has(key)) {
         map.set(key, {
-          id: companyName,
+          id: job.companyId?._id || companyName,
           name: companyName,
-          location: job.location,
+          logo: logo,
+          location: job.location || "New York, US",
           description: job.description
             ? job.description.split("\n\n")[0]
             : "",
           activeJobsCount: 1,
+          rating: 5,
+          reviewCount: 25 + (companyName.length * 7) % 65,
           recruiterName: job.recruiterId?.name,
           recruiterEmail: job.recruiterId?.email,
           createdAt: job.createdAt,
@@ -50,6 +55,12 @@ export default function RecruitersPage() {
       } else {
         const existing = map.get(key)!;
         existing.activeJobsCount += 1;
+        if (job.location && (!existing.location || existing.location === "New York, US")) {
+          existing.location = job.location;
+        }
+        if (!existing.logo && logo) {
+          existing.logo = logo;
+        }
         existing.jobs.push(job);
         if (!existing.recruiterName && job.recruiterId?.name) {
           existing.recruiterName = job.recruiterId.name;

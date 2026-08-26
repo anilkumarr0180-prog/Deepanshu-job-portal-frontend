@@ -18,8 +18,13 @@ import {
   Edit3,
   RotateCcw,
   Calendar,
+  CalendarDays,
   Video,
+  Copy,
+  Building2,
+  ExternalLink,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 import type { BackendJobDetails } from "@/features/jobs/utils/jobMapper";
 import { formatSalary } from "../utils/jobMapper";
@@ -98,7 +103,7 @@ export default function ApplyJobModal({
   });
 
   const isAlreadyApplied = Boolean(existingApplication);
-  
+
   const activeResumeUrl =
     resumeOption === "custom" ? customResume?.url : profile?.resumeUrl;
   const activeResumePublicId =
@@ -189,25 +194,25 @@ export default function ApplyJobModal({
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl transition-all border border-slate-100 overflow-hidden z-10 my-8">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0a0d1a] shadow-2xl transition-all border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100 overflow-hidden z-10 my-8">
         {/* Modal Header */}
-        <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5 bg-slate-50/50">
+        <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-5 bg-slate-50/50 dark:bg-slate-900/60">
           <div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-[#3C65F5]">
+              <span className="rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-semibold text-[#3C65F5] dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
                 Job Application
               </span>
               {isAlreadyApplied && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
                   <CheckCircle2 className="h-3 w-3" /> Application Submitted
                 </span>
               )}
             </div>
-            <h2 className="mt-1 text-xl font-bold text-slate-900">
+            <h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
               {job.title}
             </h2>
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-              <span className="font-medium text-slate-700">{job.company}</span>
+            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-medium text-slate-700 dark:text-slate-300">{job.company}</span>
               <span>•</span>
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3 w-3" /> {job.location}
@@ -220,7 +225,7 @@ export default function ApplyJobModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition"
           >
             <X className="h-5 w-5" />
           </button>
@@ -230,25 +235,24 @@ export default function ApplyJobModal({
         {isAlreadyApplied ? (
           /* Submitted Application View */
           <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-            <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/50 via-white to-slate-50 p-6 space-y-3 shadow-xs">
+            <div className="rounded-2xl border border-blue-100 dark:border-slate-800 bg-gradient-to-br from-blue-50/50 via-white to-slate-50 dark:from-slate-900/90 dark:via-slate-900/60 dark:to-slate-950/80 p-6 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
                   Application Status
                 </span>
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold shadow-xs ${
-                    existingApplication?.status === "Shortlisted"
-                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold shadow-xs ${existingApplication?.status === "Shortlisted"
+                      ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
                       : existingApplication?.status === "Interview"
-                      ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
-                      : existingApplication?.status === "Under Review"
-                      ? "bg-blue-100 text-blue-800 border border-blue-200"
-                      : existingApplication?.status === "Hired"
-                      ? "bg-purple-100 text-purple-800 border border-purple-200"
-                      : existingApplication?.status === "Rejected"
-                      ? "bg-rose-100 text-rose-800 border border-rose-200"
-                      : "bg-amber-100 text-amber-800 border border-amber-200"
-                  }`}
+                        ? "bg-indigo-100 dark:bg-indigo-500/10 text-indigo-800 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20"
+                        : existingApplication?.status === "Under Review"
+                          ? "bg-blue-100 dark:bg-blue-500/10 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20"
+                          : existingApplication?.status === "Hired"
+                            ? "bg-purple-100 dark:bg-purple-500/10 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20"
+                            : existingApplication?.status === "Rejected"
+                              ? "bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20"
+                              : "bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20"
+                    }`}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   {existingApplication?.status || "Applied"}
@@ -256,131 +260,218 @@ export default function ApplyJobModal({
               </div>
 
               <div>
-                <p className="text-base font-bold text-slate-900">
+                <p className="text-base font-bold text-slate-900 dark:text-white">
                   Application Submitted
                 </p>
-                <p className="mt-0.5 text-xs text-slate-600">
+                <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
                   Submitted on{" "}
                   {existingApplication?.createdAt
                     ? new Date(existingApplication.createdAt).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )
+                      "en-US",
+                      {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )
                     : "Aug 7, 2026"}
                 </p>
               </div>
             </div>
 
             {/* Scheduled Interview Details Card (If Recruiter Scheduled Interview) */}
-            {(existingApplication?.interviewDetails || existingApplication?.status === "Interview") && (
-              <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-5 space-y-3.5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold shadow-xs">
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900">
-                        {existingApplication?.interviewDetails?.type || "Scheduled Interview"}
-                      </h4>
-                      <span className="text-xs font-semibold text-indigo-700">
-                        Format: {existingApplication?.interviewDetails?.mode === "in-person" ? "In-Person On-Site 🏢" : existingApplication?.interviewDetails?.mode === "phone" ? "Phone Call 📞" : "Online Video Call 📹"}
-                      </span>
-                    </div>
-                  </div>
+            {(existingApplication?.interviewDetails || existingApplication?.status === "Interview") && (() => {
+              const details = existingApplication?.interviewDetails;
+              const isVideo = details?.mode === "video" || details?.locationOrLink?.startsWith("http");
+              const isPhone = details?.mode === "phone";
+              const isInPerson = details?.mode === "in-person" || (!isVideo && !isPhone);
+              const locationOrLink = details?.locationOrLink || "";
 
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-800 bg-indigo-100 px-3 py-1 rounded-full border border-indigo-200 shadow-2xs">
-                    Interview Scheduled
-                  </span>
-                </div>
+              return (
+                <div className="rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/50 dark:via-slate-900/80 dark:to-blue-950/40 p-5 space-y-4 shadow-sm">
+                  {/* Top Bar: Icon + Type + Format + Status Badge */}
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold shadow-sm shrink-0">
+                        <Calendar className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                            {details?.type || "Scheduled Interview"}
+                          </h4>
+                          <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100/80 dark:bg-indigo-500/20 px-2 py-0.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                            {isInPerson ? "🏢 In-Person On-Site" : isPhone ? "📞 Phone Call" : "📹 Online Video Call"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          The hiring team has confirmed your interview schedule.
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="grid gap-2.5 sm:grid-cols-2 text-xs pt-1 border-t border-indigo-100/80">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Clock className="h-4 w-4 text-indigo-500 shrink-0" />
-                    <span>
-                      <strong>Date & Time:</strong> {existingApplication?.interviewDetails?.date || "Confirmed by Recruiter"} {existingApplication?.interviewDetails?.time ? `at ${existingApplication.interviewDetails.time}` : ""}
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-800 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/15 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/30 shadow-2xs">
+                      <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                      Interview Scheduled
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-slate-700">
-                    {existingApplication?.interviewDetails?.mode === "in-person" ? (
-                      <MapPin className="h-4 w-4 text-[#3C65F5] shrink-0" />
-                    ) : existingApplication?.interviewDetails?.mode === "phone" ? (
-                      <Phone className="h-4 w-4 text-emerald-600 shrink-0" />
-                    ) : (
-                      <Video className="h-4 w-4 text-[#3C65F5] shrink-0" />
-                    )}
-                    <span className="truncate">
-                      <strong>Location / Link:</strong>{" "}
-                      {existingApplication?.interviewDetails?.locationOrLink?.startsWith("http") ? (
-                        <a
-                          href={existingApplication.interviewDetails.locationOrLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[#3C65F5] font-semibold underline hover:text-blue-700"
+                  {/* Date, Time & Schedule Info Cards */}
+                  <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-3.5 grid gap-3 sm:grid-cols-2 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
+                        <CalendarDays className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Interview Date</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                          {details?.date || "Confirmed by Recruiter"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-[#3C65F5] dark:text-blue-400 shrink-0">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Scheduled Time</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                          {details?.time || "10:00 AM"} {details?.timezone ? `(${details.timezone})` : ""}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Full Location / Meeting Access Section (Full Width, No Truncate, Word Break, Copy & Navigation Action) */}
+                  <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-4 space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {isInPerson ? (
+                          <Building2 className="h-4 w-4 text-[#3C65F5] shrink-0" />
+                        ) : isPhone ? (
+                          <Phone className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <Video className="h-4 w-4 text-[#3C65F5] shrink-0" />
+                        )}
+                        <span>
+                          {isInPerson ? "Interview Venue / Office Address" : isPhone ? "Contact Number / Dial-in" : "Meeting Link & Video Room"}
+                        </span>
+                      </div>
+
+                      {locationOrLink && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(locationOrLink);
+                            toast.success(isInPerson ? "Address copied to clipboard!" : "Link copied to clipboard!");
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline cursor-pointer"
                         >
-                          Join Meeting &rarr;
-                        </a>
-                      ) : (
-                        existingApplication?.interviewDetails?.locationOrLink || "Details provided by recruiter"
+                          <Copy className="h-3 w-3" /> Copy {isInPerson ? "Address" : "Link"}
+                        </button>
                       )}
-                    </span>
+                    </div>
+
+                    {/* Full readable content */}
+                    <div className="rounded-lg bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-3 text-xs text-slate-800 dark:text-slate-200 leading-relaxed break-words">
+                      {locationOrLink ? (
+                        locationOrLink.startsWith("http") ? (
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <a
+                              href={locationOrLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[#3C65F5] dark:text-blue-400 font-semibold underline hover:text-blue-600 break-all"
+                            >
+                              {locationOrLink}
+                            </a>
+                            <a
+                              href={locationOrLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#3C65F5] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-600 transition"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" /> Join Video Meeting
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+                            <p className="font-medium whitespace-pre-wrap leading-relaxed flex-1">{locationOrLink}</p>
+                            {isInPerson && (
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationOrLink)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 shrink-0 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 text-xs font-semibold text-[#3C65F5] dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 transition"
+                              >
+                                <MapPin className="h-3 w-3" /> Open Maps &rarr;
+                              </a>
+                            )}
+                          </div>
+                        )
+                      ) : (
+                        <p className="text-slate-400 italic">No specific address or meeting link was provided by the recruiter.</p>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Recruiter Instructions / Preparation Notes */}
+                  {details?.notes && (
+                    <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-950/30 p-3.5 text-xs space-y-1">
+                      <span className="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                        📝 Recruiter Instructions:
+                      </span>
+                      <p className="text-indigo-950 dark:text-indigo-200 leading-relaxed break-words whitespace-pre-wrap pl-4">
+                        {details.notes}
+                      </p>
+                    </div>
+                  )}
                 </div>
+              );
+            })()}
 
-                {existingApplication?.interviewDetails?.notes && (
-                  <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-xs text-indigo-950">
-                    <strong>Recruiter Instructions:</strong> {existingApplication.interviewDetails.notes}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-900 shadow-xs">
+            <div className="flex items-start gap-3 rounded-xl border border-blue-200 dark:border-blue-500/20 bg-blue-50/80 dark:bg-blue-950/30 p-3.5 text-xs text-blue-900 dark:text-blue-200 shadow-xs">
               <Mail className="h-4 w-4 text-[#3C65F5] shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-blue-950">Emails Dispatched via Nodemailer SMTP ✉️</p>
-                <p className="mt-0.5 text-blue-700">
-                  A confirmation receipt was sent to <span className="font-semibold">{profile?.email || "your registered email"}</span> and a candidate alert was sent to the job recruiter.
+                <p className="font-bold text-blue-950 dark:text-blue-100">Emails Dispatched via Nodemailer SMTP ✉️</p>
+                <p className="mt-0.5 text-blue-700 dark:text-blue-300/80">
+                  A confirmation receipt was sent to <span className="font-semibold text-blue-950 dark:text-white">{profile?.email || "your registered email"}</span> and a candidate alert was sent to the job recruiter.
                 </p>
               </div>
             </div>
 
             {/* Submitted Application Snapshot View */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 space-y-4">
-              <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <User className="h-4 w-4 text-[#3C65F5]" /> Submitted Application Details
               </h3>
               <div className="grid gap-3 sm:grid-cols-2 text-sm">
-                <div className="flex items-center gap-2 text-slate-700">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <User className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="font-medium text-slate-900">
+                  <span className="font-medium text-slate-900 dark:text-white">
                     {existingApplication?.applicantName || profile?.name || "Candidate Name"}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-700">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <Mail className="h-4 w-4 text-slate-400 shrink-0" />
                   <span className="truncate">{existingApplication?.applicantEmail || profile?.email || "No email"}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-700">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <Phone className="h-4 w-4 text-slate-400 shrink-0" />
                   <span>{existingApplication?.applicantPhone || profile?.phone || "No phone added"}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-700">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <Briefcase className="h-4 w-4 text-slate-400 shrink-0" />
                   <span className="truncate">{existingApplication?.applicantDesignation || profile?.headline || "Full Stack Developer"}</span>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm">
                   <FileText className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="text-slate-600 font-medium">Submitted Resume:</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-600 font-medium text-xs bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">Submitted Resume:</span>
+                  <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium text-xs bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
                     <CheckCircle2 className="h-3 w-3" /> Attached
                   </span>
                 </div>
@@ -398,21 +489,21 @@ export default function ApplyJobModal({
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-slate-900">
+              <label className="block text-sm font-semibold text-slate-900 dark:text-slate-200">
                 Submitted Cover Letter
               </label>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 leading-relaxed min-h-[90px]">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm text-slate-700 dark:text-slate-300 leading-relaxed min-h-[90px]">
                 {existingApplication?.coverLetter?.trim()
                   ? existingApplication.coverLetter
                   : "No cover letter was attached with this application."}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
               >
                 Close
               </button>
@@ -428,7 +519,7 @@ export default function ApplyJobModal({
                         : `/candidate/messages?jobId=${job._id}`
                     );
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#3C65F5] bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#3C65F5] transition hover:bg-blue-100"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#3C65F5] dark:border-[#3C65F5]/40 bg-blue-50 dark:bg-blue-950/40 px-4 py-2.5 text-sm font-semibold text-[#3C65F5] dark:text-blue-400 transition hover:bg-blue-100 dark:hover:bg-blue-900/40"
                 >
                   💬 Message Recruiter
                 </button>
@@ -628,11 +719,10 @@ export default function ApplyJobModal({
               {/* Option A: Default Profile Resume */}
               {profile?.resumeUrl && (
                 <label
-                  className={`flex items-start gap-3 rounded-xl border p-3.5 transition cursor-pointer ${
-                    resumeOption === "profile"
+                  className={`flex items-start gap-3 rounded-xl border p-3.5 transition cursor-pointer ${resumeOption === "profile"
                       ? "border-[#3C65F5] bg-blue-50/60 ring-1 ring-[#3C65F5]"
                       : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
+                    }`}
                 >
                   <input
                     type="radio"
@@ -657,11 +747,10 @@ export default function ApplyJobModal({
 
               {/* Option B: Upload Custom Resume */}
               <label
-                className={`flex items-start gap-3 rounded-xl border p-3.5 transition cursor-pointer ${
-                  resumeOption === "custom"
+                className={`flex items-start gap-3 rounded-xl border p-3.5 transition cursor-pointer ${resumeOption === "custom"
                     ? "border-[#3C65F5] bg-blue-50/60 ring-1 ring-[#3C65F5]"
                     : "border-slate-200 bg-white hover:border-slate-300"
-                }`}
+                  }`}
               >
                 <input
                   type="radio"

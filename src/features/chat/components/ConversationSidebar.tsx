@@ -57,11 +57,11 @@ export default function ConversationSidebar({
   };
 
   return (
-    <div className="flex h-full w-full flex-col bg-white border-r border-slate-200/80">
+    <div className="flex h-full w-full flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800">
       {/* ── Sidebar Header ── */}
-      <div className="px-4 pt-4 pb-3 border-b border-slate-100">
+      <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[17px] font-extrabold text-slate-900 flex items-center gap-2">
+          <h2 className="text-[17px] font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
             <MessageSquareDot className="h-5 w-5 text-[#3C65F5]" />
             Messages
           </h2>
@@ -71,7 +71,7 @@ export default function ConversationSidebar({
                 {totalUnread > 99 ? "99+" : totalUnread}
               </span>
             )}
-            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
+            <span className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
               {onlineUserIds.length} online
             </span>
           </div>
@@ -85,13 +85,13 @@ export default function ConversationSidebar({
             placeholder="Search conversations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-9 pr-9 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#3C65F5] focus:bg-white placeholder:text-slate-400"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 pl-9 pr-9 py-2.5 text-sm text-slate-800 dark:text-slate-100 outline-none transition focus:border-[#3C65F5] focus:bg-white dark:focus:bg-slate-800 placeholder:text-slate-400"
           />
           {searchTerm && (
             <button
               type="button"
               onClick={() => setSearchTerm("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 hover:text-slate-600 transition"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -105,22 +105,22 @@ export default function ConversationSidebar({
           <div className="p-4 space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center gap-3 animate-pulse">
-                <div className="h-12 w-12 rounded-full bg-slate-200 shrink-0" />
+                <div className="h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3.5 w-1/3 rounded-full bg-slate-200" />
-                  <div className="h-3 w-2/3 rounded-full bg-slate-100" />
-                  <div className="h-3 w-1/2 rounded-full bg-slate-100" />
+                  <div className="h-3.5 w-1/3 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="h-3 w-2/3 rounded-full bg-slate-100 dark:bg-slate-800/60" />
+                  <div className="h-3 w-1/2 rounded-full bg-slate-100 dark:bg-slate-800/60" />
                 </div>
               </div>
             ))}
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-10 space-y-4 text-center px-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 border border-blue-100 dark:border-slate-800">
               <MessageSquareDot className="h-8 w-8 text-[#3C65F5]" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 {searchTerm ? "No results found" : "No Conversations Yet"}
               </p>
               <p className="mt-1 text-xs text-slate-400 leading-relaxed">
@@ -142,7 +142,7 @@ export default function ConversationSidebar({
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100/80">
+          <div className="divide-y divide-slate-100/80 dark:divide-slate-800/80">
             {filteredConversations.map((conv) => {
               const convId = conv._id || conv.id || "";
               const candidateIdStr = getUserIdString(conv.candidateId);
@@ -164,8 +164,8 @@ export default function ConversationSidebar({
                   onClick={() => onSelectConversation(convId)}
                   className={`w-full text-left flex items-center gap-3 px-4 py-3.5 transition-all relative ${
                     isSelected
-                      ? "bg-blue-50/60 border-l-[4px] border-l-[#3C65F5] shadow-[inset_0px_1px_4px_rgba(0,0,0,0.02)]"
-                      : "bg-white border-l-[4px] border-l-transparent hover:bg-slate-50"
+                      ? "bg-blue-50/60 dark:bg-blue-950/40 border-l-[4px] border-l-[#3C65F5] shadow-[inset_0px_1px_4px_rgba(0,0,0,0.02)]"
+                      : "bg-white dark:bg-slate-900 border-l-[4px] border-l-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60"
                   }`}
                 >
                   {/* Avatar */}
@@ -174,7 +174,7 @@ export default function ConversationSidebar({
                       <img
                         src={partner.profilePicture}
                         alt={partner.name}
-                        className="h-12 w-12 rounded-full object-cover border border-slate-200 shadow-sm"
+                        className="h-12 w-12 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-sm"
                       />
                     ) : (
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#3C65F5] to-indigo-700 font-bold text-white shadow-sm text-sm">
@@ -187,8 +187,8 @@ export default function ConversationSidebar({
                     )}
                     {/* Online Dot */}
                     <span
-                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white transition-colors ${
-                        isOnline ? "bg-emerald-500" : "bg-slate-300"
+                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-slate-900 transition-colors ${
+                        isOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
                       }`}
                     />
                   </div>
@@ -198,7 +198,9 @@ export default function ConversationSidebar({
                     <div className="flex items-start justify-between gap-1 mb-0.5">
                       <span
                         className={`text-sm truncate ${
-                          unreadCount > 0 ? "font-extrabold text-slate-900" : "font-bold text-slate-800"
+                          unreadCount > 0
+                            ? "font-extrabold text-slate-900 dark:text-white"
+                            : "font-bold text-slate-800 dark:text-slate-200"
                         }`}
                       >
                         {partner?.name || "User"}
@@ -218,7 +220,7 @@ export default function ConversationSidebar({
                     {conv.jobId?.title && (
                       <div className="flex items-center gap-1 mb-1">
                         <Briefcase className="h-3 w-3 shrink-0 text-[#3C65F5]" />
-                        <span className="text-[11px] font-semibold text-[#3C65F5] truncate max-w-[200px]">
+                        <span className="text-[11px] font-semibold text-[#3C65F5] dark:text-blue-400 truncate max-w-[200px]">
                           {conv.jobId.title}
                         </span>
                       </div>
@@ -228,7 +230,7 @@ export default function ConversationSidebar({
                     <div className="flex items-center justify-between gap-2 mt-0.5">
                       <p
                         className={`text-xs truncate ${
-                          unreadCount > 0 ? "font-semibold text-slate-800" : "text-slate-500"
+                          unreadCount > 0 ? "font-semibold text-slate-800 dark:text-slate-300" : "text-slate-500 dark:text-slate-400"
                         }`}
                       >
                         {isLastMsgImage

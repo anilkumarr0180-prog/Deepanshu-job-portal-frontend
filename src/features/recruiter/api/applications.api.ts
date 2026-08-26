@@ -73,7 +73,7 @@ export async function updateApplicationStatus(
   status: string,
   interviewDetails?: any
 ): Promise<BackendApplication> {
-  const response = await axiosInstance.put(
+  const response = await axiosInstance.patch(
     `/applications/${applicationId}/status`,
     { status, interviewDetails }
   );

@@ -178,10 +178,10 @@ export default function CandidateAppliedJobsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           My Applications
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {totalApplications === 0
             ? "You haven't applied to any jobs yet."
             : `You have ${totalApplications} application${totalApplications !== 1 ? "s" : ""}`}

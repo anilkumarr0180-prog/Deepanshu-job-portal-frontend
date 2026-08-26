@@ -68,3 +68,12 @@ export async function changePasswordApi(payload: {
   return axiosInstance.patch("/auth/change-password", payload);
 }
 
+export async function forgotPasswordUser(payload: { email: string }) {
+  return axiosInstance.post("/auth/forgot-password", payload);
+}
+
+export async function resetPasswordUser(token: string, payload: { password: string }) {
+  return axiosInstance.post(`/auth/reset-password/${token}`, payload);
+}
+
+
