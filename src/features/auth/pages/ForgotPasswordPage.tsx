@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
           <AuthHeader
             badge="Email Dispatched"
             title="Check Your Inbox"
-            subtitle={`If an account with ${email} exists, a secure password reset link has been sent. The link expires in 30 minutes.`}
+            subtitle={`If an account with ${email} exists, a secure password reset link has been sent. The link expires in 15 minutes.`}
           />
 
           <div className="mt-8 space-y-4">

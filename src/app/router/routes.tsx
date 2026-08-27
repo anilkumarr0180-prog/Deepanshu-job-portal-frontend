@@ -152,11 +152,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: "reset-password/:token",
-        element: (
-          <GuestRoute>
-            <ResetPasswordPage />
-          </GuestRoute>
-        ),
+        element: <ResetPasswordPage />,
       },
     ],
   },

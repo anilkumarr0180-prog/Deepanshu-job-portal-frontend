@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import { AuthProvider } from "@/features/auth/context/AuthProvider";
+import { RealtimeProvider } from "@/shared/context/RealtimeContext";
 import { NotificationProvider } from "@/shared/context/NotificationContext";
 import { ThemeProvider } from "@/shared/context/ThemeContext";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
@@ -24,16 +25,18 @@ export default function AppProvider({ children }: AppProviderProps) {
         <ReduxProvider>
           <QueryProvider>
             <AuthProvider>
-              <NotificationProvider>
-                <GoogleOAuthProvider clientId={googleClientId}>
-                  {children}
-                  <Toaster position="top-right" />
-                </GoogleOAuthProvider>
-              </NotificationProvider>
+              <RealtimeProvider>
+                <NotificationProvider>
+                  <GoogleOAuthProvider clientId={googleClientId}>
+                    {children}
+                    <Toaster position="top-right" />
+                  </GoogleOAuthProvider>
+                </NotificationProvider>
+              </RealtimeProvider>
             </AuthProvider>
           </QueryProvider>
         </ReduxProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
-}
+}

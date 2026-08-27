@@ -12,10 +12,12 @@ import {
   AuthLayout,
 } from "../components";
 import { resetPasswordUser } from "../api/auth.api";
+import useAuth from "../hooks/useAuth";
 
 export default function ResetPasswordPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { logout, isAuthenticated } = useAuth();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -187,7 +189,12 @@ export default function ResetPasswordPage() {
           <div className="mt-8">
             <button
               type="button"
-              onClick={() => navigate("/login")}
+              onClick={() => {
+                if (isAuthenticated) {
+                  logout();
+                }
+                navigate("/login");
+              }}
               className="flex h-14 w-full items-center justify-center rounded-xl bg-[#05264E] text-base font-semibold text-white transition-all duration-200 hover:bg-[#031C3B]"
             >
               Proceed to Sign In

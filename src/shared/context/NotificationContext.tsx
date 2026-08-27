@@ -6,10 +6,10 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { io, Socket } from "socket.io-client";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import useAuth from "@/features/auth/hooks/useAuth";
+import { useRealtime } from "./RealtimeContext";
 import { notificationService } from "../services/notificationService";
 import type { NotificationItem } from "../types/notification";
 
@@ -32,11 +32,11 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { token, isAuthenticated } = useAuth();
+  const { socket } = useRealtime();
   const queryClient = useQueryClient();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [_socket, setSocket] = useState<Socket | null>(null);
 
   // Initial Fetch of Notifications & Unread Count
   const refetchNotifications = useCallback(async () => {
@@ -108,32 +108,11 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [isAuthenticated, token, refetchNotifications]);
 
-  // Real-Time Socket.io Connection Setup
+  // Real-Time Event Subscription on Central Socket
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      setSocket((prev) => {
-        if (prev) prev.disconnect();
-        return null;
-      });
-      return;
-    }
+    if (!socket || !isAuthenticated) return;
 
-    const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const backendUrl = rawApiUrl.replace(/\/api\/?$/, "");
-
-    const socketInstance = io(backendUrl, {
-      auth: { token: `Bearer ${token}` },
-      transports: ["polling", "websocket"],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000,
-    });
-
-    socketInstance.on("connect", () => {
-      console.log("⚡ Real-time Notification Socket Connected.");
-    });
-
-    socketInstance.on("notification:new", (data: any) => {
+    const handleNewNotification = (data: any) => {
       // Multi-tab synchronization event handling
       if (data?.event === "read_all") {
         setNotifications((prev) =>
@@ -207,9 +186,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
       toast.custom(
         (t) => (
           <div
-            className={`${
-              t.visible ? "animate-enter" : "animate-leave"
-            } pointer-events-auto flex w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl ring-1 ring-black/5 border border-slate-100`}
+            className={`${t.visible ? "animate-enter" : "animate-leave"
+              } pointer-events-auto flex w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl ring-1 ring-black/5 border border-slate-100`}
           >
             <div className="flex-1">
               <div className="flex items-start gap-3">
@@ -230,23 +208,22 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
         ),
         { duration: 5000 }
       );
-    });
+    };
 
-    socketInstance.on(
-      "notification:unread_count",
-      (payload: { unreadCount: number }) => {
-        if (typeof payload?.unreadCount === "number") {
-          setUnreadCount(payload.unreadCount);
-        }
+    const handleUnreadCount = (payload: { unreadCount: number }) => {
+      if (typeof payload?.unreadCount === "number") {
+        setUnreadCount(payload.unreadCount);
       }
-    );
+    };
 
-    setSocket(socketInstance);
+    socket.on("notification:new", handleNewNotification);
+    socket.on("notification:unread_count", handleUnreadCount);
 
     return () => {
-      socketInstance.disconnect();
+      socket.off("notification:new", handleNewNotification);
+      socket.off("notification:unread_count", handleUnreadCount);
     };
-  }, [isAuthenticated, token, playNotificationSound, queryClient]);
+  }, [socket, isAuthenticated, playNotificationSound, queryClient]);
 
   const markAsRead = async (id: string) => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   MessageSquare,
   ChevronUp,
@@ -9,14 +9,25 @@ import {
   Search,
   X,
   Loader2,
+  Users,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useQuery } from "@tanstack/react-query";
 import useAuth from "@/features/auth/hooks/useAuth";
-import { useConversations, useMessages, useSendMessage, useMarkConversationRead } from "../hooks/useChat";
+import { useRealtime } from "@/shared/context/RealtimeContext";
+import {
+  useConversations,
+  useMessages,
+  useSendMessage,
+  useCreateConversation,
+} from "../hooks/useChat";
 import { UserAvatar } from "@/shared/components/UserAvatar";
+import useDebounce from "@/shared/hooks/useDebounce";
+import { searchUsers } from "@/features/posts/api/connectionApi";
 import type { RootState } from "@/app/store/store";
 import type { ChatConversation, ChatMessage } from "../types/chat.types";
+import { getUserIdString } from "../types/chat.types";
 
 function formatMiniChatTime(dateStr?: string): string {
   if (!dateStr) return "";
@@ -35,19 +46,36 @@ export default function FloatingMessagingDock() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { joinConversation } = useRealtime();
 
   // Hide dock if already on the dedicated full messages page
   const isMessagesPage = location.pathname.includes("/messages");
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [isStartingChatWithId, setIsStartingChatWithId] = useState<string | null>(null);
   const [activeConversation, setActiveConversation] = useState<ChatConversation | null>(null);
   const [textInput, setTextInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const unreadTotal = useSelector((state: RootState) => state.chat.unreadTotalCount);
+  const onlineUsers = useSelector((state: RootState) => state.chat.onlineUsers);
   const { data: conversationsData, isLoading: isLoadingConversations } = useConversations(1, 20);
   const conversations: ChatConversation[] = conversationsData?.conversations || [];
+
+  const createConversation = useCreateConversation();
+
+  // Search users on JobBox network when searching in mini dock
+  const isSearchingPeople = debouncedSearchQuery.trim().length >= 2;
+  const { data: userSearchResults, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["mini-dock-user-search", debouncedSearchQuery.trim()],
+    queryFn: () => searchUsers({ q: debouncedSearchQuery.trim(), limit: 4 }),
+    enabled: isSearchingPeople,
+    staleTime: 1000 * 30,
+  });
+
+  const foundUsers = userSearchResults?.items || [];
 
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(
     activeConversation?._id || null,
@@ -57,16 +85,40 @@ export default function FloatingMessagingDock() {
   const messages: ChatMessage[] = messagesData?.messages || [];
 
   const { mutate: sendMessage, isPending: isSending } = useSendMessage();
-  const { mutate: markRead } = useMarkConversationRead();
 
   const currentUserId = user?._id || user?.id;
 
-  // Mark active conversation read
-  useEffect(() => {
-    if (isOpen && activeConversation?._id) {
-      markRead(activeConversation._id);
+  const visibleConversations = useMemo(() => {
+    try {
+      const key = "jobbox_deleted_convs";
+      const deletedMap: Record<string, number> = JSON.parse(localStorage.getItem(key) || "{}");
+      return conversations.filter((conv) => {
+        const id = conv._id || conv.id;
+        if (!id || !deletedMap[id]) return true;
+        const deletedAt = deletedMap[id];
+        const lastMsgTime = new Date(conv.lastMessageAt || 0).getTime();
+        return lastMsgTime > deletedAt;
+      });
+    } catch {
+      return conversations;
     }
-  }, [isOpen, activeConversation, markRead]);
+  }, [conversations]);
+
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return visibleConversations;
+    const q = searchQuery.toLowerCase();
+    return visibleConversations.filter((c) => {
+      const candidateIdStr = getUserIdString(c.candidateId);
+      const otherUser = candidateIdStr === String(currentUserId) ? c.recruiterId : c.candidateId;
+      const lastMsg = (c as any).lastMessageId?.message || "";
+      const jobTitle = c.jobId?.title || "";
+      return (
+        otherUser?.name?.toLowerCase().includes(q) ||
+        lastMsg.toLowerCase().includes(q) ||
+        jobTitle.toLowerCase().includes(q)
+      );
+    });
+  }, [visibleConversations, currentUserId, searchQuery]);
 
   // Scroll to bottom of mini-chat
   useEffect(() => {
@@ -77,14 +129,44 @@ export default function FloatingMessagingDock() {
 
   if (isMessagesPage || !user) return null;
 
-  const filteredConversations = conversations.filter((c) => {
-    const otherUser = String(c.candidateId?._id) === String(currentUserId) ? c.recruiterId : c.candidateId;
-    return otherUser?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
   const handleOpenConversation = (conv: ChatConversation) => {
     setActiveConversation(conv);
-    markRead(conv._id);
+    const convId = conv._id || conv.id;
+    if (convId) {
+      joinConversation(convId);
+    }
+  };
+
+  const handleSelectPerson = async (targetUserItem: any) => {
+    const userObj = targetUserItem.user || targetUserItem;
+    const targetUserId = String(userObj._id || userObj.id || "");
+    if (!targetUserId) return;
+
+    // 1. Check existing conversation
+    const existingConv = conversations.find((c) => {
+      const candidateIdStr = getUserIdString(c.candidateId);
+      const recruiterIdStr = getUserIdString(c.recruiterId);
+      const partnerId = candidateIdStr === String(currentUserId) ? recruiterIdStr : candidateIdStr;
+      return partnerId === targetUserId;
+    });
+
+    if (existingConv) {
+      handleOpenConversation(existingConv);
+      setSearchQuery("");
+      return;
+    }
+
+    // 2. Create or find conversation
+    try {
+      setIsStartingChatWithId(targetUserId);
+      const newConv = await createConversation.mutateAsync({ targetUserId });
+      handleOpenConversation(newConv);
+      setSearchQuery("");
+    } catch (err) {
+      console.error("Failed to start conversation in dock:", err);
+    } finally {
+      setIsStartingChatWithId(null);
+    }
   };
 
   const handleSend = (e?: React.FormEvent) => {
@@ -118,6 +200,10 @@ export default function FloatingMessagingDock() {
       : activeConversation.candidateId
     : null;
 
+  const activeOtherUserId = getUserIdString(activeOtherUser);
+  const isPartnerOnline = Boolean(activeOtherUserId && onlineUsers.includes(activeOtherUserId));
+  const isUserOnline = Boolean(currentUserId && onlineUsers.includes(String(currentUserId)));
+
   return (
     <div className="fixed bottom-0 right-4 sm:right-6 z-40 flex flex-col items-end">
       {/* ── Collapsed Dock Bar ── */}
@@ -130,7 +216,11 @@ export default function FloatingMessagingDock() {
         >
           <div className="relative">
             <UserAvatar src={user.profilePicture} name={user.name} size="xs" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+            <span
+              className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 transition-colors ${
+                isUserOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+              }`}
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -169,13 +259,24 @@ export default function FloatingMessagingDock() {
                     name={activeOtherUser?.name || "User"}
                     size="xs"
                   />
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white dark:ring-slate-900" />
+                  <span
+                    className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-white dark:ring-slate-900 transition-colors ${
+                      isPartnerOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                    }`}
+                  />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {activeOtherUser?.name || "Chat"}
                   </h4>
-                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">Active</span>
+                  {isPartnerOnline ? (
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Online
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium text-slate-400">Offline</span>
+                  )}
                 </div>
               </div>
             ) : (
@@ -286,7 +387,7 @@ export default function FloatingMessagingDock() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search messages..."
+                    placeholder="Search people or messages..."
                     className="h-8 w-full rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-8 pr-3 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#3C65F5]"
                   />
                   {searchQuery && (
@@ -301,8 +402,8 @@ export default function FloatingMessagingDock() {
                 </div>
               </div>
 
-              {/* Conversations */}
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/60">
+              {/* Content / Search Results */}
+              <div className="flex-1 overflow-y-auto">
                 {isLoadingConversations ? (
                   <div className="p-4 space-y-3">
                     {[1, 2, 3].map((i) => (
@@ -315,58 +416,241 @@ export default function FloatingMessagingDock() {
                       </div>
                     ))}
                   </div>
-                ) : filteredConversations.length > 0 ? (
-                  filteredConversations.map((conv) => {
-                    const otherUser =
-                      String(conv.candidateId?._id) === String(currentUserId)
-                        ? conv.recruiterId
-                        : conv.candidateId;
-                    const unread = conv.unreadCount && conv.unreadCount > 0;
-
-                    return (
-                      <div
-                        key={conv._id}
-                        onClick={() => handleOpenConversation(conv)}
-                        className={`flex items-center gap-3 p-3 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer group ${
-                          unread ? "bg-blue-50/20 dark:bg-blue-950/20" : ""
-                        }`}
-                      >
-                        <div className="relative shrink-0">
-                          <UserAvatar
-                            src={otherUser?.profilePicture}
-                            name={otherUser?.name || "User"}
-                            size="sm"
-                          />
-                          {unread && (
-                            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#3C65F5] ring-2 ring-white dark:ring-slate-900" />
-                          )}
+                ) : searchQuery.trim() ? (
+                  /* ── Search Mode ── */
+                  <div className="pb-3">
+                    {/* PEOPLE SECTION */}
+                    {(isSearchingPeople || isLoadingUsers || foundUsers.length > 0) && (
+                      <div className="mb-2">
+                        <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-slate-800/60 border-y border-slate-100 dark:border-slate-800">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <Users className="h-3 w-3 text-[#3C65F5]" />
+                            People
+                          </span>
+                          {isLoadingUsers && <Loader2 className="h-3 w-3 animate-spin text-[#3C65F5]" />}
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <h5 className={`text-xs truncate ${unread ? "font-bold text-slate-900 dark:text-white" : "font-semibold text-slate-800 dark:text-slate-200"}`}>
-                              {otherUser?.name}
-                            </h5>
-                            {conv.lastMessageAt && (
-                              <span className="text-[10px] text-slate-400 shrink-0">
-                                {formatMiniChatTime(conv.lastMessageAt)}
-                              </span>
-                            )}
+                        {isLoadingUsers ? (
+                          <div className="p-3 space-y-2">
+                            {[1, 2].map((i) => (
+                              <div key={i} className="flex items-center gap-2 animate-pulse">
+                                <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                                <div className="space-y-1 flex-1">
+                                  <div className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : foundUsers.length > 0 ? (
+                          <div className="divide-y divide-slate-50 dark:divide-slate-800/40">
+                            {foundUsers.map((item: any) => {
+                              const userObj = item.user || item;
+                              const targetUserId = String(userObj._id || userObj.id || "");
+                              const isOtherOnline = onlineUsers.includes(targetUserId);
+                              const isStartingThis = isStartingChatWithId === targetUserId;
+
+                              return (
+                                <div
+                                  key={targetUserId}
+                                  onClick={() => !isStartingThis && handleSelectPerson(item)}
+                                  className="flex items-center justify-between gap-2.5 p-2.5 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer group"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div className="relative shrink-0">
+                                      <UserAvatar
+                                        src={userObj.profilePicture}
+                                        name={userObj.name || "User"}
+                                        size="sm"
+                                      />
+                                      <span
+                                        className={`absolute bottom-0 right-0 h-2 w-2 rounded-full border border-white dark:border-slate-900 transition-colors ${
+                                          isOtherOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                                        }`}
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <h5 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#3C65F5] transition truncate">
+                                        {userObj.name}
+                                      </h5>
+                                      <p className="text-[10px] text-slate-400 truncate">
+                                        {isOtherOnline ? "Online" : "Offline"} • {userObj.role || "Member"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="shrink-0">
+                                    {isStartingThis ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin text-[#3C65F5]" />
+                                    ) : (
+                                      <span className="text-[10px] font-bold text-[#3C65F5] opacity-0 group-hover:opacity-100 transition">
+                                        Chat
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="py-2 px-3 text-[11px] text-slate-400 italic">
+                            No people found
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* CONVERSATIONS SECTION */}
+                    <div>
+                      <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/60 border-y border-slate-100 dark:border-slate-800">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3 text-[#3C65F5]" />
+                          Conversations
+                        </span>
+                      </div>
+
+                      {filteredConversations.length > 0 ? (
+                        <div className="divide-y divide-slate-50 dark:divide-slate-800/60">
+                          {filteredConversations.map((conv) => {
+                            const candidateIdStr = getUserIdString(conv.candidateId);
+                            const otherUser =
+                              candidateIdStr === String(currentUserId)
+                                ? conv.recruiterId
+                                : conv.candidateId;
+                            const otherUserId = getUserIdString(otherUser);
+                            const isOtherOnline = Boolean(otherUserId && onlineUsers.includes(otherUserId));
+                            const unreadCount = conv.unreadCount || 0;
+
+                            return (
+                              <div
+                                key={conv._id || conv.id}
+                                onClick={() => {
+                                  handleOpenConversation(conv);
+                                  setSearchQuery("");
+                                }}
+                                className={`flex items-center gap-3 p-3 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer group ${
+                                  unreadCount > 0 ? "bg-blue-50/30 dark:bg-blue-950/25" : ""
+                                }`}
+                              >
+                                <div className="relative shrink-0">
+                                  <UserAvatar
+                                    src={otherUser?.profilePicture}
+                                    name={otherUser?.name || "User"}
+                                    size="sm"
+                                  />
+                                  <span
+                                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-900 transition-colors ${
+                                      isOtherOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                                    }`}
+                                  />
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <h5 className={`text-xs truncate ${unreadCount > 0 ? "font-bold text-slate-900 dark:text-white" : "font-semibold text-slate-800 dark:text-slate-200"}`}>
+                                      {otherUser?.name || "User"}
+                                    </h5>
+                                    {conv.lastMessageAt && (
+                                      <span className={`text-[10px] shrink-0 ${unreadCount > 0 ? "font-bold text-[#3C65F5]" : "text-slate-400"}`}>
+                                        {formatMiniChatTime(conv.lastMessageAt)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                                    <p className={`text-[11px] truncate ${unreadCount > 0 ? "font-semibold text-slate-800 dark:text-slate-200" : "text-slate-500 dark:text-slate-400"}`}>
+                                      {conv.lastMessageId?.message || "No messages yet"}
+                                    </p>
+                                    {unreadCount > 0 && (
+                                      <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-[#3C65F5] px-1 text-[9px] font-extrabold text-white shadow-xs">
+                                        {unreadCount > 99 ? "99+" : unreadCount}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="py-2 px-3 text-[11px] text-slate-400 italic">
+                          No conversations matching "{searchQuery}"
+                        </div>
+                      )}
+                    </div>
+
+                    {!isLoadingUsers && foundUsers.length === 0 && filteredConversations.length === 0 && (
+                      <div className="py-6 text-center text-slate-400 px-4">
+                        <Search className="h-6 w-6 mx-auto mb-1.5 opacity-30" />
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No results found</p>
+                      </div>
+                    )}
+                  </div>
+                ) : filteredConversations.length > 0 ? (
+                  /* ── Default Conversation List ── */
+                  <div className="divide-y divide-slate-50 dark:divide-slate-800/60">
+                    {filteredConversations.map((conv) => {
+                      const candidateIdStr = getUserIdString(conv.candidateId);
+                      const otherUser =
+                        candidateIdStr === String(currentUserId)
+                          ? conv.recruiterId
+                          : conv.candidateId;
+                      const otherUserId = getUserIdString(otherUser);
+                      const isOtherOnline = Boolean(otherUserId && onlineUsers.includes(otherUserId));
+                      const unreadCount = conv.unreadCount || 0;
+
+                      return (
+                        <div
+                          key={conv._id || conv.id}
+                          onClick={() => handleOpenConversation(conv)}
+                          className={`flex items-center gap-3 p-3 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer group ${
+                            unreadCount > 0 ? "bg-blue-50/30 dark:bg-blue-950/25" : ""
+                          }`}
+                        >
+                          <div className="relative shrink-0">
+                            <UserAvatar
+                              src={otherUser?.profilePicture}
+                              name={otherUser?.name || "User"}
+                              size="sm"
+                            />
+                            <span
+                              className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-900 transition-colors ${
+                                isOtherOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                              }`}
+                            />
                           </div>
 
-                          <p className={`text-[11px] truncate mt-0.5 ${unread ? "font-semibold text-[#3C65F5] dark:text-blue-400" : "text-slate-500 dark:text-slate-400"}`}>
-                            {conv.lastMessageId?.message || "No messages yet"}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <h5 className={`text-xs truncate ${unreadCount > 0 ? "font-bold text-slate-900 dark:text-white" : "font-semibold text-slate-800 dark:text-slate-200"}`}>
+                                {otherUser?.name || "User"}
+                              </h5>
+                              {conv.lastMessageAt && (
+                                <span className={`text-[10px] shrink-0 ${unreadCount > 0 ? "font-bold text-[#3C65F5]" : "text-slate-400"}`}>
+                                  {formatMiniChatTime(conv.lastMessageAt)}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 mt-0.5">
+                              <p className={`text-[11px] truncate ${unreadCount > 0 ? "font-semibold text-slate-800 dark:text-slate-200" : "text-slate-500 dark:text-slate-400"}`}>
+                                {conv.lastMessageId?.message || "No messages yet"}
+                              </p>
+                              {unreadCount > 0 && (
+                                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-[#3C65F5] px-1 text-[9px] font-extrabold text-white shadow-xs">
+                                  {unreadCount > 99 ? "99+" : unreadCount}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 ) : (
                   <div className="p-8 text-center text-slate-400">
                     <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">No conversations</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
-                      Connect with members to chat directly
+                      Search for members above to start chatting
                     </p>
                   </div>
                 )}

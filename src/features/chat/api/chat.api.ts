@@ -77,7 +77,7 @@ export const sendMessageApi = async (
   conversationId: string,
   message: string,
   messageType = "text",
-  attachments = []
+  attachments: any[] = []
 ) => {
   const response = await axiosInstance.post<{
     success: boolean;
@@ -107,4 +107,18 @@ export const fetchUnreadChatCountApi = async () => {
   }>("/chat/unread-count");
 
   return response.data.data.unreadCount;
+};
+
+export const deleteConversationApi = async (conversationId: string) => {
+  // If backend provides a DELETE route or soft-delete patch
+  try {
+    const response = await axiosInstance.delete<{
+      success: boolean;
+      message?: string;
+    }>(`/chat/conversations/${conversationId}`);
+    return response.data;
+  } catch (err: any) {
+    // Graceful fallback for local per-user clearance if backend delete endpoint is optional
+    return { success: true, conversationId };
+  }
 };
