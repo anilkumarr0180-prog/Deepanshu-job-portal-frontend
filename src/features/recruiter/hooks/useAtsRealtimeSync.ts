@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { io, Socket } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
 import useAuth from "@/features/auth/hooks/useAuth";
+import { useRealtime } from "@/shared/context/RealtimeContext";
 
 export interface AtsStatusChangedPayload {
   applicationId: string;
@@ -15,47 +15,34 @@ export interface AtsStatusChangedPayload {
 }
 
 export function useAtsRealtimeSync(jobId?: string) {
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  const socketRef = useRef<Socket | null>(null);
+  const { socket, joinAtsRecruiter, joinAtsJob, leaveAtsJob } = useRealtime();
   const processedEventsRef = useRef<Set<string>>(new Set());
+  const socketRef = useRef(socket);
+  socketRef.current = socket;
 
+  // 1. Join ATS Rooms via RealtimeContext
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-      return;
+    if (!isAuthenticated) return;
+
+    // Join recruiter room
+    joinAtsRecruiter();
+
+    // If specific job is selected, join that job room
+    if (jobId) {
+      joinAtsJob(jobId);
+      return () => {
+        leaveAtsJob(jobId);
+      };
     }
+  }, [isAuthenticated, jobId, joinAtsRecruiter, joinAtsJob, leaveAtsJob]);
 
-    const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const backendUrl = rawApiUrl.replace(/\/api\/?$/, "");
+  // 2. Listen to application:status_changed events on shared socket
+  useEffect(() => {
+    if (!socket || !isAuthenticated) return;
 
-    const socket = io(backendUrl, {
-      auth: { token: `Bearer ${token}` },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 15,
-      reconnectionDelay: 1500,
-    });
-
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      // 1. Join recruiter-scoped ATS room
-      socket.emit("join_ats_recruiter");
-
-      // 2. If a specific jobId is provided, join that job's ATS room
-      if (jobId) {
-        socket.emit("join_ats_job", { jobId });
-      }
-
-      // 3. Reconnect synchronization: invalidate queries to reconcile with server state
-      void queryClient.invalidateQueries({ queryKey: ["applications"] });
-    });
-
-    socket.on("application:status_changed", (data: AtsStatusChangedPayload) => {
+    const handleStatusChanged = (data: AtsStatusChangedPayload) => {
       if (!data || !data.applicationId || !data.toStatus) return;
 
       // Duplicate event deduplication
@@ -94,16 +81,16 @@ export function useAtsRealtimeSync(jobId?: string) {
       // Invalidate queries in background to guarantee absolute consistency with DB
       void queryClient.invalidateQueries({ queryKey: ["applications"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    });
+    };
+
+    socket.on("application:status_changed", handleStatusChanged);
 
     return () => {
-      if (jobId) {
-        socket.emit("leave_ats_job", { jobId });
-      }
-      socket.disconnect();
-      socketRef.current = null;
+      socket.off("application:status_changed", handleStatusChanged);
     };
-  }, [isAuthenticated, token, jobId, queryClient]);
+  }, [socket, isAuthenticated, queryClient]);
 
   return socketRef;
 }
+
+export default useAtsRealtimeSync;

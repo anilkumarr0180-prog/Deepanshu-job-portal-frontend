@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { CheckCheck, FileText, Download, Info, MoreVertical, Edit2, Trash2, X, Check } from "lucide-react";
+import { CheckCheck, FileText, Download, Info, MoreVertical, Edit2, Trash2, X, Check, Ban } from "lucide-react";
 import type { ChatMessage } from "../types/chat.types";
 
 interface MessageBubbleProps {
@@ -25,6 +25,62 @@ export default function MessageBubble({
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const isDeletedMsg =
+    message.isDeleted ||
+    message.message?.includes("This message was deleted") ||
+    message.message?.includes("message was deleted");
+
+  // In-line deleted message presentation (WhatsApp / Telegram style)
+  if (isDeletedMsg) {
+    return (
+      <div
+        className={`group flex items-end gap-2 my-[3px] ${
+          isSelf ? "flex-row-reverse" : "flex-row"
+        }`}
+      >
+        {!isSelf && (
+          <div className="shrink-0 mb-1">
+            {showAvatar ? (
+              senderAvatar ? (
+                <img
+                  src={senderAvatar}
+                  alt={senderName || "User"}
+                  className="h-7 w-7 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                  {senderName ? senderName.charAt(0).toUpperCase() : "?"}
+                </div>
+              )
+            ) : (
+              <div className="h-7 w-7" />
+            )}
+          </div>
+        )}
+
+        <div
+          className={`relative max-w-[72%] sm:max-w-[58%] flex flex-col ${
+            isSelf ? "items-end" : "items-start"
+          }`}
+        >
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs italic border border-dashed shadow-2xs ${
+              isSelf
+                ? "bg-slate-100/40 dark:bg-slate-800/40 border-slate-300/60 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 rounded-tr-xs"
+                : "bg-slate-100/50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 rounded-tl-xs"
+            }`}
+          >
+            <Ban className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <span>This message was deleted</span>
+            <span className="text-[10px] text-slate-400 ml-1 not-italic tabular-nums font-normal">
+              {formattedTime}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // System messages (e.g. "Conversation started")
   if (message.messageType === "system") {

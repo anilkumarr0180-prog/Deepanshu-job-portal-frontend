@@ -16,6 +16,7 @@ import {
   BellOff,
   Bell,
   ShieldAlert,
+  Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -24,8 +25,10 @@ import { getUserIdString } from "../types/chat.types";
 import type { TypingUserEntry } from "../store/chatSlice";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
+import DeleteConversationModal from "./DeleteConversationModal";
 import { useUserProfileModal } from "@/features/posts/context/UserProfileContext";
 import { useConnectionStatus } from "@/features/posts/hooks/useConnectionStatus";
+import { useClearChatMessages } from "../hooks/useChat";
 
 interface ChatWindowProps {
   conversation: ChatConversation | null;
@@ -36,6 +39,7 @@ interface ChatWindowProps {
   onSendMessage: (messageText: string, messageType?: string, attachments?: any[]) => void;
   onEditMessage?: (messageId: string, newText: string) => void;
   onDeleteMessage?: (messageId: string, deleteForEveryone: boolean) => void;
+  onDeleteConversation?: (conversationId: string) => void;
   onTypingStart: () => void;
   onTypingStop: () => void;
   isLoadingMessages: boolean;
@@ -64,10 +68,12 @@ export default function ChatWindow({
   onBackToSidebar,
 }: ChatWindowProps) {
   const { openUserProfile } = useUserProfileModal();
+  const clearChat = useClearChatMessages();
 
   const [inputText, setInputText] = useState("");
   const [showQuickEmojis, setShowQuickEmojis] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -272,6 +278,17 @@ export default function ChatWindow({
     textareaRef.current?.focus();
   };
 
+  const handleConfirmClearChat = async () => {
+    if (!conversation?._id) return;
+    try {
+      await clearChat.mutateAsync(conversation._id);
+      setShowDeleteModal(false);
+      toast.success("Chat messages deleted");
+    } catch (err) {
+      toast.error("Failed to delete chat messages");
+    }
+  };
+
   // Build message list with date headers & grouping
   const renderMessages = () => {
     if (displayedMessages.length === 0) {
@@ -424,9 +441,9 @@ export default function ChatWindow({
               {isPartnerTyping ? (
                 <span className="text-[#3C65F5] italic animate-pulse">typing...</span>
               ) : isPartnerOnline ? (
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Active now
+                  Online
                 </span>
               ) : (
                 <span className="text-slate-400">Offline</span>
@@ -546,6 +563,19 @@ export default function ChatWindow({
 
                 <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
+                {/* Delete Chat */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowDeleteModal(true);
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                  <span>Delete Chat</span>
+                </button>
+
                 {/* Safety / Report */}
                 <button
                   type="button"
@@ -553,9 +583,9 @@ export default function ChatWindow({
                     setShowMenu(false);
                     toast.success("Report submitted to trust & safety team.");
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                 >
-                  <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
+                  <ShieldAlert className="h-3.5 w-3.5 text-slate-400" />
                   <span>Report / Block</span>
                 </button>
               </div>
@@ -743,6 +773,15 @@ export default function ChatWindow({
           🔒 Messages are secured end-to-end for your job application
         </p>
       </div>
+
+      {/* Delete Chat Confirmation Modal */}
+      <DeleteConversationModal
+        open={showDeleteModal}
+        userName={partner?.name || "this contact"}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmClearChat}
+        isLoading={clearChat.isPending}
+      />
     </div>
   );
 }

@@ -186,6 +186,14 @@ function RecruiterMessagesContent() {
     sendMessage(activeConversationId, messageText, messageType, attachments as any);
   };
 
+  const handleDeleteConversation = (convId: string) => {
+    if (activeConversationId === convId) {
+      setActiveConversationId(null);
+      setShowMobileChat(false);
+      setSearchParams({}, { replace: true });
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-5rem)] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
       {/* Sidebar - Conversation List */}
@@ -220,6 +228,7 @@ function RecruiterMessagesContent() {
           onSendMessage={handleSendMessage}
           onEditMessage={(msgId, newText) => activeConversationId && isRealConversationId && editMessage(activeConversationId, msgId, newText)}
           onDeleteMessage={(msgId, forEveryone) => activeConversationId && isRealConversationId && deleteMessage(activeConversationId, msgId, forEveryone)}
+          onDeleteConversation={handleDeleteConversation}
           onTypingStart={() => activeConversationId && isRealConversationId && startTyping(activeConversationId)}
           onTypingStop={() => activeConversationId && isRealConversationId && stopTyping(activeConversationId)}
           isLoadingMessages={isRealConversationId ? isLoadingMessages : false}
