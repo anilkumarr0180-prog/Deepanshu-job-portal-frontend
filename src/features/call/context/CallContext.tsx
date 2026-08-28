@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { useRealtime } from "@/shared/context/RealtimeContext";
 import type { CallState, ActiveCallData, CallUser } from "../types/call.types";
 import { WebRTCCallService } from "../services/webrtc.service";
+import { CallDiagnosticsSession } from "../services/callDiagnostics";
 import CallModal from "../components/CallModal";
 
 interface CallContextValue {
@@ -118,10 +119,12 @@ export const CallProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const processedOfferCallIdRef = useRef<string | null>(null);
   const processedAnswerCallIdRef = useRef<string | null>(null);
   const webrtcServiceRef = useRef<WebRTCCallService | null>(null);
+  const diagnosticsRef = useRef<CallDiagnosticsSession | null>(null);
 
   // Clean teardown helper (Idempotent & Safe)
   const resetCallSession = useCallback((nextState: CallState = "IDLE", delayMs = 1500) => {
     toneGenerator.stop();
+    diagnosticsRef.current?.recordEnded();
     if (durationTimerRef.current) {
       clearInterval(durationTimerRef.current);
       durationTimerRef.current = null;
@@ -158,6 +161,7 @@ export const CallProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const getOrCreateWebRTCService = useCallback(() => {
     if (!webrtcServiceRef.current) {
       webrtcServiceRef.current = new WebRTCCallService({
+        diagnostics: diagnosticsRef.current || undefined,
         onIceCandidate: (candidate) => {
           if (socket?.connected && activeCallRef.current?.callId) {
             socket.emit("call:ice_candidate", {
@@ -174,6 +178,7 @@ export const CallProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               connectingWatchdogRef.current = null;
             }
             setCallState("CONNECTED");
+            diagnosticsRef.current?.recordConnected();
             if (!durationTimerRef.current) {
               setCallDuration(0);
               durationTimerRef.current = setInterval(() => {

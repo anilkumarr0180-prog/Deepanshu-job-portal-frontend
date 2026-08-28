@@ -173,8 +173,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
         void queryClient.invalidateQueries({ queryKey: ["people-suggestions"] });
       } else if (nType.includes("POST") || nType.includes("COMMENT") || nType.includes("REPOST")) {
         void queryClient.invalidateQueries({ queryKey: ["posts"] });
-      } else if (nType.includes("APPLICATION")) {
+      } else if (nType.includes("APPLICATION") || nType.includes("INTERVIEW")) {
         void queryClient.invalidateQueries({ queryKey: ["applications"] });
+        void queryClient.invalidateQueries({ queryKey: ["interviews"] });
         void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       } else if (nType.includes("JOB")) {
         void queryClient.invalidateQueries({ queryKey: ["jobs"] });

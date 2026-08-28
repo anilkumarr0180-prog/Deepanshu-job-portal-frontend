@@ -146,7 +146,9 @@ export default function ApplicantsKanbanBoard({
         <ScheduleInterviewModal
           isOpen={Boolean(activeInterviewApplicant)}
           onClose={handleCloseScheduleModal}
+          applicationId={activeInterviewApplicant.id}
           candidateName={activeInterviewApplicant.candidate}
+          jobTitle={activeInterviewApplicant.job}
           onSchedule={handleScheduleSubmit}
           isSubmitting={isUpdating}
         />

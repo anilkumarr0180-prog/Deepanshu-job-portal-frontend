@@ -1,5 +1,7 @@
+import type { MessageType } from "../types/chat.types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
+import useAuth from "@/features/auth/hooks/useAuth";
 import { useRealtime } from "@/shared/context/RealtimeContext";
 import {
   fetchConversationsApi,
@@ -53,7 +55,7 @@ export const useSendMessage = () => {
     }: {
       conversationId: string;
       message: string;
-      messageType?: "text" | "image" | "file" | "system";
+      messageType?: MessageType;
       attachments?: any[];
     }) => sendMessageApi(conversationId, message, messageType, attachments),
     onSuccess: (_data, variables) => {
@@ -93,6 +95,7 @@ export const useUnreadChatCount = () => {
 export const useDeleteConversation = () => {
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
+  const { user } = useAuth();
   const { socket } = useRealtime();
 
   return useMutation({
@@ -127,7 +130,7 @@ export const useDeleteConversation = () => {
 
       // 3. Mark in local storage to keep conversation hidden from sidebar until new message arrives
       try {
-        const key = "jobbox_deleted_convs";
+        const key = "jobbox_deleted_convs_" + (user?.id || (user as any)?._id || "");
         const existing = JSON.parse(localStorage.getItem(key) || "{}");
         existing[conversationId] = Date.now();
         localStorage.setItem(key, JSON.stringify(existing));

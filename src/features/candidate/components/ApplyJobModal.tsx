@@ -33,6 +33,38 @@ import { useMyApplications } from "../hooks/useMyApplications";
 import { useApplyJob } from "../hooks/useApplyJob";
 import { useCreateConversation } from "@/features/chat/hooks/useChat";
 import { useCloudinaryUpload } from "@/shared/hooks/useCloudinaryUpload";
+import { useApplicationInterviews } from "@/features/recruiter/hooks/useApplicationInterviews";
+import { useCandidateInterviewRsvp } from "../hooks/useCandidateInterviewRsvp";
+import type { Interview } from "@/features/recruiter/types/interview.types";
+
+function formatCandidateInterviewDate(startTime?: string | Date): string {
+  if (!startTime) return "Confirmed by Recruiter";
+  const date = new Date(startTime);
+  if (isNaN(date.getTime())) return String(startTime);
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatCandidateInterviewTime(
+  startTime?: string | Date,
+  durationMinutes?: number,
+  timezone?: string
+): string {
+  if (!startTime) return "10:00 AM";
+  const date = new Date(startTime);
+  if (isNaN(date.getTime())) return String(startTime);
+  const timeStr = date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${timeStr}${durationMinutes ? ` (${durationMinutes}m)` : ""}${
+    timezone ? ` · ${timezone}` : ""
+  }`;
+}
 
 interface ApplyJobModalProps {
   job: BackendJobDetails | null;
@@ -55,6 +87,29 @@ export default function ApplyJobModal({
   const applyJob = useApplyJob();
   const createConversation = useCreateConversation();
   const { uploadFile, isUploading, progress } = useCloudinaryUpload();
+
+  // Check if candidate has already applied for this job
+  const existingApplication = myApplications?.find((app) => {
+    if (!job) return false;
+    if (typeof app.jobId === "string") {
+      return app.jobId === job._id;
+    }
+    return app.jobId?._id === job._id;
+  });
+
+  const { data: applicationInterviews } = useApplicationInterviews(
+    existingApplication?._id || ""
+  );
+
+  const {
+    acceptMutation,
+    declineMutation,
+    isPending: isRsvpPending,
+  } = useCandidateInterviewRsvp();
+
+  // RSVP state
+  const [declineConfirmId, setDeclineConfirmId] = useState<string | null>(null);
+  const [declineNote, setDeclineNote] = useState("");
 
   // Toggle for Edit Mode vs Default Clean View
   const [isEditingDetails, setIsEditingDetails] = useState(false);
@@ -89,20 +144,15 @@ export default function ApplyJobModal({
       setCoverLetter("");
       setApiError(null);
       setIsEditingDetails(false);
+      setDeclineConfirmId(null);
+      setDeclineNote("");
     }
   }, [isOpen]);
 
   if (!isOpen || !job) return null;
 
-  // Check if candidate has already applied for this job
-  const existingApplication = myApplications?.find((app) => {
-    if (typeof app.jobId === "string") {
-      return app.jobId === job._id;
-    }
-    return app.jobId?._id === job._id;
-  });
-
   const isAlreadyApplied = Boolean(existingApplication);
+
 
   const activeResumeUrl =
     resumeOption === "custom" ? customResume?.url : profile?.resumeUrl;
@@ -279,157 +329,422 @@ export default function ApplyJobModal({
               </div>
             </div>
 
-            {/* Scheduled Interview Details Card (If Recruiter Scheduled Interview) */}
-            {(existingApplication?.interviewDetails || existingApplication?.status === "Interview") && (() => {
-              const details = existingApplication?.interviewDetails;
-              const isVideo = details?.mode === "video" || details?.locationOrLink?.startsWith("http");
-              const isPhone = details?.mode === "phone";
-              const isInPerson = details?.mode === "in-person" || (!isVideo && !isPhone);
-              const locationOrLink = details?.locationOrLink || "";
+            {/* Scheduled Interviews Section (Live Multi-Round Data + Accept / Decline RSVP Actions) */}
+            {((applicationInterviews && applicationInterviews.length > 0) ||
+              existingApplication?.interviewDetails ||
+              existingApplication?.status === "Interview") && (
+              <div className="space-y-4">
+                {applicationInterviews && applicationInterviews.length > 0 ? (
+                  applicationInterviews.map((interview: Interview) => {
+                    const isVideo =
+                      interview.mode === "video" ||
+                      interview.locationOrLink?.startsWith("http");
+                    const isPhone = interview.mode === "phone";
+                    const isInPerson =
+                      interview.mode === "in-person" || (!isVideo && !isPhone);
+                    const locationOrLink = interview.locationOrLink || "";
+                    const candidateRsvp =
+                      interview.candidateRsvp ||
+                      (interview as any).candidateResponse;
 
-              return (
-                <div className="rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/50 dark:via-slate-900/80 dark:to-blue-950/40 p-5 space-y-4 shadow-sm">
-                  {/* Top Bar: Icon + Type + Format + Status Badge */}
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold shadow-sm shrink-0">
-                        <Calendar className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                            {details?.type || "Scheduled Interview"}
-                          </h4>
-                          <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100/80 dark:bg-indigo-500/20 px-2 py-0.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-                            {isInPerson ? "🏢 In-Person On-Site" : isPhone ? "📞 Phone Call" : "📹 Online Video Call"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          The hiring team has confirmed your interview schedule.
-                        </p>
-                      </div>
-                    </div>
+                    const isPendingRsvp =
+                      interview.status === "scheduled" ||
+                      (interview.status === "rescheduled" &&
+                        (!candidateRsvp ||
+                          candidateRsvp.status === "pending"));
 
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-800 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/15 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/30 shadow-2xs">
-                      <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
-                      Interview Scheduled
-                    </span>
-                  </div>
+                    const isAccepted =
+                      interview.status === "accepted" ||
+                      candidateRsvp?.status === "accepted";
 
-                  {/* Date, Time & Schedule Info Cards */}
-                  <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-3.5 grid gap-3 sm:grid-cols-2 text-xs">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
-                        <CalendarDays className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Interview Date</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                          {details?.date || "Confirmed by Recruiter"}
-                        </span>
-                      </div>
-                    </div>
+                    const isDeclined =
+                      interview.status === "declined" ||
+                      candidateRsvp?.status === "declined";
 
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-[#3C65F5] dark:text-blue-400 shrink-0">
-                        <Clock className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Scheduled Time</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                          {details?.time || "10:00 AM"} {details?.timezone ? `(${details.timezone})` : ""}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                    const isCancelled = interview.status === "cancelled";
+                    const isCompleted = interview.status === "completed";
 
-                  {/* Full Location / Meeting Access Section (Full Width, No Truncate, Word Break, Copy & Navigation Action) */}
-                  <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-4 space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {isInPerson ? (
-                          <Building2 className="h-4 w-4 text-[#3C65F5] shrink-0" />
-                        ) : isPhone ? (
-                          <Phone className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        ) : (
-                          <Video className="h-4 w-4 text-[#3C65F5] shrink-0" />
-                        )}
-                        <span>
-                          {isInPerson ? "Interview Venue / Office Address" : isPhone ? "Contact Number / Dial-in" : "Meeting Link & Video Room"}
-                        </span>
-                      </div>
 
-                      {locationOrLink && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(locationOrLink);
-                            toast.success(isInPerson ? "Address copied to clipboard!" : "Link copied to clipboard!");
-                          }}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline cursor-pointer"
-                        >
-                          <Copy className="h-3 w-3" /> Copy {isInPerson ? "Address" : "Link"}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Full readable content */}
-                    <div className="rounded-lg bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-3 text-xs text-slate-800 dark:text-slate-200 leading-relaxed break-words">
-                      {locationOrLink ? (
-                        locationOrLink.startsWith("http") ? (
-                          <div className="flex items-center justify-between gap-3 flex-wrap">
-                            <a
-                              href={locationOrLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[#3C65F5] dark:text-blue-400 font-semibold underline hover:text-blue-600 break-all"
-                            >
-                              {locationOrLink}
-                            </a>
-                            <a
-                              href={locationOrLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#3C65F5] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-600 transition"
-                            >
-                              <ExternalLink className="h-3.5 w-3.5" /> Join Video Meeting
-                            </a>
+                    return (
+                      <div
+                        key={interview._id}
+                        className="rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/50 dark:via-slate-900/80 dark:to-blue-950/40 p-5 space-y-4 shadow-sm"
+                      >
+                        {/* Top Bar: Icon + Type + Format + Status Badge */}
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold shadow-sm shrink-0">
+                              <Calendar className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                                  {interview.title || `Round ${interview.roundNumber}: ${interview.type || "Interview"}`}
+                                </h4>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100/80 dark:bg-indigo-500/20 px-2 py-0.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                                  {isInPerson
+                                    ? "🏢 In-Person On-Site"
+                                    : isPhone
+                                    ? "📞 Phone Call"
+                                    : "📹 Online Video Call"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Round {interview.roundNumber} &bull; The hiring team has scheduled this session.
+                              </p>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
-                            <p className="font-medium whitespace-pre-wrap leading-relaxed flex-1">{locationOrLink}</p>
-                            {isInPerson && (
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationOrLink)}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 shrink-0 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 text-xs font-semibold text-[#3C65F5] dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 transition"
+
+                          {/* Status Badge */}
+                          {isAccepted ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30 shadow-2xs">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              Accepted
+                            </span>
+                          ) : isDeclined ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/20 px-3 py-1 rounded-full border border-rose-200 dark:border-rose-500/30 shadow-2xs">
+                              <AlertCircle className="h-3.5 w-3.5 text-rose-600" />
+                              Declined
+                            </span>
+                          ) : isCancelled ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-2xs">
+                              <AlertCircle className="h-3.5 w-3.5 text-slate-500" />
+                              Cancelled
+                            </span>
+                          ) : isCompleted ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-800 dark:text-purple-300 bg-purple-100 dark:bg-purple-500/20 px-3 py-1 rounded-full border border-purple-200 dark:border-purple-500/30 shadow-2xs">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-purple-600" />
+                              Completed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-800 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/15 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/30 shadow-2xs">
+                              <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                              {interview.status === "rescheduled" ? "Rescheduled" : "Action Required"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Date, Time & Schedule Info Cards */}
+                        <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-3.5 grid gap-3 sm:grid-cols-2 text-xs">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
+                              <CalendarDays className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Interview Date</span>
+                              <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                                {formatCandidateInterviewDate(interview.scheduledStartTime)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-[#3C65F5] dark:text-blue-400 shrink-0">
+                              <Clock className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Scheduled Time</span>
+                              <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                                {formatCandidateInterviewTime(interview.scheduledStartTime, interview.durationMinutes, interview.timezone)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Full Location / Meeting Access Section */}
+                        <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-4 space-y-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                              {isInPerson ? (
+                                <Building2 className="h-4 w-4 text-[#3C65F5] shrink-0" />
+                              ) : isPhone ? (
+                                <Phone className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              ) : (
+                                <Video className="h-4 w-4 text-[#3C65F5] shrink-0" />
+                              )}
+                              <span>
+                                {isInPerson ? "Interview Venue / Office Address" : isPhone ? "Contact Number / Dial-in" : "Meeting Link & Video Room"}
+                              </span>
+                            </div>
+
+                            {locationOrLink && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void navigator.clipboard.writeText(locationOrLink);
+                                  toast.success(isInPerson ? "Address copied to clipboard!" : "Link copied to clipboard!");
+                                }}
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline cursor-pointer"
                               >
-                                <MapPin className="h-3 w-3" /> Open Maps &rarr;
-                              </a>
+                                <Copy className="h-3 w-3" /> Copy {isInPerson ? "Address" : "Link"}
+                              </button>
                             )}
                           </div>
-                        )
-                      ) : (
-                        <p className="text-slate-400 italic">No specific address or meeting link was provided by the recruiter.</p>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Recruiter Instructions / Preparation Notes */}
-                  {details?.notes && (
-                    <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-950/30 p-3.5 text-xs space-y-1">
-                      <span className="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
-                        📝 Recruiter Instructions:
-                      </span>
-                      <p className="text-indigo-950 dark:text-indigo-200 leading-relaxed break-words whitespace-pre-wrap pl-4">
-                        {details.notes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+                          <div className="rounded-lg bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-3 text-xs text-slate-800 dark:text-slate-200 leading-relaxed break-words">
+                            {locationOrLink ? (
+                              locationOrLink.startsWith("http") ? (
+                                <div className="flex items-center justify-between gap-3 flex-wrap">
+                                  <a
+                                    href={locationOrLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[#3C65F5] dark:text-blue-400 font-semibold underline hover:text-blue-600 break-all"
+                                  >
+                                    {locationOrLink}
+                                  </a>
+                                  <a
+                                    href={locationOrLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#3C65F5] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-600 transition"
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5" /> Join Video Meeting
+                                  </a>
+                                </div>
+                              ) : (
+                                <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+                                  <p className="font-medium whitespace-pre-wrap leading-relaxed flex-1">{locationOrLink}</p>
+                                  {isInPerson && (
+                                    <a
+                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationOrLink)}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 shrink-0 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 text-xs font-semibold text-[#3C65F5] dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 transition"
+                                    >
+                                      <MapPin className="h-3 w-3" /> Open Maps &rarr;
+                                    </a>
+                                  )}
+                                </div>
+                              )
+                            ) : (
+                              <p className="text-slate-400 italic">No specific address or meeting link was provided by the recruiter.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Recruiter Instructions / Preparation Notes */}
+                        {interview.notes && (
+                          <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-950/30 p-3.5 text-xs space-y-1">
+                            <span className="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                              📝 Recruiter Instructions:
+                            </span>
+                            <p className="text-indigo-950 dark:text-indigo-200 leading-relaxed break-words whitespace-pre-wrap pl-4">
+                              {interview.notes}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Candidate RSVP Actions / Status States */}
+                        {isPendingRsvp && (
+                          <div className="pt-2 border-t border-indigo-100 dark:border-indigo-500/20">
+                            {declineConfirmId === interview._id ? (
+                              <div className="rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/90 dark:bg-rose-950/40 p-4 space-y-3">
+                                <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
+                                  Are you sure you want to decline this interview invitation?
+                                </p>
+                                <input
+                                  type="text"
+                                  value={declineNote}
+                                  onChange={(e) => setDeclineNote(e.target.value)}
+                                  placeholder="Optional reason for declining..."
+                                  maxLength={500}
+                                  className="w-full rounded-lg border border-rose-200 dark:border-rose-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                />
+                                <div className="flex items-center gap-2 justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setDeclineConfirmId(null);
+                                      setDeclineNote("");
+                                    }}
+                                    disabled={isRsvpPending}
+                                    className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      declineMutation.mutate(
+                                        { interviewId: interview._id, note: declineNote },
+                                        {
+                                          onSuccess: () => {
+                                            setDeclineConfirmId(null);
+                                            setDeclineNote("");
+                                          },
+                                        }
+                                      );
+                                    }}
+                                    disabled={isRsvpPending}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition cursor-pointer disabled:opacity-50"
+                                  >
+                                    {declineMutation.isPending ? "Declining..." : "Confirm Decline"}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-wrap items-center gap-3">
+                                <button
+                                  type="button"
+                                  aria-label="Accept interview"
+                                  onClick={() => acceptMutation.mutate({ interviewId: interview._id })}
+                                  disabled={isRsvpPending}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  <span>{acceptMutation.isPending ? "Accepting..." : "Accept Interview"}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  aria-label="Decline interview"
+                                  onClick={() => {
+                                    setDeclineConfirmId(interview._id);
+                                    setDeclineNote("");
+                                  }}
+                                  disabled={isRsvpPending}
+                                  className="inline-flex items-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/80 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 px-4 py-2.5 text-xs font-bold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                  <X className="h-4 w-4" />
+                                  <span>Decline Interview</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {isAccepted && (
+                          <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/80 dark:bg-emerald-950/30 p-3 text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span>Interview Accepted &bull; The recruiter has been notified.</span>
+                          </div>
+                        )}
+
+                        {isDeclined && (
+                          <div className="rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/80 dark:bg-rose-950/30 p-3 text-xs font-bold text-rose-800 dark:text-rose-300 flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                            <span>Interview Declined</span>
+                          </div>
+                        )}
+
+                        {isCancelled && (
+                          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 p-3 text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-slate-500 shrink-0" />
+                            <span>Interview Cancelled by Recruiter</span>
+                          </div>
+                        )}
+
+                        {isCompleted && (
+                          <div className="rounded-xl border border-purple-200 dark:border-purple-900/40 bg-purple-50/80 dark:bg-purple-950/30 p-3 text-xs font-bold text-purple-800 dark:text-purple-300 flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-purple-600 shrink-0" />
+                            <span>Interview Completed</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  (() => {
+                    const details = existingApplication?.interviewDetails;
+                    const isVideo = details?.mode === "video" || details?.locationOrLink?.startsWith("http");
+                    const isPhone = details?.mode === "phone";
+                    const isInPerson = details?.mode === "in-person" || (!isVideo && !isPhone);
+                    const locationOrLink = details?.locationOrLink || "";
+
+                    return (
+                      <div className="rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/50 dark:via-slate-900/80 dark:to-blue-950/40 p-5 space-y-4 shadow-sm">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold shadow-sm shrink-0">
+                              <Calendar className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                                  {details?.type || "Scheduled Interview"}
+                                </h4>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100/80 dark:bg-indigo-500/20 px-2 py-0.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                                  {isInPerson ? "🏢 In-Person On-Site" : isPhone ? "📞 Phone Call" : "📹 Online Video Call"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                The hiring team has confirmed your interview schedule.
+                              </p>
+                            </div>
+                          </div>
+
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-800 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/15 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/30 shadow-2xs">
+                            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                            Interview Scheduled
+                          </span>
+                        </div>
+
+                        <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-3.5 grid gap-3 sm:grid-cols-2 text-xs">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
+                              <CalendarDays className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Interview Date</span>
+                              <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                                {details?.date || "Confirmed by Recruiter"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-[#3C65F5] dark:text-blue-400 shrink-0">
+                              <Clock className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <span className="block font-semibold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Scheduled Time</span>
+                              <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                                {details?.time || "10:00 AM"} {details?.timezone ? `(${details.timezone})` : ""}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {locationOrLink && (
+                          <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-white/80 dark:bg-slate-950/50 p-4 space-y-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                {isInPerson ? (
+                                  <Building2 className="h-4 w-4 text-[#3C65F5] shrink-0" />
+                                ) : isPhone ? (
+                                  <Phone className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                ) : (
+                                  <Video className="h-4 w-4 text-[#3C65F5] shrink-0" />
+                                )}
+                                <span>
+                                  {isInPerson ? "Interview Venue / Office Address" : isPhone ? "Contact Number / Dial-in" : "Meeting Link & Video Room"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="rounded-lg bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-3 text-xs text-slate-800 dark:text-slate-200 leading-relaxed break-words">
+                              {locationOrLink.startsWith("http") ? (
+                                <a
+                                  href={locationOrLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[#3C65F5] dark:text-blue-400 font-semibold underline hover:text-blue-600 break-all"
+                                >
+                                  {locationOrLink}
+                                </a>
+                              ) : (
+                                <p className="font-medium whitespace-pre-wrap leading-relaxed">{locationOrLink}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+            )}
 
             <div className="flex items-start gap-3 rounded-xl border border-blue-200 dark:border-blue-500/20 bg-blue-50/80 dark:bg-blue-950/30 p-3.5 text-xs text-blue-900 dark:text-blue-200 shadow-xs">
               <Mail className="h-4 w-4 text-[#3C65F5] shrink-0 mt-0.5" />

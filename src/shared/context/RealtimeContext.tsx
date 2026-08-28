@@ -20,6 +20,8 @@ import {
   decrementUnreadCount,
 } from "@/features/chat/store/chatSlice";
 import { type ChatMessage, getUserIdString } from "@/features/chat/types/chat.types";
+import type { CallHistoryItem } from "@/features/call/types/call.types";
+import type { Interview } from "@/features/recruiter/types/interview.types";
 
 interface RealtimeContextValue {
   socket: Socket | null;
@@ -73,6 +75,9 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
     void queryClient.invalidateQueries({ queryKey: ["connection-status"] });
     void queryClient.invalidateQueries({ queryKey: ["applications"] });
     void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    void queryClient.invalidateQueries({ queryKey: ["call-history"] });
+    void queryClient.invalidateQueries({ queryKey: ["unread-missed-calls-count"] });
+    void queryClient.invalidateQueries({ queryKey: ["interviews"] });
   }, [queryClient]);
 
   // Restore room subscriptions on reconnect
@@ -164,7 +169,7 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
     /* SINGLE GLOBAL CHAT EVENT SUBSCRIBERS (Zero Multiplier, Direct Cache Sync)   */
     /* -------------------------------------------------------------------------- */
 
-    // 1. Message Received
+    // 1. Message Received (Guaranteed Realtime Cache Sync)
     const handleMessageReceived = (data: { message: ChatMessage; conversationId: string }) => {
       const { message, conversationId } = data;
       if (!message || !conversationId) return;
@@ -172,9 +177,9 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
       const isViewing = activeConversationIdRef.current === conversationId;
       const isFromOther = senderIdStr !== currentUserIdRef.current;
 
-      // Unhide conversation if it was deleted previously
+      // Unhide conversation if it was deleted previously (user-namespaced)
       try {
-        const key = "jobbox_deleted_convs";
+        const key = "jobbox_deleted_convs_" + currentUserIdRef.current;
         const deletedMap = JSON.parse(localStorage.getItem(key) || "{}");
         if (deletedMap[conversationId]) {
           delete deletedMap[conversationId];
@@ -192,17 +197,29 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
       // Optimistically append to all cached message lists for this conversation
       queryClient.setQueriesData(
         { queryKey: ["messages", conversationId] },
-        (old: { messages: ChatMessage[]; pagination?: unknown } | undefined) => {
+        (old: any) => {
           if (!old) return { messages: [message] };
-          const exists = old.messages?.some(
-            (m) => (m._id || m.id) === (message._id || message.id)
-          );
-          if (exists) return old;
-          return { ...old, messages: [...(old.messages || []), message] };
+          if (Array.isArray(old)) {
+            const exists = old.some((m) => (m._id || m.id) === (message._id || message.id));
+            if (exists) return old;
+            return [...old, message];
+          }
+          if (Array.isArray(old.messages)) {
+            const exists = old.messages.some((m: any) => (m._id || m.id) === (message._id || message.id));
+            if (exists) return old;
+            return { ...old, messages: [...old.messages, message] };
+          }
+          if (Array.isArray(old.items)) {
+            const exists = old.items.some((m: any) => (m._id || m.id) === (message._id || message.id));
+            if (exists) return old;
+            return { ...old, items: [...old.items, message] };
+          }
+          return { ...old, messages: [message] };
         }
       );
 
-      // Directly update conversation preview, per-conversation unread count, and reorder to top
+      // Update conversation preview and unread count
+      let foundInCache = false;
       queryClient.setQueriesData(
         { queryKey: ["conversations"] },
         (old: any) => {
@@ -210,6 +227,7 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
           let targetConv: any = null;
           const remainingConvs = old.conversations.filter((c: any) => {
             if ((c._id || c.id) === conversationId) {
+              foundInCache = true;
               targetConv = {
                 ...c,
                 lastMessageId: message,
@@ -226,6 +244,11 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
           };
         }
       );
+
+      // If conversation is brand new for this user, fetch it so sidebar shows it immediately
+      if (!foundInCache) {
+        void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      }
 
       // If NOT viewing and from other user, increment global unread count
       if (!isViewing && isFromOther) {
@@ -262,13 +285,24 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (isViewing) {
           queryClient.setQueriesData(
             { queryKey: ["messages", data.conversationId] },
-            (old: { messages: ChatMessage[]; pagination?: unknown } | undefined) => {
+            (old: any) => {
               if (!old) return { messages: [data.lastMessage] };
-              const exists = old.messages?.some(
-                (m) => (m._id || m.id) === (data.lastMessage._id || data.lastMessage.id)
-              );
-              if (exists) return old;
-              return { ...old, messages: [...(old.messages || []), data.lastMessage] };
+              if (Array.isArray(old)) {
+                const exists = old.some((m) => (m._id || m.id) === (data.lastMessage._id || data.lastMessage.id));
+                if (exists) return old;
+                return [...old, data.lastMessage];
+              }
+              if (Array.isArray(old.messages)) {
+                const exists = old.messages.some((m: any) => (m._id || m.id) === (data.lastMessage._id || data.lastMessage.id));
+                if (exists) return old;
+                return { ...old, messages: [...old.messages, data.lastMessage] };
+              }
+              if (Array.isArray(old.items)) {
+                const exists = old.items.some((m: any) => (m._id || m.id) === (data.lastMessage._id || data.lastMessage.id));
+                if (exists) return old;
+                return { ...old, items: [...old.items, data.lastMessage] };
+              }
+              return { ...old, messages: [data.lastMessage] };
             }
           );
 
@@ -277,6 +311,7 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
           }
         }
 
+        let foundInCache = false;
         queryClient.setQueriesData(
           { queryKey: ["conversations"] },
           (old: any) => {
@@ -284,6 +319,7 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
             let targetConv: any = null;
             const remainingConvs = old.conversations.filter((c: any) => {
               if ((c._id || c.id) === data.conversationId) {
+                foundInCache = true;
                 const alreadyUpdatedWithMsg =
                   (c.lastMessageId?._id || c.lastMessageId?.id) ===
                   (data.lastMessage._id || data.lastMessage.id);
@@ -314,6 +350,10 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
             };
           }
         );
+
+        if (!foundInCache) {
+          void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        }
       }
     };
 
@@ -515,6 +555,207 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
     socketInstance.on("message_deleted", handleMessageDeleted);
     socketInstance.on("user_typing", handleUserTyping);
     socketInstance.on("user_stop_typing", handleUserStopTyping);
+
+    // Call History Realtime Sync
+    const processedCallHistoryRef = new Set<string>();
+    const handleCallHistoryCreated = (data: CallHistoryItem) => {
+      if (!data?.callId) return;
+      if (processedCallHistoryRef.has(data.callId)) return;
+      processedCallHistoryRef.add(data.callId);
+      if (processedCallHistoryRef.size > 200) {
+        processedCallHistoryRef.clear();
+      }
+
+      const convId =
+        typeof data.conversationId === "object"
+          ? data.conversationId?._id || data.conversationId?.id
+          : data.conversationId;
+
+      if (convId) {
+        queryClient.setQueriesData(
+          { queryKey: ["call-history", convId] },
+          (old: { items: CallHistoryItem[]; pagination: any } | undefined) => {
+            if (!old) {
+              return {
+                items: [data],
+                pagination: {
+                  page: 1,
+                  limit: 50,
+                  totalItems: 1,
+                  totalPages: 1,
+                  hasNextPage: false,
+                  hasPrevPage: false,
+                },
+              };
+            }
+            const exists = old.items?.some((c) => c.callId === data.callId);
+            if (exists) return old;
+            return {
+              ...old,
+              items: [...(old.items || []), data],
+              pagination: old.pagination
+                ? { ...old.pagination, totalItems: (old.pagination.totalItems || 0) + 1 }
+                : old.pagination,
+            };
+          }
+        );
+      }
+
+      queryClient.setQueriesData(
+        { queryKey: ["call-history"] },
+        (old: { items: CallHistoryItem[]; pagination: any } | undefined) => {
+          if (!old?.items) return old;
+          const exists = old.items.some((c) => c.callId === data.callId);
+          if (exists) return old;
+          return {
+            ...old,
+            items: [data, ...old.items],
+            pagination: old.pagination
+              ? { ...old.pagination, totalItems: (old.pagination.totalItems || 0) + 1 }
+              : old.pagination,
+          };
+        }
+      );
+    };
+
+    const handleCallMissed = (data: CallHistoryItem) => {
+      if (!data?.callId) return;
+    };
+
+    const handleCallMissedCountUpdated = (data: { unreadMissedCallCount: number }) => {
+      if (typeof data.unreadMissedCallCount === "number") {
+        queryClient.setQueryData(["unread-missed-calls-count"], data.unreadMissedCallCount);
+      }
+    };
+
+    socketInstance.on("call:history_created", handleCallHistoryCreated);
+    socketInstance.on("call:missed", handleCallMissed);
+    socketInstance.on("call:missed_count_updated", handleCallMissedCountUpdated);
+
+    // 8. Interview Realtime Synchronization (Single source of truth, Idempotent, Stale-event protected)
+    const handleInterviewUpdated = (data: {
+      interview: Interview;
+      action?: string;
+    }) => {
+      if (!data?.interview) return;
+      const { interview } = data;
+      const interviewId = interview._id || (interview as any).id;
+      if (!interviewId) return;
+
+      const appId =
+        typeof interview.applicationId === "object"
+          ? (interview.applicationId as any)?._id || (interview.applicationId as any)?.id
+          : interview.applicationId;
+
+      // 1. Synchronize application multi-round interviews cache: ["interviews", "application", appId]
+      if (appId) {
+        queryClient.setQueriesData(
+          { queryKey: ["interviews", "application", appId] },
+          (oldData: Interview[] | undefined) => {
+            if (!oldData || !Array.isArray(oldData)) {
+              return [interview];
+            }
+
+            const existingIdx = oldData.findIndex(
+              (item) => (item._id || (item as any).id) === interviewId
+            );
+
+            if (existingIdx >= 0) {
+              const existingItem = oldData[existingIdx];
+              const existingUpdatedAt = new Date(existingItem.updatedAt || 0).getTime();
+              const newUpdatedAt = new Date(interview.updatedAt || 0).getTime();
+
+              // Stale event protection: do not overwrite newer cached data with older event
+              if (existingUpdatedAt > newUpdatedAt) {
+                return oldData;
+              }
+
+              const updatedList = [...oldData];
+              updatedList[existingIdx] = { ...existingItem, ...interview };
+              return updatedList;
+            }
+
+            return [...oldData, interview];
+          }
+        );
+      }
+
+      // 2. Synchronize list interviews cache: ["interviews"]
+      queryClient.setQueriesData(
+        { queryKey: ["interviews"] },
+        (oldData: any) => {
+          if (!oldData) return oldData;
+
+          if (Array.isArray(oldData)) {
+            const existingIdx = oldData.findIndex(
+              (item) => (item._id || item.id) === interviewId
+            );
+            if (existingIdx >= 0) {
+              const existing = oldData[existingIdx];
+              if (
+                new Date(existing.updatedAt || 0).getTime() >
+                new Date(interview.updatedAt || 0).getTime()
+              ) {
+                return oldData;
+              }
+              const updated = [...oldData];
+              updated[existingIdx] = { ...existing, ...interview };
+              return updated;
+            }
+            return [interview, ...oldData];
+          }
+
+          if (Array.isArray(oldData.items)) {
+            const existingIdx = oldData.items.findIndex(
+              (item: any) => (item._id || item.id) === interviewId
+            );
+            if (existingIdx >= 0) {
+              const existing = oldData.items[existingIdx];
+              if (
+                new Date(existing.updatedAt || 0).getTime() >
+                new Date(interview.updatedAt || 0).getTime()
+              ) {
+                return oldData;
+              }
+              const updatedItems = [...oldData.items];
+              updatedItems[existingIdx] = { ...existing, ...interview };
+              return { ...oldData, items: updatedItems };
+            }
+            return {
+              ...oldData,
+              items: [interview, ...oldData.items],
+              pagination: oldData.pagination
+                ? { ...oldData.pagination, total: (oldData.pagination.total || 0) + 1 }
+                : oldData.pagination,
+            };
+          }
+
+          return oldData;
+        }
+      );
+
+      // 3. Synchronize single interview query cache: ["interviews", interviewId]
+      queryClient.setQueryData(
+        ["interviews", interviewId],
+        (old: Interview | undefined) => {
+          if (!old) return interview;
+          if (
+            new Date(old.updatedAt || 0).getTime() >
+            new Date(interview.updatedAt || 0).getTime()
+          ) {
+            return old;
+          }
+          return { ...old, ...interview };
+        }
+      );
+
+      // 4. Invalidate applications list to keep applicant stage counts / statuses in sync
+      void queryClient.invalidateQueries({ queryKey: ["applications"] });
+    };
+
+    socketInstance.on("interview:updated", handleInterviewUpdated);
+
+
 
     setSocket(socketInstance);
 

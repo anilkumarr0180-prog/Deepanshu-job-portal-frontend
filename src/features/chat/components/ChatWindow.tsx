@@ -18,6 +18,9 @@ import {
   Bell,
   ShieldAlert,
   Trash2,
+  Square,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -27,10 +30,19 @@ import type { TypingUserEntry } from "../store/chatSlice";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import DeleteConversationModal from "./DeleteConversationModal";
+import VoiceMessagePlayer from "./VoiceMessagePlayer";
+import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import {
+  uploadVoiceAudioToCloudinary,
+  type VoiceUploadResult,
+} from "../services/voiceUpload.service";
 import { useUserProfileModal } from "@/features/posts/context/UserProfileContext";
 import { useConnectionStatus } from "@/features/posts/hooks/useConnectionStatus";
 import { useClearChatMessages } from "../hooks/useChat";
 import { useCall } from "@/features/call/context/CallContext";
+import { useConversationCallHistory, useMarkMissedCallsAsRead } from "@/features/call/hooks/useCallHistory";
+import CallHistoryBubble from "@/features/call/components/CallHistoryBubble";
+import type { CallHistoryItem } from "@/features/call/types/call.types";
 
 interface ChatWindowProps {
   conversation: ChatConversation | null;
@@ -72,6 +84,43 @@ export default function ChatWindow({
   const { openUserProfile } = useUserProfileModal();
   const clearChat = useClearChatMessages();
   const { initiateCall, callState } = useCall();
+  const { data: callHistoryData } = useConversationCallHistory(conversation?._id || null);
+  const markMissedCalls = useMarkMissedCallsAsRead();
+
+  // Mark missed calls as read when opening conversation
+  useEffect(() => {
+    if (conversation?._id) {
+      markMissedCalls.mutate(conversation._id);
+    }
+  }, [conversation?._id]);
+
+  // Safe WebRTC active call detection
+  const isCallActive = Boolean(
+    callState &&
+    callState !== "IDLE" &&
+    callState !== "ENDED" &&
+    callState !== "FAILED"
+  );
+
+  // Production-grade voice recorder hook
+  const voiceRecorder = useVoiceRecorder({
+    maxDurationSeconds: 300,
+    onError: (msg) => toast.error(msg),
+  });
+
+  const [voiceSendStatus, setVoiceSendStatus] = useState<
+    "idle" | "uploading" | "sending" | "error"
+  >("idle");
+  const [voiceSendError, setVoiceSendError] = useState<string | null>(null);
+  const uploadedVoiceResultRef = useRef<VoiceUploadResult | null>(null);
+
+  // Reset recorder when switching conversations
+  useEffect(() => {
+    voiceRecorder.resetRecording();
+    uploadedVoiceResultRef.current = null;
+    setVoiceSendStatus("idle");
+    setVoiceSendError(null);
+  }, [conversation?._id]);
 
   const [inputText, setInputText] = useState("");
   const [showQuickEmojis, setShowQuickEmojis] = useState(false);
@@ -131,6 +180,38 @@ export default function ChatWindow({
     const q = searchQuery.toLowerCase();
     return messages.filter((m) => m.message?.toLowerCase().includes(q));
   }, [messages, searchQuery]);
+
+  // Build unified chronological timeline (messages + call records)
+  type TimelineItem =
+    | { type: "message"; id: string; timestamp: Date; message: ChatMessage }
+    | { type: "call"; id: string; timestamp: Date; call: CallHistoryItem };
+
+  const timelineItems = useMemo<TimelineItem[]>(() => {
+    const items: TimelineItem[] = [];
+
+    displayedMessages.forEach((msg) => {
+      items.push({
+        type: "message",
+        id: msg._id || msg.id || `msg_${msg.createdAt}`,
+        timestamp: new Date(msg.createdAt),
+        message: msg,
+      });
+    });
+
+    if (callHistoryData?.items && Array.isArray(callHistoryData.items) && !searchQuery.trim()) {
+      callHistoryData.items.forEach((c) => {
+        items.push({
+          type: "call",
+          id: c._id || c.id || c.callId,
+          timestamp: new Date(c.startedAt || c.createdAt),
+          call: c,
+        });
+      });
+    }
+
+    items.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return items;
+  }, [displayedMessages, callHistoryData, searchQuery]);
 
   const candidateIdStr = getUserIdString(conversation?.candidateId);
   const isCandidate = candidateIdStr === currentUserId;
@@ -291,6 +372,77 @@ export default function ChatWindow({
     textareaRef.current?.focus();
   };
 
+  const handleStartVoiceRecording = async () => {
+    if (isCallActive) {
+      toast.error("Cannot record voice message during an active call.");
+      return;
+    }
+    setVoiceSendStatus("idle");
+    setVoiceSendError(null);
+    await voiceRecorder.startRecording();
+  };
+
+  const handleSendVoiceRecording = async () => {
+    if (
+      !voiceRecorder.recordingData ||
+      voiceSendStatus === "uploading" ||
+      voiceSendStatus === "sending" ||
+      !conversation
+    ) {
+      return;
+    }
+
+    try {
+      let uploadResult = uploadedVoiceResultRef.current;
+
+      if (!uploadResult) {
+        setVoiceSendStatus("uploading");
+        setVoiceSendError(null);
+
+        uploadResult = await uploadVoiceAudioToCloudinary({
+          blob: voiceRecorder.recordingData.blob,
+          mimeType: voiceRecorder.recordingData.mimeType,
+          duration: voiceRecorder.recordingData.duration,
+        });
+
+        uploadedVoiceResultRef.current = uploadResult;
+      }
+
+      setVoiceSendStatus("sending");
+
+      const voiceAttachment = {
+        url: uploadResult.url,
+        name: uploadResult.originalFilename,
+        size: uploadResult.size,
+        mimeType: uploadResult.mimeType,
+        duration: uploadResult.duration,
+      };
+
+      onSendMessage("🎤 Voice message", "voice", [voiceAttachment]);
+
+      uploadedVoiceResultRef.current = null;
+      voiceRecorder.resetRecording();
+      setVoiceSendStatus("idle");
+      setVoiceSendError(null);
+    } catch (err: unknown) {
+      console.error("Voice message upload/send failed:", err);
+      setVoiceSendStatus("error");
+      const errorMsg = (err as Error)?.message || "";
+      setVoiceSendError(
+        errorMsg.includes("5MB")
+          ? "Voice recording exceeds maximum limit of 5MB."
+          : "Upload failed. Please try again."
+      );
+    }
+  };
+
+  const handleDiscardVoiceRecording = () => {
+    uploadedVoiceResultRef.current = null;
+    voiceRecorder.resetRecording();
+    setVoiceSendStatus("idle");
+    setVoiceSendError(null);
+  };
+
   const handleConfirmClearChat = async () => {
     if (!conversation?._id) return;
     try {
@@ -302,9 +454,11 @@ export default function ChatWindow({
     }
   };
 
+
+
   // Build message list with date headers & grouping
   const renderMessages = () => {
-    if (displayedMessages.length === 0) {
+    if (timelineItems.length === 0) {
       if (searchQuery) {
         return (
           <div className="flex flex-col items-center justify-center h-48 text-center text-slate-400">
@@ -315,11 +469,11 @@ export default function ChatWindow({
       }
       return (
         <div className="flex flex-col items-center justify-center h-full py-16 space-y-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-slate-800">
             <Briefcase className="h-7 w-7 text-[#3C65F5]" />
           </div>
-          <p className="text-sm font-semibold text-slate-700">No messages yet</p>
-          <p className="text-xs text-slate-400">Send a message below to start the conversation!</p>
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No activity yet</p>
+          <p className="text-xs text-slate-400">Send a message or start a call to begin the conversation!</p>
         </div>
       );
     }
@@ -327,23 +481,23 @@ export default function ChatWindow({
     const elements: React.ReactNode[] = [];
     let lastDateStr = "";
 
-    displayedMessages.forEach((msg, idx) => {
-      const msgDate = new Date(msg.createdAt);
+    timelineItems.forEach((item, idx) => {
+      const itemDate = item.timestamp;
       const now = new Date();
-      const isToday = msgDate.toDateString() === now.toDateString();
+      const isToday = itemDate.toDateString() === now.toDateString();
       const isYesterday =
-        new Date(now.setDate(now.getDate() - 1)).toDateString() === msgDate.toDateString();
+        new Date(now.setDate(now.getDate() - 1)).toDateString() === itemDate.toDateString();
 
       const dateStr = isToday
         ? "Today"
         : isYesterday
         ? "Yesterday"
-        : msgDate.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+        : itemDate.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
 
       if (dateStr !== lastDateStr) {
         lastDateStr = dateStr;
         elements.push(
-          <div key={`date-${dateStr}`} className="flex justify-center my-5">
+          <div key={`date-${dateStr}-${idx}`} className="flex justify-center my-5">
             <span className="rounded-full bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/70 dark:border-slate-700/60 px-4 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shadow-sm">
               {dateStr}
             </span>
@@ -351,23 +505,39 @@ export default function ChatWindow({
         );
       }
 
-      const senderIdStr = getUserIdString(msg.senderId);
-      const isSelf = senderIdStr === currentUserId;
-      const nextMsg = idx < displayedMessages.length - 1 ? displayedMessages[idx + 1] : null;
-      const showAvatar = !isSelf && (!nextMsg || !isSameSender(msg, nextMsg));
+      if (item.type === "call") {
+        elements.push(
+          <CallHistoryBubble
+            key={item.id}
+            call={item.call}
+            currentUserId={currentUserId}
+            onCallAgain={handleStartCall}
+          />
+        );
+      } else {
+        const msg = item.message;
+        const senderIdStr = getUserIdString(msg.senderId);
+        const isSelf = senderIdStr === currentUserId;
+        const nextItem = idx < timelineItems.length - 1 ? timelineItems[idx + 1] : null;
+        const showAvatar =
+          !isSelf &&
+          (!nextItem ||
+            nextItem.type !== "message" ||
+            !isSameSender(msg, nextItem.message));
 
-      elements.push(
-        <MessageBubble
-          key={msg._id || msg.id || idx}
-          message={msg}
-          isSelf={isSelf}
-          showAvatar={showAvatar}
-          senderName={partner?.name}
-          senderAvatar={partner?.profilePicture}
-          onEditMessage={onEditMessage}
-          onDeleteMessage={onDeleteMessage}
-        />
-      );
+        elements.push(
+          <MessageBubble
+            key={msg._id || msg.id || idx}
+            message={msg}
+            isSelf={isSelf}
+            showAvatar={showAvatar}
+            senderName={partner?.name}
+            senderAvatar={partner?.profilePicture}
+            onEditMessage={onEditMessage}
+            onDeleteMessage={onDeleteMessage}
+          />
+        );
+      }
     });
 
     return elements;
@@ -710,19 +880,19 @@ export default function ChatWindow({
       )}
 
       {/* ── Input Area ── */}
-      <div className="relative bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 px-3 py-3">
+      <div className="relative bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 px-3 sm:px-4 py-2.5 sm:py-3">
         {/* Emoji Panel */}
         {showQuickEmojis && (
           <div
             ref={emojiPanelRef}
-            className="absolute bottom-full left-3 mb-2 z-30 flex flex-wrap gap-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-xl w-[220px]"
+            className="absolute bottom-full left-3 sm:left-4 mb-2 z-30 flex flex-wrap gap-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850 p-2.5 shadow-xl w-[220px] animate-in fade-in zoom-in-95 duration-150"
           >
             {QUICK_EMOJIS.map((e) => (
               <button
                 key={e}
                 type="button"
                 onClick={() => handleEmojiClick(e)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-lg hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-all"
+                className="flex h-8.5 w-8.5 items-center justify-center rounded-xl text-lg hover:bg-slate-100 dark:hover:bg-slate-750 active:scale-90 transition-all cursor-pointer"
               >
                 {e}
               </button>
@@ -730,72 +900,207 @@ export default function ChatWindow({
           </div>
         )}
 
-        <form onSubmit={handleSend} className="flex items-end gap-2">
-          {/* Attach */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleFileSelect}
-            accept="image/*,.pdf,.doc,.docx"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 rounded-2xl p-2.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#3C65F5] transition"
-            title="Attach file"
-          >
-            <Paperclip className="h-5 w-5" />
-          </button>
+        {/* 1. RECORDING IN PROGRESS STATE */}
+        {voiceRecorder.isRecording || voiceRecorder.isStopping ? (
+          <div className="flex items-center justify-between gap-3 bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200/90 dark:border-rose-900/60 rounded-2xl px-4 py-2.5 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+              </span>
+              <span className="text-xs font-bold text-rose-600 dark:text-rose-400 tracking-tight">
+                Recording
+              </span>
+              <span className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
+                {voiceRecorder.formattedDuration}
+              </span>
+            </div>
 
-          {/* Emoji */}
-          <button
-            type="button"
-            onClick={() => setShowQuickEmojis((v) => !v)}
-            className={`shrink-0 rounded-2xl p-2.5 transition ${
-              showQuickEmojis
-                ? "text-[#3C65F5] bg-blue-50 dark:bg-blue-500/10"
-                : "text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#3C65F5]"
-            }`}
-            title="Emoji"
-          >
-            <Smile className="h-5 w-5" />
-          </button>
-
-          {/* Text Input */}
-          <div className="flex-1 relative">
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={inputText}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message… (Enter to send)"
-              className="w-full resize-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 outline-none transition-all focus:border-[#3C65F5] focus:bg-white dark:focus:bg-slate-800 focus:shadow-sm placeholder:text-slate-400 leading-relaxed"
-              style={{ minHeight: "42px", maxHeight: "120px" }}
-            />
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={voiceRecorder.cancelRecording}
+                aria-label="Cancel recording"
+                className="flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 px-2.5 py-1.5 rounded-xl hover:bg-rose-100/50 dark:hover:bg-rose-900/30 transition-colors cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Cancel</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => voiceRecorder.stopRecording()}
+                aria-label="Stop recording"
+                className="flex items-center gap-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 px-3.5 py-1.5 rounded-xl shadow-2xs transition-all active:scale-95 cursor-pointer"
+              >
+                <Square className="h-3.5 w-3.5 fill-current" />
+                <span>Stop</span>
+              </button>
+            </div>
           </div>
+        ) : voiceRecorder.isCompleted && voiceRecorder.recordingData ? (
+          /* 2. PREVIEW BEFORE SEND STATE */
+          <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <VoiceMessagePlayer
+                  id="recording_preview"
+                  audioUrl={voiceRecorder.recordingData.url}
+                  duration={voiceRecorder.recordingData.duration}
+                />
+              </div>
 
-          {/* Send / Mic button */}
-          <button
-            type={canSend ? "submit" : "button"}
-            className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-all active:scale-90 ${
-              canSend
-                ? "bg-[#3C65F5] text-white shadow-blue-500/30 hover:bg-[#2954ea]"
-                : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
-            }`}
-            title={canSend ? "Send" : "Voice message"}
-          >
-            {canSend ? (
-              <Send className="h-4 w-4 translate-x-[1px]" />
-            ) : (
-              <Mic className="h-4 w-4" />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleDiscardVoiceRecording}
+                  disabled={voiceSendStatus === "uploading" || voiceSendStatus === "sending"}
+                  aria-label="Discard voice recording"
+                  className="flex items-center gap-1 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200/60 dark:hover:bg-slate-750 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Discard</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSendVoiceRecording}
+                  disabled={voiceSendStatus === "uploading" || voiceSendStatus === "sending"}
+                  aria-label="Send voice message"
+                  className="flex items-center gap-1.5 rounded-xl bg-[#3C65F5] hover:bg-[#2e55e8] px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-xs disabled:opacity-60 transition-all active:scale-95 cursor-pointer"
+                >
+                  {voiceSendStatus === "uploading" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : voiceSendStatus === "sending" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-3.5 w-3.5" />
+                      <span>Send</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {voiceSendStatus === "error" && (
+              <div className="flex items-center justify-between bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl px-3 py-2 text-xs text-rose-600 dark:text-rose-400">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{voiceSendError || "Upload failed"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSendVoiceRecording}
+                    className="font-semibold underline hover:no-underline cursor-pointer"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDiscardVoiceRecording}
+                    className="text-slate-500 hover:underline cursor-pointer"
+                  >
+                    Discard
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
-        </form>
+          </div>
+        ) : (
+          /* 3. POLISHED UNIFIED COMPOSER */
+          <form onSubmit={handleSend} className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-850/90 border border-slate-200/90 dark:border-slate-700/80 rounded-2xl px-2 sm:px-2.5 py-1 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-[#3C65F5] focus-within:bg-white dark:focus-within:bg-slate-800 transition-all shadow-2xs">
+            {/* Attachment Button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileSelect}
+              accept="image/*,.pdf,.doc,.docx"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="shrink-0 rounded-xl p-2 text-slate-400 hover:text-[#3C65F5] dark:hover:text-blue-400 hover:bg-slate-200/50 dark:hover:bg-slate-750 transition-colors cursor-pointer"
+              title="Attach file"
+              aria-label="Attach file"
+            >
+              <Paperclip className="h-4.5 w-4.5" />
+            </button>
 
-        <p className="mt-1.5 text-center text-[10px] text-slate-400 dark:text-slate-500 select-none">
-          🔒 Messages are secured end-to-end for your job application
+            {/* Emoji Button */}
+            <button
+              type="button"
+              onClick={() => setShowQuickEmojis((v) => !v)}
+              className={`shrink-0 rounded-xl p-2 transition-colors cursor-pointer ${
+                showQuickEmojis
+                  ? "text-[#3C65F5] dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10"
+                  : "text-slate-400 hover:text-[#3C65F5] dark:hover:text-blue-400 hover:bg-slate-200/50 dark:hover:bg-slate-750"
+              }`}
+              title="Emoji"
+              aria-label="Add emoji"
+            >
+              <Smile className="h-4.5 w-4.5" />
+            </button>
+
+            {/* Integrated Borderless Textarea */}
+            <div className="flex-1 min-w-0 py-0.5">
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={inputText}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message… (Enter to send)"
+                className="w-full resize-none border-0 bg-transparent px-1 py-1 text-[13.5px] sm:text-sm text-slate-850 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 leading-relaxed max-h-28"
+                style={{ minHeight: "28px", maxHeight: "112px" }}
+              />
+            </div>
+
+            {/* Send / Mic button */}
+            <button
+              type={canSend ? "submit" : "button"}
+              onClick={canSend ? undefined : handleStartVoiceRecording}
+              disabled={!canSend && isCallActive}
+              aria-label={
+                canSend
+                  ? "Send message"
+                  : isCallActive
+                  ? "Cannot record voice message during an active call"
+                  : "Record voice message"
+              }
+              className={`shrink-0 flex h-8.5 w-8.5 sm:h-9 sm:w-9 items-center justify-center rounded-xl transition-all duration-150 active:scale-95 shadow-xs ${
+                canSend
+                  ? "bg-[#3C65F5] text-white hover:bg-[#2e55e8] cursor-pointer shadow-blue-500/20"
+                  : isCallActive
+                  ? "bg-slate-200/60 dark:bg-slate-700/60 text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed"
+                  : "bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-[#3C65F5] hover:text-white dark:hover:bg-[#3C65F5] cursor-pointer"
+              }`}
+              title={
+                canSend
+                  ? "Send"
+                  : isCallActive
+                  ? "Cannot record voice message during an active call"
+                  : "Record voice message"
+              }
+            >
+              {canSend ? (
+                <Send className="h-4 w-4 translate-x-[1px]" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          </form>
+        )}
+
+        <p className="mt-1.5 text-center text-[10px] text-slate-400 dark:text-slate-500 select-none tracking-tight">
+          🔒 End-to-end secured for your job application
         </p>
       </div>
 

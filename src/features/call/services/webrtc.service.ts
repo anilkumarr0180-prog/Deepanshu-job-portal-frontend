@@ -4,6 +4,7 @@
  */
 
 import { fetchIceServersApi, type IceServerConfig } from "../api/call.api";
+import { CallDiagnosticsSession, classifyMediaError } from "./callDiagnostics";
 
 const DEFAULT_STUN_CONFIG: RTCConfiguration = {
   iceServers: [
@@ -19,6 +20,7 @@ let cachedIceServers: IceServerConfig[] | null = null;
 let iceServersExpiresAt = 0;
 
 export interface WebRTCCallbacks {
+  diagnostics?: CallDiagnosticsSession;
   onIceCandidate: (candidate: RTCIceCandidateInit) => void;
   onConnectionStateChange: (state: RTCPeerConnectionState) => void;
   onRemoteStreamReady?: (stream: MediaStream) => void;
@@ -101,15 +103,9 @@ export class WebRTCCallService {
       this.localStream = stream;
       return stream;
     } catch (err: any) {
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        throw new Error("Microphone permission was denied. Please allow microphone access in your browser.");
-      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-        throw new Error("No microphone device was found on your system.");
-      } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
-        throw new Error("Microphone is currently in use by another application.");
-      } else {
-        throw new Error(`Failed to access microphone: ${err.message || err.name}`);
-      }
+      const { category, userMessage } = classifyMediaError(err);
+      this.callbacks.diagnostics?.recordFailure(category, err?.message);
+      throw new Error(userMessage);
     }
   }
 
@@ -147,8 +143,15 @@ export class WebRTCCallService {
         // Trickle ICE handler
         pc.onicecandidate = (event) => {
           if (event.candidate) {
+            this.callbacks.diagnostics?.recordCandidate(event.candidate.candidate);
             this.callbacks.onIceCandidate(event.candidate.toJSON());
           }
+        };
+        pc.onicegatheringstatechange = () => {
+          this.callbacks.diagnostics?.recordIceGatheringState(pc.iceGatheringState);
+        };
+        pc.onsignalingstatechange = () => {
+          this.callbacks.diagnostics?.recordSignalingState(pc.signalingState);
         };
 
         // Remote audio track handler
@@ -167,6 +170,7 @@ export class WebRTCCallService {
         pc.onconnectionstatechange = () => {
           if (!this.peerConnection) return;
           const state = this.peerConnection.connectionState;
+          this.callbacks.diagnostics?.recordConnectionState(state);
           console.log(`📡 WebRTC ConnectionState: ${state}`);
 
           if (state === "connected") {
@@ -197,6 +201,7 @@ export class WebRTCCallService {
         pc.oniceconnectionstatechange = () => {
           if (!this.peerConnection) return;
           const iceState = this.peerConnection.iceConnectionState;
+          this.callbacks.diagnostics?.recordIceState(iceState);
           console.log(`❄️ WebRTC ICE State: ${iceState}`);
 
           if (iceState === "connected" || iceState === "completed") {
