@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Send,
+  Phone,
   Paperclip,
   Smile,
   User as UserIcon,
@@ -29,6 +30,7 @@ import DeleteConversationModal from "./DeleteConversationModal";
 import { useUserProfileModal } from "@/features/posts/context/UserProfileContext";
 import { useConnectionStatus } from "@/features/posts/hooks/useConnectionStatus";
 import { useClearChatMessages } from "../hooks/useChat";
+import { useCall } from "@/features/call/context/CallContext";
 
 interface ChatWindowProps {
   conversation: ChatConversation | null;
@@ -69,6 +71,7 @@ export default function ChatWindow({
 }: ChatWindowProps) {
   const { openUserProfile } = useUserProfileModal();
   const clearChat = useClearChatMessages();
+  const { initiateCall, callState } = useCall();
 
   const [inputText, setInputText] = useState("");
   const [showQuickEmojis, setShowQuickEmojis] = useState(false);
@@ -176,6 +179,16 @@ export default function ChatWindow({
       </div>
     );
   }
+
+  const handleStartCall = () => {
+    if (!conversation?._id || !partner) return;
+    initiateCall(conversation._id, {
+      id: partnerId,
+      name: partner.name,
+      profilePicture: partner.profilePicture,
+      role: partner.role,
+    });
+  };
 
   const handleOpenPartnerProfile = () => {
     if (!partner) return;
@@ -454,6 +467,18 @@ export default function ChatWindow({
 
         {/* Right Side: Quick Action Icons & 3-Dots Menu */}
         <div className="flex items-center gap-1 shrink-0">
+          {/* Call Button */}
+          <button
+            type="button"
+            onClick={handleStartCall}
+            disabled={callState !== "IDLE"}
+            className="rounded-xl p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-700 transition disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            title={`Start audio call with ${partner?.name || "participant"}`}
+            aria-label={`Start audio call with ${partner?.name || "participant"}`}
+          >
+            <Phone className="h-4 w-4" />
+          </button>
+
           {/* Search in Chat Button */}
           <button
             type="button"

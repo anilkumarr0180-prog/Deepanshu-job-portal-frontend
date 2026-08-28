@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import { AuthProvider } from "@/features/auth/context/AuthProvider";
 import { RealtimeProvider } from "@/shared/context/RealtimeContext";
+import { CallProvider } from "@/features/call/context/CallContext";
 import { NotificationProvider } from "@/shared/context/NotificationContext";
 import { ThemeProvider } from "@/shared/context/ThemeContext";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
@@ -26,12 +27,14 @@ export default function AppProvider({ children }: AppProviderProps) {
           <QueryProvider>
             <AuthProvider>
               <RealtimeProvider>
-                <NotificationProvider>
-                  <GoogleOAuthProvider clientId={googleClientId}>
-                    {children}
-                    <Toaster position="top-right" />
-                  </GoogleOAuthProvider>
-                </NotificationProvider>
+                <CallProvider>
+                  <NotificationProvider>
+                    <GoogleOAuthProvider clientId={googleClientId}>
+                      {children}
+                      <Toaster position="top-right" />
+                    </GoogleOAuthProvider>
+                  </NotificationProvider>
+                </CallProvider>
               </RealtimeProvider>
             </AuthProvider>
           </QueryProvider>
