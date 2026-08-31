@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import useAuth from "@/features/auth/hooks/useAuth";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -16,20 +17,47 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const THEME_STORAGE_KEY = "jobbox_theme_preference";
+const getStorageKey = (userId?: string | null) => {
+  return userId ? `jobbox_theme_${userId}` : "jobbox_theme_preference";
+};
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const userId = user?._id || user?.id || null;
+
   const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "light";
     try {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-      if (stored === "light" || stored === "dark" || stored === "system") {
-        return stored;
+      if (userId) {
+        const stored = localStorage.getItem(getStorageKey(userId)) as Theme | null;
+        if (stored === "light" || stored === "dark" || stored === "system") {
+          return stored;
+        }
       }
     } catch {
       // Fallback
     }
-    return "system";
+    return "light";
   });
+
+  // Synchronize theme state when user authenticates or logs out
+  useEffect(() => {
+    if (!userId) {
+      // Unauthenticated / Guest / Logged out: Default is always white / light mode
+      setThemeState("light");
+    } else {
+      try {
+        const userStored = localStorage.getItem(getStorageKey(userId)) as Theme | null;
+        if (userStored === "light" || userStored === "dark" || userStored === "system") {
+          setThemeState(userStored);
+        } else {
+          setThemeState("light");
+        }
+      } catch {
+        setThemeState("light");
+      }
+    }
+  }, [userId]);
 
   const [effectiveTheme, setEffectiveTheme] = useState<"light" | "dark">("light");
 
@@ -43,7 +71,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         isDark = true;
       } else if (theme === "light") {
         isDark = false;
-      } else {
+      } else if (theme === "system") {
         isDark = mediaQuery.matches;
       }
 
@@ -64,7 +92,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
     };
 
-
     applyTheme();
 
     const handleChange = () => {
@@ -80,7 +107,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+      if (userId) {
+        localStorage.setItem(getStorageKey(userId), newTheme);
+      }
     } catch {
       // Ignored
     }
@@ -100,3 +129,4 @@ export function useTheme(): ThemeContextValue {
   }
   return context;
 }
+

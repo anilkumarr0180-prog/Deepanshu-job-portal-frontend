@@ -81,3 +81,38 @@ export async function withdrawApplication(
     `/applications/${applicationId}`
   );
 }
+
+export interface BackendApplicationStatusHistoryActor {
+  _id: string;
+  name: string;
+  email?: string;
+  role?: string;
+  profilePicture?: string;
+}
+
+export interface BackendApplicationStatusHistoryItem {
+  _id: string;
+  applicationId: string;
+  jobId: string;
+  fromStatus: string;
+  toStatus: string;
+  changedBy: BackendApplicationStatusHistoryActor | string;
+  reason?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApplicationHistoryApiResponse {
+  success: boolean;
+  data: BackendApplicationStatusHistoryItem[];
+}
+
+export async function getApplicationHistory(
+  applicationId: string
+): Promise<BackendApplicationStatusHistoryItem[]> {
+  const response = await axiosInstance.get<ApplicationHistoryApiResponse>(
+    `/applications/${applicationId}/history`
+  );
+  return response.data?.data || [];
+}

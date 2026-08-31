@@ -31,11 +31,14 @@ import { formatSalary } from "../utils/jobMapper";
 import { useProfile } from "../hooks/useProfile";
 import { useMyApplications } from "../hooks/useMyApplications";
 import { useApplyJob } from "../hooks/useApplyJob";
+import { useQuickApplyJob } from "../hooks/useQuickApplyJob";
+import { Zap } from "lucide-react";
 import { useCreateConversation } from "@/features/chat/hooks/useChat";
 import { useCloudinaryUpload } from "@/shared/hooks/useCloudinaryUpload";
 import { useApplicationInterviews } from "@/features/recruiter/hooks/useApplicationInterviews";
 import { useCandidateInterviewRsvp } from "../hooks/useCandidateInterviewRsvp";
 import type { Interview } from "@/features/recruiter/types/interview.types";
+import ApplicationTimeline from "./ApplicationTimeline";
 
 function formatCandidateInterviewDate(startTime?: string | Date): string {
   if (!startTime) return "Confirmed by Recruiter";
@@ -85,6 +88,7 @@ export default function ApplyJobModal({
   const { data: profile, isLoading: isProfileLoading } = useProfile();
   const { data: myApplications } = useMyApplications();
   const applyJob = useApplyJob();
+  const quickApplyJob = useQuickApplyJob();
   const createConversation = useCreateConversation();
   const { uploadFile, isUploading, progress } = useCloudinaryUpload();
 
@@ -330,9 +334,10 @@ export default function ApplyJobModal({
             </div>
 
             {/* Scheduled Interviews Section (Live Multi-Round Data + Accept / Decline RSVP Actions) */}
-            {((applicationInterviews && applicationInterviews.length > 0) ||
-              existingApplication?.interviewDetails ||
-              existingApplication?.status === "Interview") && (
+            {Boolean(
+              (applicationInterviews && applicationInterviews.length > 0) ||
+              (existingApplication?.interviewDetails?.date && existingApplication?.interviewDetails?.date.trim() !== "")
+            ) && (
               <div className="space-y-4">
                 {applicationInterviews && applicationInterviews.length > 0 ? (
                   applicationInterviews.map((interview: Interview) => {
@@ -756,6 +761,14 @@ export default function ApplyJobModal({
               </div>
             </div>
 
+            {/* Application Lifecycle Timeline */}
+            <ApplicationTimeline
+              applicationId={existingApplication?._id}
+              currentStatus={existingApplication?.status}
+              createdAt={existingApplication?.createdAt}
+              interviewDetails={existingApplication?.interviewDetails}
+            />
+
             {/* Submitted Application Snapshot View */}
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-5 space-y-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
@@ -861,6 +874,46 @@ export default function ApplyJobModal({
                 </div>
               </div>
             )}
+
+            {/* Quick Apply 1-Click Top Action */}
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-blue-200 dark:border-blue-500/30 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50/50 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-blue-950/20 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3C65F5] text-white shadow-sm">
+                  <Zap className="h-5 w-5 fill-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">1-Click Quick Apply</h4>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded">
+                      Fast Track
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Submit instantly using your master profile credentials.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (job) {
+                    quickApplyJob.mutate(
+                      { jobId: job._id, coverLetter: coverLetter.trim() || undefined },
+                      {
+                        onSuccess: () => {
+                          onClose();
+                        },
+                      }
+                    );
+                  }
+                }}
+                disabled={!profile?.resumeUrl || quickApplyJob.isPending}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#3C65F5] px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-600 active:scale-95 transition disabled:opacity-50 cursor-pointer"
+              >
+                <Zap className="h-3.5 w-3.5 fill-white" />
+                <span>{quickApplyJob.isPending ? "Applying..." : "Quick Apply Now"}</span>
+              </button>
+            </div>
 
             {/* Applicant Profile Details Section: Default Clean Summary vs Edit Mode */}
             <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-5 space-y-4 transition-all">

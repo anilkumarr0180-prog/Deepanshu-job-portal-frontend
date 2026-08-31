@@ -11,6 +11,7 @@ import ApplicantsKanbanColumn, {
 
 interface ApplicantsKanbanBoardProps {
   applicants: RecruiterApplicantRecord[];
+  statusFilter?: string;
   onView?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string, interviewDetails?: any) => void;
   isUpdating?: boolean;
@@ -18,6 +19,7 @@ interface ApplicantsKanbanBoardProps {
 
 export default function ApplicantsKanbanBoard({
   applicants,
+  statusFilter = "All",
   onView,
   onUpdateStatus,
   isUpdating = false,
@@ -117,10 +119,21 @@ export default function ApplicantsKanbanBoard({
     [applicants, draggedApplicant, isUpdating, onUpdateStatus, pendingMoveIds]
   );
 
+  const columnsToRender =
+    statusFilter && statusFilter !== "All"
+      ? KANBAN_COLUMNS.filter((c) => c.statusKey === statusFilter)
+      : KANBAN_COLUMNS;
+
   return (
     <>
-      <div className="flex w-full gap-4 overflow-x-auto pb-4 pt-1">
-        {KANBAN_COLUMNS.map((column) => {
+      <div
+        className={
+          columnsToRender.length === 1
+            ? "mx-auto w-full max-w-2xl py-1"
+            : "flex w-full gap-3 overflow-x-auto pb-4 pt-1"
+        }
+      >
+        {columnsToRender.map((column) => {
           const columnApplicants = applicants.filter(
             (app) => app.status === column.statusKey
           );

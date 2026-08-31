@@ -14,7 +14,11 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: (payload: UpdateProfilePayload) => {
-      const cleanedPayload = removeEmptyFields(payload);
+      const { jobPreferences, ...rest } = payload;
+      const cleanedPayload: UpdateProfilePayload = removeEmptyFields(rest);
+      if (jobPreferences !== undefined) {
+        cleanedPayload.jobPreferences = jobPreferences;
+      }
       return updateProfile(cleanedPayload);
     },
     onSuccess: (data: BackendProfile) => {

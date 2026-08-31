@@ -39,14 +39,22 @@ import SettingsSidebar, {
   type CandidateSettingsCategory,
 } from "../components/settings/SettingsSidebar";
 
-interface CandidateJobPrefs {
+interface CandidateJobPrefsState {
   preferredRoles: string[];
+  preferredSkills: string[];
   preferredLocations: string[];
-  workMode: "remote" | "hybrid" | "onsite" | "any";
-  employmentType: "full-time" | "part-time" | "contract" | "internship" | "any";
-  experienceLevel: "entry" | "mid" | "senior" | "lead" | "any";
+  workMode: "onsite" | "remote" | "hybrid" | "";
+  employmentType:
+    | "Full Time"
+    | "Part Time"
+    | "Contract"
+    | "Internship"
+    | "Remote"
+    | "";
+  experienceLevel: "Fresher" | "1-2 Years" | "3-5 Years" | "5+ Years" | "";
   minSalary: string;
-  currency: "USD" | "INR" | "EUR" | "GBP";
+  currency: string;
+  salaryPeriod: "yearly" | "monthly" | "hourly";
 }
 
 interface CandidatePrivacyState {
@@ -55,14 +63,16 @@ interface CandidatePrivacyState {
   allowRecruiterMessages: boolean;
 }
 
-const DEFAULT_JOB_PREFS: CandidateJobPrefs = {
-  preferredRoles: ["Frontend Developer", "Full Stack Engineer"],
-  preferredLocations: ["Remote"],
-  workMode: "remote",
-  employmentType: "full-time",
-  experienceLevel: "mid",
+const DEFAULT_JOB_PREFS: CandidateJobPrefsState = {
+  preferredRoles: [],
+  preferredSkills: [],
+  preferredLocations: [],
+  workMode: "",
+  employmentType: "",
+  experienceLevel: "",
   minSalary: "",
   currency: "USD",
+  salaryPeriod: "yearly",
 };
 
 const DEFAULT_PRIVACY: CandidatePrivacyState = {
@@ -120,19 +130,9 @@ export default function CandidateSettingsPage() {
   });
 
   // 3. Job Preferences Form State
-  const [jobPrefs, setJobPrefs] = useState<CandidateJobPrefs>(() => {
-    try {
-      const saved = localStorage.getItem("jobbox_candidate_job_preferences");
-      if (saved) {
-        return { ...DEFAULT_JOB_PREFS, ...JSON.parse(saved) };
-      }
-    } catch {
-      // Fallback
-    }
-    return DEFAULT_JOB_PREFS;
-  });
-
+  const [jobPrefs, setJobPrefs] = useState<CandidateJobPrefsState>(DEFAULT_JOB_PREFS);
   const [roleInput, setRoleInput] = useState("");
+  const [skillInput, setSkillInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
 
   // 4. Audio Notification Preference State
@@ -181,6 +181,24 @@ export default function CandidateSettingsPage() {
           twitter: profile.socialLinks?.twitter || "",
         },
       });
+
+      if (profile.jobPreferences) {
+        setJobPrefs({
+          preferredRoles: profile.jobPreferences.preferredRoles || [],
+          preferredSkills: profile.jobPreferences.preferredSkills || [],
+          preferredLocations: profile.jobPreferences.preferredLocations || [],
+          workMode: (profile.jobPreferences.workMode as any) || "",
+          employmentType: (profile.jobPreferences.employmentType as any) || "",
+          experienceLevel: (profile.jobPreferences.experienceLevel as any) || "",
+          minSalary:
+            profile.jobPreferences.minSalary !== null &&
+            profile.jobPreferences.minSalary !== undefined
+              ? String(profile.jobPreferences.minSalary)
+              : "",
+          currency: profile.jobPreferences.currency || "USD",
+          salaryPeriod: profile.jobPreferences.salaryPeriod || "yearly",
+        });
+      }
     }
   }, [profile]);
 
@@ -271,7 +289,16 @@ export default function CandidateSettingsPage() {
     if ("key" in e && e.key !== "Enter") return;
     e.preventDefault();
     const trimmed = roleInput.trim();
-    if (trimmed && !jobPrefs.preferredRoles.includes(trimmed)) {
+    if (!trimmed) return;
+    if (trimmed.length > 100) {
+      toast.error("Role title cannot exceed 100 characters.");
+      return;
+    }
+    if (jobPrefs.preferredRoles.length >= 30) {
+      toast.error("Maximum 30 preferred roles allowed.");
+      return;
+    }
+    if (!jobPrefs.preferredRoles.some((r) => r.toLowerCase() === trimmed.toLowerCase())) {
       setJobPrefs((prev) => ({
         ...prev,
         preferredRoles: [...prev.preferredRoles, trimmed],
@@ -287,11 +314,54 @@ export default function CandidateSettingsPage() {
     }));
   };
 
+  const handleAddSkill = (
+    e?: React.KeyboardEvent | React.MouseEvent,
+    customSkill?: string
+  ) => {
+    if (e && "key" in e && e.key !== "Enter") return;
+    if (e) e.preventDefault();
+    const trimmed = (customSkill ?? skillInput).trim();
+    if (!trimmed) return;
+    if (trimmed.length > 100) {
+      toast.error("Skill name cannot exceed 100 characters.");
+      return;
+    }
+    if (jobPrefs.preferredSkills.length >= 50) {
+      toast.error("Maximum 50 preferred skills allowed.");
+      return;
+    }
+    if (!jobPrefs.preferredSkills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+      setJobPrefs((prev) => ({
+        ...prev,
+        preferredSkills: [...prev.preferredSkills, trimmed],
+      }));
+      if (!customSkill) {
+        setSkillInput("");
+      }
+    }
+  };
+
+  const handleRemoveSkill = (skill: string) => {
+    setJobPrefs((prev) => ({
+      ...prev,
+      preferredSkills: prev.preferredSkills.filter((s) => s !== skill),
+    }));
+  };
+
   const handleAddLocation = (e: React.KeyboardEvent | React.MouseEvent) => {
     if ("key" in e && e.key !== "Enter") return;
     e.preventDefault();
     const trimmed = locationInput.trim();
-    if (trimmed && !jobPrefs.preferredLocations.includes(trimmed)) {
+    if (!trimmed) return;
+    if (trimmed.length > 100) {
+      toast.error("Location cannot exceed 100 characters.");
+      return;
+    }
+    if (jobPrefs.preferredLocations.length >= 30) {
+      toast.error("Maximum 30 preferred locations allowed.");
+      return;
+    }
+    if (!jobPrefs.preferredLocations.some((l) => l.toLowerCase() === trimmed.toLowerCase())) {
       setJobPrefs((prev) => ({
         ...prev,
         preferredLocations: [...prev.preferredLocations, trimmed],
@@ -307,18 +377,40 @@ export default function CandidateSettingsPage() {
     }));
   };
 
-  // Handle Save Job Preferences
+  // Handle Save Job Preferences to MongoDB
   const handleSaveJobPrefs = (e: FormEvent) => {
     e.preventDefault();
-    try {
-      localStorage.setItem(
-        "jobbox_candidate_job_preferences",
-        JSON.stringify(jobPrefs)
-      );
-      toast.success("Job preferences saved successfully!");
-    } catch {
-      toast.error("Failed to save job preferences.");
+
+    let parsedSalary: number | null = null;
+    if (jobPrefs.minSalary.trim() !== "") {
+      parsedSalary = Number(jobPrefs.minSalary);
+      if (isNaN(parsedSalary) || parsedSalary < 0) {
+        toast.error("Please enter a valid non-negative minimum salary.");
+        return;
+      }
     }
+
+    updateProfileMutation.mutate(
+      {
+        jobPreferences: {
+          preferredRoles: jobPrefs.preferredRoles,
+          preferredSkills: jobPrefs.preferredSkills,
+          preferredLocations: jobPrefs.preferredLocations,
+          workMode: jobPrefs.workMode ? (jobPrefs.workMode as any) : null,
+          employmentType: jobPrefs.employmentType ? (jobPrefs.employmentType as any) : null,
+          experienceLevel: jobPrefs.experienceLevel ? (jobPrefs.experienceLevel as any) : null,
+          minSalary: parsedSalary,
+          currency: jobPrefs.currency || "USD",
+          salaryPeriod: jobPrefs.salaryPeriod || "yearly",
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Job preferences saved successfully to your profile!");
+          void refetch();
+        },
+      }
+    );
   };
 
   // Handle Toggle Audio Chime
@@ -961,14 +1053,19 @@ export default function CandidateSettingsPage() {
             <form onSubmit={handleSaveJobPrefs} className="space-y-6">
               <SettingsSection
                 title="Career & Job Search Preferences"
-                description="Define the roles, work arrangements, and salary expectations that best fit your goals."
+                description="Define your target roles, preferred skills, work arrangements, and salary expectations to optimize job matching."
               >
                 <div className="space-y-6">
-                  {/* Preferred Roles Tag Input */}
+                  {/* 1. Preferred Roles Tag Input */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Preferred Job Titles & Roles
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700">
+                        Preferred Job Titles & Roles
+                      </label>
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {jobPrefs.preferredRoles.length}/30 roles
+                      </span>
+                    </div>
                     <div className="flex gap-2 mb-2">
                       <input
                         type="text"
@@ -981,7 +1078,7 @@ export default function CandidateSettingsPage() {
                       <button
                         type="button"
                         onClick={handleAddRole}
-                        className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                        className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Add</span>
@@ -991,42 +1088,130 @@ export default function CandidateSettingsPage() {
                       {jobPrefs.preferredRoles.map((role) => (
                         <span
                           key={role}
-                          className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-100"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-100"
                         >
                           {role}
                           <button
                             type="button"
                             onClick={() => handleRemoveRole(role)}
-                            className="text-blue-400 hover:text-blue-700"
+                            className="text-blue-400 hover:text-blue-700 transition"
+                            aria-label={`Remove ${role}`}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         </span>
                       ))}
                       {jobPrefs.preferredRoles.length === 0 && (
-                        <p className="text-[11px] text-slate-400 italic">No roles added yet.</p>
+                        <p className="text-[11px] text-slate-400 italic">No preferred roles added yet.</p>
                       )}
                     </div>
                   </div>
 
-                  {/* Preferred Locations Tag Input */}
+                  {/* 2. Preferred Skills (NEW) */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Target Locations / Regions
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700">
+                        Preferred Tech Stack & Skills
+                      </label>
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {jobPrefs.preferredSkills.length}/50 skills
+                      </span>
+                    </div>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={skillInput}
+                        onChange={(e) => setSkillInput(e.target.value)}
+                        onKeyDown={(e) => handleAddSkill(e)}
+                        placeholder="e.g. React, TypeScript, Node.js, Python (press Enter)"
+                        className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 outline-none transition focus:border-[#3C65F5]"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => handleAddSkill(e)}
+                        className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>Add</span>
+                      </button>
+                    </div>
+
+                    {/* Quick suggestion chips */}
+                    <div className="mb-2.5 flex flex-wrap items-center gap-1 text-[11px] text-slate-500">
+                      <span className="font-semibold text-slate-600 mr-1">Popular:</span>
+                      {[
+                        "React",
+                        "TypeScript",
+                        "Node.js",
+                        "Python",
+                        "Next.js",
+                        "MongoDB",
+                        "PostgreSQL",
+                        "AWS",
+                        "Docker",
+                        "Tailwind CSS",
+                      ]
+                        .filter((s) => !jobPrefs.preferredSkills.includes(s))
+                        .slice(0, 7)
+                        .map((suggested) => (
+                          <button
+                            key={suggested}
+                            type="button"
+                            onClick={() => handleAddSkill(undefined, suggested)}
+                            className="inline-flex items-center gap-0.5 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition"
+                          >
+                            <Plus className="h-2.5 w-2.5" />
+                            <span>{suggested}</span>
+                          </button>
+                        ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 min-h-[32px]">
+                      {jobPrefs.preferredSkills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 border border-indigo-100"
+                        >
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="text-indigo-400 hover:text-indigo-700 transition"
+                            aria-label={`Remove ${skill}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                      {jobPrefs.preferredSkills.length === 0 && (
+                        <p className="text-[11px] text-slate-400 italic">No preferred skills added yet.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3. Preferred Locations Tag Input */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700">
+                        Target Locations / Regions
+                      </label>
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {jobPrefs.preferredLocations.length}/30 locations
+                      </span>
+                    </div>
                     <div className="flex gap-2 mb-2">
                       <input
                         type="text"
                         value={locationInput}
                         onChange={(e) => setLocationInput(e.target.value)}
                         onKeyDown={handleAddLocation}
-                        placeholder="e.g. Remote, San Francisco, London (press Enter)"
+                        placeholder="e.g. Remote, New York, London, Bangalore (press Enter)"
                         className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 outline-none transition focus:border-[#3C65F5]"
                       />
                       <button
                         type="button"
                         onClick={handleAddLocation}
-                        className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                        className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Add</span>
@@ -1036,15 +1221,16 @@ export default function CandidateSettingsPage() {
                       {jobPrefs.preferredLocations.map((loc) => (
                         <span
                           key={loc}
-                          className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200"
                         >
                           {loc}
                           <button
                             type="button"
                             onClick={() => handleRemoveLocation(loc)}
-                            className="text-slate-400 hover:text-slate-700"
+                            className="text-slate-400 hover:text-slate-700 transition"
+                            aria-label={`Remove ${loc}`}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         </span>
                       ))}
@@ -1054,7 +1240,7 @@ export default function CandidateSettingsPage() {
                     </div>
                   </div>
 
-                  {/* Work Mode & Employment Type */}
+                  {/* 4. Canonical Work Arrangement, Employment Type, Experience Level */}
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">
@@ -1070,10 +1256,10 @@ export default function CandidateSettingsPage() {
                         }
                         className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-[#3C65F5]"
                       >
+                        <option value="">Any Arrangement (No Preference)</option>
                         <option value="remote">Remote Only</option>
                         <option value="hybrid">Hybrid</option>
                         <option value="onsite">On-Site</option>
-                        <option value="any">Any Arrangement</option>
                       </select>
                     </div>
 
@@ -1091,11 +1277,12 @@ export default function CandidateSettingsPage() {
                         }
                         className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-[#3C65F5]"
                       >
-                        <option value="full-time">Full-Time</option>
-                        <option value="part-time">Part-Time</option>
-                        <option value="contract">Contract / Freelance</option>
-                        <option value="internship">Internship</option>
-                        <option value="any">Any Type</option>
+                        <option value="">Any Employment Type</option>
+                        <option value="Full Time">Full-Time</option>
+                        <option value="Part Time">Part-Time</option>
+                        <option value="Contract">Contract / Freelance</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Remote">Remote</option>
                       </select>
                     </div>
 
@@ -1113,48 +1300,72 @@ export default function CandidateSettingsPage() {
                         }
                         className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-[#3C65F5]"
                       >
-                        <option value="entry">Entry Level (0-2 yrs)</option>
-                        <option value="mid">Mid Level (3-5 yrs)</option>
-                        <option value="senior">Senior Level (5-8 yrs)</option>
-                        <option value="lead">Lead / Principal (8+ yrs)</option>
-                        <option value="any">Any Experience Level</option>
+                        <option value="">Any Experience Level</option>
+                        <option value="Fresher">Fresher / Entry Level (0-1 yrs)</option>
+                        <option value="1-2 Years">Junior Level (1-2 Years)</option>
+                        <option value="3-5 Years">Mid Level (3-5 Years)</option>
+                        <option value="5+ Years">Senior / Lead (5+ Years)</option>
                       </select>
                     </div>
                   </div>
 
-                  {/* Salary Expectations */}
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  {/* 5. Salary Expectations */}
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                        Minimum Annual Salary Expectation
+                        Currency
                       </label>
-                      <div className="flex gap-2">
-                        <select
-                          value={jobPrefs.currency}
-                          onChange={(e) =>
-                            setJobPrefs((prev) => ({
-                              ...prev,
-                              currency: e.target.value as any,
-                            }))
-                          }
-                          className="w-24 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#3C65F5]"
-                        >
-                          <option value="USD">USD ($)</option>
-                          <option value="INR">INR (₹)</option>
-                          <option value="EUR">EUR (€)</option>
-                          <option value="GBP">GBP (£)</option>
-                        </select>
-                        <input
-                          type="number"
-                          min="0"
-                          value={jobPrefs.minSalary}
-                          onChange={(e) =>
-                            setJobPrefs((prev) => ({ ...prev, minSalary: e.target.value }))
-                          }
-                          placeholder="e.g. 90000"
-                          className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 outline-none transition focus:border-[#3C65F5]"
-                        />
-                      </div>
+                      <select
+                        value={jobPrefs.currency}
+                        onChange={(e) =>
+                          setJobPrefs((prev) => ({
+                            ...prev,
+                            currency: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-[#3C65F5]"
+                      >
+                        <option value="USD">USD ($)</option>
+                        <option value="INR">INR (₹)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Minimum Target Salary
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={jobPrefs.minSalary}
+                        onChange={(e) =>
+                          setJobPrefs((prev) => ({ ...prev, minSalary: e.target.value }))
+                        }
+                        placeholder="e.g. 90000"
+                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 outline-none transition focus:border-[#3C65F5]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Salary Frequency / Period
+                      </label>
+                      <select
+                        value={jobPrefs.salaryPeriod}
+                        onChange={(e) =>
+                          setJobPrefs((prev) => ({
+                            ...prev,
+                            salaryPeriod: e.target.value as any,
+                          }))
+                        }
+                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-[#3C65F5]"
+                      >
+                        <option value="yearly">Per Year (Annual)</option>
+                        <option value="monthly">Per Month</option>
+                        <option value="hourly">Per Hour</option>
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -1165,7 +1376,7 @@ export default function CandidateSettingsPage() {
                     type="button"
                     onClick={() => {
                       setJobPrefs(DEFAULT_JOB_PREFS);
-                      toast.success("Preferences reset to defaults.");
+                      toast.success("Preferences reset to blank defaults.");
                     }}
                     className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
                   >
@@ -1175,10 +1386,15 @@ export default function CandidateSettingsPage() {
 
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#3C65F5] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#2f55e0] transition"
+                    disabled={updateProfileMutation.isPending}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#3C65F5] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#2f55e0] transition disabled:opacity-50"
                   >
-                    <Save className="h-4 w-4" />
-                    <span>Save Preferences</span>
+                    {updateProfileMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    <span>{updateProfileMutation.isPending ? "Saving..." : "Save Preferences"}</span>
                   </button>
                 </div>
               </SettingsSection>

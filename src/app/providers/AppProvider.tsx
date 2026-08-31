@@ -22,10 +22,10 @@ const googleClientId =
 export default function AppProvider({ children }: AppProviderProps) {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <ReduxProvider>
-          <QueryProvider>
-            <AuthProvider>
+      <ReduxProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <ThemeProvider>
               <RealtimeProvider>
                 <CallProvider>
                   <NotificationProvider>
@@ -36,10 +36,10 @@ export default function AppProvider({ children }: AppProviderProps) {
                   </NotificationProvider>
                 </CallProvider>
               </RealtimeProvider>
-            </AuthProvider>
-          </QueryProvider>
-        </ReduxProvider>
-      </ThemeProvider>
+            </ThemeProvider>
+          </AuthProvider>
+        </QueryProvider>
+      </ReduxProvider>
     </ErrorBoundary>
   );
 }

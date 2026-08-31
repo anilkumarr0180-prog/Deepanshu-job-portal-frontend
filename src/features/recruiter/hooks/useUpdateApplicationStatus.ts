@@ -64,6 +64,8 @@ export function useUpdateApplicationStatus() {
       // 5. Reconcile cache with backend truth after mutation finishes
       void queryClient.invalidateQueries({ queryKey: ["applications"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      void queryClient.invalidateQueries({ queryKey: ["application-timeline"] });
+      void queryClient.invalidateQueries({ queryKey: ["my-applications"] });
     },
 
     onSuccess: () => {

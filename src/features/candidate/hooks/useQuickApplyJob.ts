@@ -1,33 +1,33 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-import { withdrawApplication } from "../api/applications.api";
+import { quickApplyForJob, type QuickApplyPayload } from "../api/jobs.api";
 
-export function useWithdrawApplication() {
+export function useQuickApplyJob() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: withdrawApplication,
+    mutationFn: (payload: QuickApplyPayload) => quickApplyForJob(payload),
     onSuccess: () => {
-      toast.success("Application withdrawn successfully.");
+      toast.success("Quick application submitted successfully! 🎉");
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      void queryClient.invalidateQueries({ queryKey: ["job"] });
       void queryClient.invalidateQueries({
         queryKey: ["applications", "mine"],
       });
       void queryClient.invalidateQueries({
         queryKey: ["my-applications"],
       });
-      void queryClient.invalidateQueries({
-        queryKey: ["application-timeline"],
-      });
     },
     onError: (error: unknown) => {
       const axiosError = error as {
         response?: { data?: { message?: string } };
       };
-      toast.error(
+      const message =
         axiosError?.response?.data?.message ||
-          "Failed to withdraw application."
-      );
+        "Failed to submit quick application. Please try again.";
+
+      toast.error(message);
     },
   });
 }
