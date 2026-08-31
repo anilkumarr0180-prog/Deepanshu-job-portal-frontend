@@ -7,18 +7,16 @@ import JobDayCard from "./JobDayCard";
 import JobsOfDaySkeleton from "./JobsOfDaySkeleton";
 
 const TAB_KEYWORDS: Record<string, string[]> = {
-  software: ["software", "developer", "engineer", "react", "frontend", "backend", "fullstack", "node"],
-  management: ["management", "manager", "lead", "director", "head"],
-  marketing: ["marketing", "sale", "sales", "seo", "media", "growth"],
-  finance: ["finance", "bank", "accountant", "accounting", "audit"],
-  hr: ["human resource", "hr", "recruiter", "talent", "people"],
-  retail: ["retail", "product", "e-commerce", "store"],
-  customer: ["customer", "support", "help", "service", "client"],
-  content: ["content", "writer", "copywriter", "editor", "blog"],
+  management: ["management", "manager", "lead", "director", "head", "product", "executive"],
+  marketing: ["marketing", "sale", "sales", "seo", "media", "growth", "advertising"],
+  finance: ["finance", "bank", "accountant", "accounting", "audit", "tax", "payroll"],
+  hr: ["human resource", "hr", "recruiter", "talent", "people", "recruiting"],
+  retail: ["retail", "product", "e-commerce", "store", "merchandise", "sales"],
+  content: ["content", "writer", "copywriter", "editor", "blog", "technical writer"],
 };
 
 export default function JobsOfDay() {
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("management");
 
   const { data, isLoading, isError, refetch } = useJobs({ limit: "16" });
 
@@ -28,7 +26,7 @@ export default function JobsOfDay() {
   const filteredJobs = useMemo(() => {
     const activeJobs = jobs ?? [];
 
-    if (activeTab === "all" || !TAB_KEYWORDS[activeTab]) {
+    if (!TAB_KEYWORDS[activeTab]) {
       return activeJobs;
     }
 
@@ -43,15 +41,15 @@ export default function JobsOfDay() {
   }, [jobs, activeTab]);
 
   return (
-    <section className="bg-white pt-8 pb-6 sm:pt-12 sm:pb-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="bg-white dark:bg-[#0B132B] pt-12 pb-8 sm:pt-16 sm:pb-12">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-[#05264E] sm:text-5xl">
+        <div className="text-center">
+          <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-3xl font-extrabold tracking-tight text-[#05264E] dark:text-[#F1F5F9] sm:text-4xl lg:text-[40px]">
             Jobs of the day
           </h2>
 
-          <p className="mt-3 text-base text-slate-500 sm:text-lg">
+          <p className="mt-2.5 font-['Inter',sans-serif] text-[15px] sm:text-[16px] font-normal text-[#66789C] dark:text-slate-400">
             Search and connect with the right candidates faster.
           </p>
         </div>

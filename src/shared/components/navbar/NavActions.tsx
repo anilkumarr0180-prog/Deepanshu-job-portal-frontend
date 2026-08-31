@@ -19,22 +19,22 @@ export default function NavActions() {
 
   if (isAuthenticated && user) {
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <NotificationDropdown />
 
         <Link
           to={getDashboardRoute(user.role)}
-          className="rounded-xl bg-[#3C65F5] px-4 py-2 text-sm font-semibold text-white shadow-xs transition-colors duration-200 hover:bg-[#2956F2]"
+          className="inline-flex h-[38px] sm:h-[40px] items-center justify-center rounded-[5px] sm:rounded-[6px] bg-[#3C65F5] px-4 sm:px-5 text-[14px] font-medium text-white shadow-xs transition-colors duration-200 hover:bg-[#2956F2]"
         >
           Dashboard
         </Link>
 
-        <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3C65F5] text-sm font-semibold text-white">
+        <div className="flex items-center gap-3 rounded-full border border-slate-200/80 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 px-3 py-1">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3C65F5] text-xs font-semibold text-white">
             {user.name?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
 
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-[14px] font-medium text-[#05264E] dark:text-slate-200">
             {user.name ?? user.email ?? "User"}
           </span>
         </div>
@@ -42,7 +42,7 @@ export default function NavActions() {
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="inline-flex h-[38px] sm:h-[40px] items-center justify-center rounded-[5px] sm:rounded-[6px] border border-slate-200 dark:border-slate-700 px-4 text-[14px] font-medium text-[#05264E] dark:text-slate-200 transition hover:bg-slate-100/60 dark:hover:bg-slate-800"
         >
           Logout
         </button>
@@ -50,22 +50,21 @@ export default function NavActions() {
     );
   }
 
-
   return (
-    <div className="flex items-center gap-8">
+    <div className="flex items-center gap-7 lg:gap-8">
       <Link
         to="/register"
-        className="text-[15px] font-medium text-slate-800 transition-colors duration-200 hover:text-[#3C65F5] hover:underline"
+        className="text-[14px] sm:text-[15px] font-medium text-[#05264E] dark:text-slate-200 underline underline-offset-4 decoration-1 transition-colors duration-200 hover:text-[#3C65F5] dark:hover:text-[#5E81FF]"
       >
         Register
       </Link>
 
       <Link
         to="/login"
-        className="rounded-xl bg-[#3C65F5] px-[25px] py-[10px] text-sm font-medium text-white shadow-md transition-colors duration-200 hover:bg-[#2956F2]"
+        className="inline-flex h-[38px] sm:h-[40px] items-center justify-center rounded-[5px] sm:rounded-[6px] bg-[#3C65F5] px-5 sm:px-6 text-[14px] font-medium text-white transition-colors duration-200 hover:bg-[#2956F2]"
       >
         Sign In
       </Link>
     </div>
   );
-}
+}

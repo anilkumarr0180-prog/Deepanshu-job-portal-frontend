@@ -8,7 +8,7 @@ export default function NavLogo() {
       aria-label="JobBox Home"
     >
       <svg
-        className="h-9 sm:h-10 w-auto"
+        className="h-[32px] sm:h-[34px] lg:h-[36px] w-auto"
         viewBox="0 0 139 36"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
