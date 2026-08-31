@@ -258,7 +258,9 @@ export default function RecruiterInterviewsPage() {
         <ScheduleInterviewModal
           isOpen={Boolean(rescheduleApplicant)}
           onClose={() => setRescheduleApplicant(null)}
+          applicationId={rescheduleApplicant.id}
           candidateName={rescheduleApplicant.candidate}
+          jobTitle={rescheduleApplicant.job}
           onSchedule={handleRescheduleSubmit}
           isSubmitting={updateMutation.isPending}
         />

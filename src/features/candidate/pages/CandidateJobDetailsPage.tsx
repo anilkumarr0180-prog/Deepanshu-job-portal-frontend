@@ -14,6 +14,8 @@ import {
 
 import { useJobDetails } from "@/features/jobs/hooks/useJobDetails";
 import { useMyApplications } from "../hooks/useMyApplications";
+import { useQuickApplyJob } from "../hooks/useQuickApplyJob";
+import { Zap } from "lucide-react";
 import { useCheckJobSavedStatus } from "../hooks/useSavedJobs";
 import { useToggleSaveJob } from "../hooks/useToggleSaveJob";
 import { formatSalary, formatRelativeDate } from "../utils/jobMapper";
@@ -36,6 +38,7 @@ export default function CandidateJobDetailsPage() {
 
   const { data: isSaved = false } = useCheckJobSavedStatus(id ?? "");
   const toggleSaveMutation = useToggleSaveJob();
+  const quickApplyMutation = useQuickApplyJob();
 
   const handleBookmarkToggle = () => {
     if (!id) return;
@@ -227,17 +230,34 @@ export default function CandidateJobDetailsPage() {
                 </p>
               )}
 
-              <button
-                type="button"
-                onClick={() => setIsApplyModalOpen(true)}
-                className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
-                  isAlreadyApplied
-                    ? "bg-[#3C65F5] hover:bg-blue-600"
-                    : "bg-[#3C65F5] hover:bg-blue-600"
-                } shadow-sm`}
-              >
-                {isAlreadyApplied ? "View Application Details" : "Apply for this position"}
-              </button>
+              <div className="space-y-2.5">
+                {!isAlreadyApplied && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (job) {
+                        quickApplyMutation.mutate({ jobId: job._id });
+                      }
+                    }}
+                    disabled={quickApplyMutation.isPending}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#3C65F5] to-indigo-600 py-3 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-600 hover:to-indigo-700 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  >
+                    <Zap className="h-4 w-4 fill-white" />
+                    <span>{quickApplyMutation.isPending ? "Quick Applying..." : "⚡ 1-Click Quick Apply"}</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsApplyModalOpen(true)}
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
+                    isAlreadyApplied
+                      ? "bg-[#3C65F5] text-white hover:bg-blue-600 border-transparent"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  } shadow-xs`}
+                >
+                  {isAlreadyApplied ? "View Application Details" : "Custom Application & Review"}
+                </button>
+              </div>
 
               {isAlreadyApplied && (
                 <>

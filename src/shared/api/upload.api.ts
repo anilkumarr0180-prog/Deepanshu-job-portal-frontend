@@ -4,7 +4,8 @@ export type CloudinaryUploadType =
   | "profile"
   | "company-logo"
   | "resume"
-  | "post";
+  | "post"
+  | "chat-media";
 
 export interface SignatureResponse {
   timestamp: number;

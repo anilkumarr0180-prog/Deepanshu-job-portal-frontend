@@ -29,6 +29,25 @@ export interface SocialLinks {
   website?: string;
 }
 
+export interface JobPreferences {
+  preferredRoles: string[];
+  preferredSkills: string[];
+  preferredSkillIds?: string[];
+  preferredLocations: string[];
+  workMode?: "onsite" | "remote" | "hybrid" | null;
+  employmentType?:
+    | "Full Time"
+    | "Part Time"
+    | "Contract"
+    | "Internship"
+    | "Remote"
+    | null;
+  experienceLevel?: "Fresher" | "1-2 Years" | "3-5 Years" | "5+ Years" | null;
+  minSalary?: number | null;
+  currency?: string | null;
+  salaryPeriod?: "yearly" | "monthly" | "hourly" | null;
+}
+
 export interface BackendProfile {
   _id: string;
   name: string;
@@ -50,6 +69,7 @@ export interface BackendProfile {
   state?: string;
   country?: string;
   socialLinks?: SocialLinks;
+  jobPreferences?: JobPreferences;
   designation?: string;
   department?: string;
   companyId?: string | { _id: string; name?: string; logo?: string };
@@ -77,6 +97,7 @@ export interface UpdateProfilePayload {
   state?: string;
   country?: string;
   socialLinks?: SocialLinks;
+  jobPreferences?: Partial<JobPreferences>;
   designation?: string;
   department?: string;
   companyId?: string;

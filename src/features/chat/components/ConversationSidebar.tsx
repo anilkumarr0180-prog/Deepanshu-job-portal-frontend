@@ -77,7 +77,7 @@ export default function ConversationSidebar({
 
   const visibleConversations = useMemo(() => {
     try {
-      const key = "jobbox_deleted_convs";
+      const key = "jobbox_deleted_convs_" + currentUserId;
       const deletedMap: Record<string, number> = JSON.parse(localStorage.getItem(key) || "{}");
       return conversations.filter((conv) => {
         const id = conv._id || conv.id;
@@ -382,6 +382,7 @@ export default function ConversationSidebar({
                     const lastMsg = (conv as any).lastMessageId?.message || "";
                     const isLastMsgImage = (conv as any).lastMessageId?.messageType === "image";
                     const isLastMsgFile = (conv as any).lastMessageId?.messageType === "file";
+                    const isLastMsgVoice = (conv as any).lastMessageId?.messageType === "voice";
 
                     return (
                       <div
@@ -390,10 +391,10 @@ export default function ConversationSidebar({
                           onSelectConversation(convId);
                           setSearchTerm("");
                         }}
-                        className={`w-full text-left flex items-center gap-3 px-4 py-3.5 transition-all relative group cursor-pointer ${
+                        className={`w-full text-left flex items-center gap-3 px-4 py-3.5 transition-all duration-150 relative group cursor-pointer ${
                           isSelected
-                            ? "bg-blue-50/60 dark:bg-blue-950/40 border-l-[4px] border-l-[#3C65F5]"
-                            : "bg-white dark:bg-slate-900 border-l-[4px] border-l-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                            ? "bg-blue-50/70 dark:bg-blue-950/40 border-l-[3.5px] border-l-[#3C65F5]"
+                            : "bg-white dark:bg-slate-900 border-l-[3.5px] border-l-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60"
                         }`}
                       >
                         <div className="relative shrink-0">
@@ -448,7 +449,9 @@ export default function ConversationSidebar({
                                   : "text-slate-500 dark:text-slate-400"
                               }`}
                             >
-                              {isLastMsgImage
+                              {isLastMsgVoice
+                                ? "🎤 Voice message"
+                                : isLastMsgImage
                                 ? "📷 Photo"
                                 : isLastMsgFile
                                 ? "📎 Attachment"
@@ -574,15 +577,16 @@ export default function ConversationSidebar({
               const lastMsg = (conv as any).lastMessageId?.message || "";
               const isLastMsgImage = (conv as any).lastMessageId?.messageType === "image";
               const isLastMsgFile = (conv as any).lastMessageId?.messageType === "file";
+              const isLastMsgVoice = (conv as any).lastMessageId?.messageType === "voice";
 
               return (
                 <div
                   key={convId}
                   onClick={() => onSelectConversation(convId)}
-                  className={`w-full text-left flex items-center gap-3 px-4 py-3.5 transition-all relative group cursor-pointer ${
+                  className={`w-full text-left flex items-center gap-3 px-4 py-3.5 transition-all duration-150 relative group cursor-pointer ${
                     isSelected
-                      ? "bg-blue-50/60 dark:bg-blue-950/40 border-l-[4px] border-l-[#3C65F5] shadow-[inset_0px_1px_4px_rgba(0,0,0,0.02)]"
-                      : "bg-white dark:bg-slate-900 border-l-[4px] border-l-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                      ? "bg-blue-50/70 dark:bg-blue-950/40 border-l-[3.5px] border-l-[#3C65F5]"
+                      : "bg-white dark:bg-slate-900 border-l-[3.5px] border-l-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60"
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -637,7 +641,9 @@ export default function ConversationSidebar({
                             : "text-slate-500 dark:text-slate-400"
                         }`}
                       >
-                        {isLastMsgImage
+                        {isLastMsgVoice
+                          ? "🎤 Voice message"
+                          : isLastMsgImage
                           ? "📷 Photo"
                           : isLastMsgFile
                           ? "📎 Attachment"

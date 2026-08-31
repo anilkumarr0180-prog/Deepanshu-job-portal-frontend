@@ -14,6 +14,7 @@ export type CallState =
 
 export interface CallUser {
   id: string;
+  _id?: string;
   name?: string;
   profilePicture?: string;
   role?: string;
@@ -26,4 +27,48 @@ export interface ActiveCallData {
   isOutgoing: boolean;
   startedAt?: Date;
   acceptedAt?: Date;
+}
+
+export interface CallHistoryItem {
+  _id: string;
+  id?: string;
+  callId: string;
+  conversationId: string | { _id: string; id?: string };
+  callerId: CallUser | string;
+  receiverId: CallUser | string;
+  status:
+    | "ringing"
+    | "accepted"
+    | "ended"
+    | "cancelled"
+    | "declined"
+    | "busy"
+    | "missed"
+    | "failed";
+  startedAt: string;
+  answeredAt?: string | null;
+  endedAt?: string | null;
+  durationSeconds: number;
+  endReason?: string;
+  isMissedCallRead?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CallHistoryPagination {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface CallHistoryResponse {
+  items: CallHistoryItem[];
+  pagination: CallHistoryPagination;
+}
+
+export interface CallMissedCountPayload {
+  unreadMissedCallCount: number;
 }

@@ -79,3 +79,19 @@ export async function applyForJob(
     payload ?? {}
   );
 }
+
+export interface QuickApplyPayload {
+  jobId: string;
+  coverLetter?: string;
+}
+
+export async function quickApplyForJob(
+  payload: QuickApplyPayload
+): Promise<any> {
+  const response = await axiosInstance.post<{
+    success: boolean;
+    message: string;
+    data: any;
+  }>("/applications/quick-apply", payload);
+  return response.data;
+}

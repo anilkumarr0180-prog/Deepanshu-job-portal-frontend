@@ -4,11 +4,11 @@ import { useRealtime } from "@/shared/context/RealtimeContext";
 
 export const useChatSocket = (activeConversationId?: string | null) => {
   const { user } = useAuth();
-  const { socket, isConnected, joinConversation, leaveConversation } = useRealtime();
+  const { socket, joinConversation, leaveConversation } = useRealtime();
 
   const currentUserName = user?.name || (user as any)?.firstName || "User";
 
-  // Effect: Room join/leave when activeConversationId changes for this component or socket connects
+  // Effect: Room join/leave ONLY when activeConversationId actually changes
   useEffect(() => {
     if (!activeConversationId) return;
 
@@ -17,7 +17,7 @@ export const useChatSocket = (activeConversationId?: string | null) => {
     return () => {
       leaveConversation(activeConversationId);
     };
-  }, [activeConversationId, joinConversation, leaveConversation, isConnected]);
+  }, [activeConversationId]);
 
   // Outgoing Action Handlers (Shared & Reusable across Components)
   const sendMessage = useCallback(

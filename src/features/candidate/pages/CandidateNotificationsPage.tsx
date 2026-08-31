@@ -14,6 +14,7 @@ import {
   Repeat,
   Heart,
   Crown,
+  Calendar,
 } from "lucide-react";
 import { useNotifications } from "@/shared/context/NotificationContext";
 import type { NotificationType } from "@/shared/types/notification";
@@ -21,6 +22,9 @@ import { normalizeNotificationLink } from "@/shared/utils/normalizeRoute";
 
 const getNotificationIcon = (type: NotificationType, title?: string) => {
   const lowerTitle = (title || "").toLowerCase();
+  if (lowerTitle.includes("interview")) {
+    return <Calendar className="h-5 w-5 text-purple-600" />;
+  }
   if (
     lowerTitle.includes("subscription") ||
     lowerTitle.includes("premium") ||

@@ -1,4 +1,4 @@
-export type MessageType = "text" | "image" | "file" | "system";
+export type MessageType = "text" | "image" | "file" | "system" | "voice";
 
 export interface MessageAttachment {
   url: string;

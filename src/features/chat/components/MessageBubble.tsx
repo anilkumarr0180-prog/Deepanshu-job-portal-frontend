@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CheckCheck, FileText, Download, Info, MoreVertical, Edit2, Trash2, X, Check, Ban } from "lucide-react";
 import type { ChatMessage } from "../types/chat.types";
+import VoiceMessagePlayer from "./VoiceMessagePlayer";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -117,9 +118,25 @@ export default function MessageBubble({
     setIsEditing(false);
   };
 
-  const hasAttachments = message.attachments && message.attachments.length > 0;
+  const isVoiceMessage = message.messageType === "voice";
+  const voiceAttachment =
+    isVoiceMessage
+      ? message.attachments?.find((att) => att.mimeType?.startsWith("audio/") || att.url) ||
+        message.attachments?.[0]
+      : null;
+
+  const hasAttachments =
+    !isVoiceMessage && message.attachments && message.attachments.length > 0;
   const isImageOnly =
     message.messageType === "image" && !message.message?.trim();
+
+  // Check if voice message text is default fallback
+  const isVoiceFallbackText =
+    isVoiceMessage &&
+    (!message.message ||
+      message.message.trim() === "🎤 Voice message" ||
+      message.message.trim() === "Voice message" ||
+      message.message.trim() === "voice");
 
   return (
     <div
@@ -135,10 +152,10 @@ export default function MessageBubble({
               <img
                 src={senderAvatar}
                 alt={senderName || "User"}
-                className="h-7 w-7 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-sm"
+                className="h-7 w-7 rounded-full object-cover border border-slate-200/80 dark:border-slate-700/80 shadow-2xs"
               />
             ) : (
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-[10px] font-bold text-white shadow-sm">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#3C65F5] to-indigo-700 text-[10px] font-bold text-white shadow-2xs">
                 {senderName ? senderName.charAt(0).toUpperCase() : "?"}
               </div>
             )
@@ -150,18 +167,17 @@ export default function MessageBubble({
 
       {/* Bubble */}
       <div
-        className={`relative max-w-[72%] sm:max-w-[58%] group-hover:brightness-[0.98] transition-all duration-150 ${
+        className={`relative max-w-[85%] sm:max-w-[70%] md:max-w-[62%] transition-all duration-150 ${
           isSelf ? "items-end" : "items-start"
         } flex flex-col`}
-        style={{ transformOrigin: isSelf ? "right bottom" : "left bottom" }}
       >
         {/* Bubble Body */}
         <div
-          className={`relative rounded-2xl text-sm shadow-sm transition-all ${
+          className={`relative rounded-2xl text-[13.5px] sm:text-sm shadow-2xs transition-all ${
             isSelf
-              ? "bg-[#3C65F5] text-white rounded-tr-md"
-              : "bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 rounded-tl-md"
-          } ${hasAttachments && isImageOnly ? "p-1 overflow-hidden" : "px-4 py-2.5"}`}
+              ? "bg-[#3C65F5] text-white rounded-tr-xs"
+              : "bg-white dark:bg-slate-850 border border-slate-200/90 dark:border-slate-700/80 text-slate-850 dark:text-slate-100 rounded-tl-xs"
+          } ${hasAttachments && isImageOnly ? "p-1 overflow-hidden" : "px-3.5 sm:px-4 py-2 sm:py-2.5"}`}
         >
           {/* Tail for self messages */}
           {isSelf && (
@@ -186,6 +202,18 @@ export default function MessageBubble({
                 style={{ clipPath: "polygon(0 0, 0 100%, 100% 100%)" }}
               />
             </span>
+          )}
+
+          {/* Voice Message Player */}
+          {isVoiceMessage && (
+            <div className="py-1">
+              <VoiceMessagePlayer
+                id={message._id || message.id || `voice_${message.createdAt}`}
+                audioUrl={voiceAttachment?.url}
+                duration={(voiceAttachment as any)?.duration || 0}
+                isSelf={isSelf}
+              />
+            </div>
           )}
 
           {/* Attachments */}
@@ -244,7 +272,7 @@ export default function MessageBubble({
           )}
 
           {/* Message Text or Edit Input */}
-          {message.message && !isImageOnly && (
+          {message.message && !isImageOnly && !isVoiceFallbackText && (
             isEditing ? (
               <div className="flex flex-col gap-2 min-w-[200px]">
                 <textarea

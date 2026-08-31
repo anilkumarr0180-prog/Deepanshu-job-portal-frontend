@@ -92,100 +92,89 @@ function NetworkingContent() {
     });
   };
 
+  const navTabs: {
+    id: NetworkTab;
+    label: string;
+    icon: React.ElementType;
+    badge?: number;
+  }[] = [
+    { id: "feed", label: "Feed & Discussions", icon: Globe },
+    { id: "saved", label: "Saved Posts", icon: Bookmark },
+    { id: "grow", label: "Grow Network", icon: UserPlus },
+    {
+      id: "invitations",
+      label: "Invitations",
+      icon: Inbox,
+      badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined,
+    },
+    { id: "connections", label: "My Connections", icon: Users },
+  ];
+
   return (
     <div className="flex flex-col lg:h-[calc(100vh-7.5rem)] lg:overflow-hidden gap-5">
-      {/* Compact SaaS-Style Page Header & Global Navigation */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800 shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20 shadow-2xs">
-            <Globe className="h-4.5 w-4.5" />
-          </div>
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
-              Professional Networking
-            </h1>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-blue-50 dark:bg-blue-950/70 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-200/70 dark:border-blue-800/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Community Hub
-            </span>
+      {/* Modern SaaS Header & Navigation Bar */}
+      <div className="flex flex-col gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800 shrink-0">
+        {/* Top bar: Title, Badge, and Subtitle */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20 shadow-xs">
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  Professional Networking
+                </h1>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/70">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Community Hub
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 hidden sm:block">
+                Engage with peers, share updates, discover job discussions, and grow your network.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Global Network Navigation Tabs - Sleek Compact Segmented Control */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/70 overflow-x-auto custom-scrollbar shrink-0">
-          <button
-            type="button"
-            onClick={() => handleTabChange("feed")}
-            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
-              activeTab === "feed"
-                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
-            }`}
-          >
-            <Globe className={`h-3.5 w-3.5 ${activeTab === "feed" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
-            <span>Feed & Discussions</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange("saved")}
-            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
-              activeTab === "saved"
-                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
-            }`}
-          >
-            <Bookmark className={`h-3.5 w-3.5 ${activeTab === "saved" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
-            <span>Saved Posts</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange("grow")}
-            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
-              activeTab === "grow"
-                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
-            }`}
-          >
-            <UserPlus className={`h-3.5 w-3.5 ${activeTab === "grow" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
-            <span>Grow Network</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange("invitations")}
-            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
-              activeTab === "invitations"
-                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
-            }`}
-          >
-            <Inbox className={`h-3.5 w-3.5 ${activeTab === "invitations" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
-            <span>Invitations</span>
-            {pendingRequestsCount > 0 && (
-              <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                activeTab === "invitations"
-                  ? "bg-blue-100 text-blue-700 dark:bg-white dark:text-blue-700"
-                  : "bg-blue-600 text-white"
-              }`}>
-                {pendingRequestsCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange("connections")}
-            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
-              activeTab === "connections"
-                ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-2xs border border-slate-200/80 dark:border-blue-500/50"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50"
-            }`}
-          >
-            <Users className={`h-3.5 w-3.5 ${activeTab === "connections" ? "text-blue-600 dark:text-white" : "text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-slate-200"}`} />
-            <span>My Connections</span>
-          </button>
+        {/* Global Network Navigation Tabs - Clean Segmented Pill Control */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/70 overflow-x-auto custom-scrollbar">
+          {navTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={`group flex items-center gap-2 px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-150 whitespace-nowrap cursor-pointer select-none active:scale-95 ${
+                  isActive
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/90 dark:border-slate-700"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60 border border-transparent"
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 shrink-0 transition-colors ${
+                    isActive
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                  }`}
+                />
+                <span>{tab.label}</span>
+                {tab.badge !== undefined && (
+                  <span
+                    className={`ml-0.5 rounded-full px-2 py-0.2 text-[11px] font-bold transition-colors ${
+                      isActive
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
+                        : "bg-blue-600 text-white dark:bg-blue-500"
+                    }`}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 

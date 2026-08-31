@@ -90,7 +90,7 @@ export default function FloatingMessagingDock() {
 
   const visibleConversations = useMemo(() => {
     try {
-      const key = "jobbox_deleted_convs";
+      const key = "jobbox_deleted_convs_" + (currentUserId || "");
       const deletedMap: Record<string, number> = JSON.parse(localStorage.getItem(key) || "{}");
       return conversations.filter((conv) => {
         const id = conv._id || conv.id;
