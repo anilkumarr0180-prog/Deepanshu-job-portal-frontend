@@ -129,10 +129,10 @@ export default function UniversalSearchBar({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`flex flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-lg shadow-slate-200/50 backdrop-blur-md sm:flex-row sm:items-center ${className}`}
+      className={`flex flex-col gap-1.5 sm:gap-1 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-lg shadow-slate-200/50 backdrop-blur-md sm:flex-row sm:items-center ${className}`}
     >
       {/* Industry / Category Select */}
-      <div className="flex h-11 items-center gap-2 border-b border-slate-100 px-3 sm:border-b-0 sm:border-r sm:border-slate-200">
+      <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-slate-100 px-2.5 sm:border-b-0 sm:border-r sm:border-slate-200">
         <BriefcaseBusiness className="h-4 w-4 shrink-0 text-slate-400" />
         <select
           value={industry}
@@ -141,7 +141,7 @@ export default function UniversalSearchBar({
             setIndustry(val);
             onSearch({ keyword: keyword.trim(), location: location.trim(), industry: val });
           }}
-          className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none cursor-pointer sm:w-28"
+          className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none cursor-pointer sm:w-24"
         >
           <option value="">Industry</option>
           <option value="Software">Software</option>
@@ -154,7 +154,7 @@ export default function UniversalSearchBar({
       </div>
 
       {/* Location Field with Geolocation Trigger */}
-      <div className="flex h-11 items-center gap-2 border-b border-slate-100 px-3 sm:border-b-0 sm:border-r sm:border-slate-200">
+      <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-slate-100 px-2.5 sm:border-b-0 sm:border-r sm:border-slate-200">
         <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
         <input
           type="text"
@@ -165,21 +165,21 @@ export default function UniversalSearchBar({
             onSearch({ keyword: keyword.trim(), location: val.trim(), industry: industry.trim() });
           }}
           placeholder="Location..."
-          className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400 sm:w-28"
+          className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400 sm:w-24"
         />
         <button
           type="button"
           onClick={handleDetectLocation}
           title="Detect My Location"
           disabled={isLocating}
-          className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-[#3C65F5]"
+          className="rounded-lg p-0.5 text-slate-400 transition hover:bg-slate-100 hover:text-[#3C65F5]"
         >
           <Navigation className={`h-3.5 w-3.5 ${isLocating ? "animate-spin text-[#3C65F5]" : ""}`} />
         </button>
       </div>
 
       {/* Keyword Input */}
-      <div className="flex h-11 flex-1 items-center px-3">
+      <div className="flex h-10 flex-1 min-w-0 items-center px-2.5">
         <input
           type="text"
           value={keyword}
@@ -189,13 +189,13 @@ export default function UniversalSearchBar({
             onSearch({ keyword: val.trim(), location: location.trim(), industry: industry.trim() });
           }}
           placeholder={placeholder}
-          className="w-full text-xs font-medium text-slate-800 placeholder:text-slate-400 outline-none"
+          className="w-full min-w-0 bg-transparent text-xs font-medium text-slate-800 placeholder:text-slate-400 outline-none"
         />
         {isFiltered && (
           <button
             type="button"
             onClick={handleClear}
-            className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            className="shrink-0 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
             title="Clear filters"
           >
             <X className="h-3.5 w-3.5" />
@@ -206,11 +206,11 @@ export default function UniversalSearchBar({
       {/* Search Button */}
       <button
         type="submit"
-        className={`inline-flex items-center justify-center gap-2 rounded-xl bg-[#3C65F5] font-bold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-[#2956F2] hover:shadow-lg ${
-          compact ? "h-9 px-4 text-xs" : "h-10 px-6 text-xs"
+        className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#3C65F5] font-bold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-[#2956F2] hover:shadow-lg ${
+          compact ? "h-9 px-3.5 text-xs" : "h-10 px-5 text-xs"
         }`}
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-4 w-4 shrink-0" />
         <span>Search</span>
       </button>
     </form>

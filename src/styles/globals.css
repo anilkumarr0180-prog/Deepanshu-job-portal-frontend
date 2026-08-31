@@ -3,7 +3,7 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
 
 :root {
-  --app-bg: #f8fafc;
+  --app-bg: #ffffff;
   --surface-header: #ffffff;
   --surface-sidebar: #ffffff;
   --surface-primary: #ffffff;
@@ -48,6 +48,33 @@ body.dark,
     font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
     letter-spacing: -0.015em;
   }
+}
+
+/* Hero Floating Image Animations */
+@keyframes heroFloatSlow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-8px) translateX(3px);
+  }
+}
+
+@keyframes heroFloatReverse {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(8px) translateX(-3px);
+  }
+}
+
+.animate-hero-float-1 {
+  animation: heroFloatSlow 6s ease-in-out infinite;
+}
+
+.animate-hero-float-2 {
+  animation: heroFloatReverse 7s ease-in-out infinite;
 }
 
 /* ==========================================================================

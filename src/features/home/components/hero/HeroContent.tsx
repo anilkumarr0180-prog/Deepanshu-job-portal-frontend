@@ -8,21 +8,28 @@ interface HeroContentProps {
 
 export default function HeroContent({ onSearchChange, initialFilters }: HeroContentProps) {
   return (
-    <div className="max-w-[600px]">
+    <div className="w-full">
       {/* Heading */}
-      <h1 className="text-4xl font-extrabold leading-[1.15] tracking-tight text-[#05264E] dark:text-[#F1F5F9] sm:text-5xl lg:text-[56px]">
+      <h1 className="text-3xl sm:text-4xl lg:text-[50px] font-extrabold tracking-tight text-[#05264E] dark:text-[#F1F5F9] leading-[1.16] lg:leading-[58px]">
         The{" "}
-        <span className="relative inline-block rounded-xl bg-[#3C65F5]/10 dark:bg-[#3C65F5]/20 px-3 py-0.5 text-[#3C65F5] dark:text-[#5E81FF]">
+        <span className="relative inline-block rounded-[4px] bg-[#DCE7FC] dark:bg-[#3C65F5]/25 px-2 py-0.5 text-[#3C65F5] dark:text-[#5E81FF]">
           Easiest Way
         </span>
         <br />
-        to Get Your New Job
+        to Get Your New
+        <br />
+        Job
       </h1>
 
       {/* Description */}
-      <p className="mt-5 max-w-[560px] text-base leading-relaxed text-slate-500 dark:text-slate-400 sm:text-lg">
-        Each month, more than 3 million job seekers turn to website in their
-        search for work, making over 140,000 applications every single day.
+      <p className="mt-6 max-w-[460px] text-base lg:text-[18px] font-normal leading-[28px] text-[#4F5E64] dark:text-slate-400">
+        Each month, more than 3 million job seekers turn to
+        <br />
+        website in their search for work, making over
+        <br />
+        140,000
+        <br />
+        applications every single day
       </p>
 
       {/* Search Bar & Popular Searches */}

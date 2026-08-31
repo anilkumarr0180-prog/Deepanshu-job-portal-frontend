@@ -14,17 +14,17 @@ export default function NavMenu() {
     : NAV_MENU;
 
   return (
-    <nav>
-      <ul className="flex items-center gap-8">
+    <nav className="flex items-center">
+      <ul className="flex items-center gap-6 lg:gap-8">
         {visibleItems.map((item) => (
           <li key={item.label}>
             <NavLink
               to={item.path}
               className={({ isActive }) =>
-                `text-[15px] font-medium tracking-wide transition-colors duration-200 ${
+                `text-[15px] font-medium leading-none transition-colors duration-200 ${
                   isActive
-                    ? "text-[#3C65F5]"
-                    : "text-slate-700 hover:text-[#3C65F5]"
+                    ? "text-[#3C65F5] font-semibold"
+                    : "text-[#05264E] hover:text-[#3C65F5] dark:text-slate-200 dark:hover:text-[#5E81FF]"
                 }`
               }
             >
@@ -35,4 +35,4 @@ export default function NavMenu() {
       </ul>
     </nav>
   );
-}
+}

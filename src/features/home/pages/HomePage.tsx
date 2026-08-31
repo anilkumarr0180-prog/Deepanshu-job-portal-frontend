@@ -32,7 +32,7 @@ const HomePage = () => {
   };
 
   return (
-    <>
+    <div className="w-full bg-white dark:bg-[#0B1220]">
       <Hero onSearchChange={setFilters} initialFilters={filters} />
 
       {/* Inline Search Results Section (Shown when user searches, hidden when cleared) */}
@@ -87,7 +87,7 @@ const HomePage = () => {
       <MillionsOfJobs />
       <Statistics />
       <TopRecruiters />
-    </>
+    </div>
   );
 };
 
