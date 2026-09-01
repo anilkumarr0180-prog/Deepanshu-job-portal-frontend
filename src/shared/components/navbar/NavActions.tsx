@@ -51,19 +51,17 @@ export default function NavActions() {
   }
 
   return (
-    <div className="flex items-center gap-7 lg:gap-8">
-      <Link
-        to="/register"
-        className="text-[14px] sm:text-[15px] font-medium text-[#05264E] dark:text-slate-200 underline underline-offset-4 decoration-1 transition-colors duration-200 hover:text-[#3C65F5] dark:hover:text-[#5E81FF]"
-      >
-        Register
+    <div className="block-signin flex items-center h-[48px]">
+      <Link to="/register">
+        <span className="text-link-bd-btom hover-up inline-block text-[14px] font-semibold leading-[21px] text-[#05264E] dark:text-slate-200 underline underline-offset-4 decoration-[#05264E] dark:decoration-slate-200 hover:text-[#3C65F5] dark:hover:text-[#5E81FF] transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap">
+          Register
+        </span>
       </Link>
 
-      <Link
-        to="/login"
-        className="inline-flex h-[38px] sm:h-[40px] items-center justify-center rounded-[5px] sm:rounded-[6px] bg-[#3C65F5] px-5 sm:px-6 text-[14px] font-medium text-white transition-colors duration-200 hover:bg-[#2956F2]"
-      >
-        Sign In
+      <Link to="/login">
+        <span className="btn btn-default btn-shadow ml-[40px] hover-up inline-flex h-[44px] items-center justify-center rounded-[6px] bg-[#3C65F5] px-[24px] py-[10px] text-[14px] font-semibold text-white shadow-[0_4px_10px_rgba(60,101,245,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2956F2] hover:shadow-[0_6px_15px_rgba(60,101,245,0.35)]">
+          Sign in
+        </span>
       </Link>
     </div>
   );

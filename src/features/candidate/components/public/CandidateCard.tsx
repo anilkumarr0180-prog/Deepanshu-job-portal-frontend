@@ -1,9 +1,7 @@
-import { ArrowRight, CheckCircle2, Mail, Phone, UserRound } from "lucide-react";
+import { Clock, MapPin, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { BackendProfile } from "../../api/profile.api";
-import { formatRelativeDate } from "@/features/jobs/utils/jobMapper";
-import { PremiumBadge } from "@/shared/components/PremiumBadge";
 
 interface CandidateCardProps {
   candidate: BackendProfile;
@@ -11,86 +9,109 @@ interface CandidateCardProps {
 
 export default function CandidateCard({ candidate }: CandidateCardProps) {
   const displayName = candidate.name?.trim() || "Candidate Professional";
-  const initials = displayName
-    .split(" ")
-    .map((w) => w.charAt(0))
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const initial = displayName.charAt(0).toUpperCase() || "C";
+  const designation = candidate.designation || candidate.headline || "UI/UX Designer";
+  const bio =
+    candidate.bio ||
+    "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero repellendus magni, atque delectus molestias quis?";
+
+  const skills =
+    candidate.skills && candidate.skills.length > 0
+      ? candidate.skills.slice(0, 5)
+      : ["Figma", "Adobe XD", "PSD", "App", "Digital"];
+
+  const location = candidate.city
+    ? `${candidate.city}${candidate.country ? `, ${candidate.country}` : ""}`
+    : "Chicago, US";
+
+  const rate = candidate.jobPreferences?.minSalary || 45;
 
   return (
-    <div className="group flex h-full flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#3C65F5]/40 hover:shadow-xl hover:shadow-blue-500/5 text-center">
-      <div className="flex flex-col items-center">
-        {/* Candidate Avatar */}
-        <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-xl font-extrabold text-white shadow-md shadow-blue-500/15 transition-transform duration-300 group-hover:scale-105">
-          {candidate.profilePicture ? (
-            <img
-              src={candidate.profilePicture}
-              alt={displayName}
-              className="h-full w-full object-cover"
-            />
-          ) : initials ? (
-            <span>{initials}</span>
-          ) : (
-            <UserRound className="h-10 w-10 text-white" />
-          )}
+    <div className="group relative flex h-full flex-col justify-between rounded-[16px] border border-[#E0E6F7] bg-white p-5 sm:p-6 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-[#3C65F5]/40 hover:shadow-lg dark:border-slate-800 dark:bg-[#131D2E] text-left">
+      <div>
+        {/* Top Header: Avatar + Info */}
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <Link to={`/candidates/${candidate._id}`} className="block">
+              <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full bg-[#3C65F5] text-2xl font-bold text-white shadow-xs">
+                {candidate.profilePicture ? (
+                  <img
+                    src={candidate.profilePicture}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span>{initial}</span>
+                )}
+              </div>
+            </Link>
+            {/* Online Indicator */}
+            <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#10B981] dark:border-[#131D2E]" />
+          </div>
+
+          {/* Candidate Info */}
+          <div className="min-w-0 flex-1">
+            <Link to={`/candidates/${candidate._id}`}>
+              <h3 className="line-clamp-1 text-[17px] font-bold text-[#05264E] transition-colors group-hover:text-[#3C65F5] dark:text-[#F1F5F9]">
+                {displayName}
+              </h3>
+            </Link>
+            <p className="mt-0.5 line-clamp-1 text-[13px] text-[#66789C] dark:text-slate-400">
+              {designation}
+            </p>
+            {/* Rating */}
+            <div className="mt-1.5 flex items-center gap-1">
+              <div className="flex items-center text-[#FFAA00]">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="h-3.5 w-3.5 fill-[#FFAA00]" />
+                ))}
+              </div>
+              <span className="text-[12px] font-medium text-[#66789C] dark:text-slate-400">
+                (65)
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Name */}
-        <h3 className="mt-4 line-clamp-1 text-base font-bold text-[#05264E] transition-colors group-hover:text-[#3C65F5]">
-          {displayName}
-        </h3>
+        {/* Description */}
+        <p className="mt-4 line-clamp-2 text-[13px] leading-[20px] text-[#66789C] dark:text-slate-400 min-h-[40px]">
+          {bio}
+        </p>
 
-        {/* Email & Phone contact */}
-        {candidate.email && (
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-            <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span className="line-clamp-1">{candidate.email}</span>
-          </p>
-        )}
-
-        {candidate.phone && (
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-            <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span>{candidate.phone}</span>
-          </p>
-        )}
-
-        {/* Resume status badge & Premium Badge */}
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-          {candidate.subscription?.planCode && !candidate.subscription.planCode.includes("free") && (
-            <PremiumBadge planCode={candidate.subscription.planCode} size="sm" />
-          )}
-
-          {candidate.resumeUrl ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-2xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-              <CheckCircle2 className="h-3 w-3" />
-              <span>Resume Uploaded</span>
+        {/* Skills Chips */}
+        <div className="mt-3.5 flex flex-wrap gap-1.5 min-h-[56px] content-start">
+          {skills.map((skill, index) => (
+            <span
+              key={index}
+              className="inline-flex items-center rounded-md bg-[#EFF4FD] px-2.5 py-1 text-[12px] font-medium text-[#3C65F5] transition-colors hover:bg-[#3C65F5] hover:text-white dark:bg-slate-800 dark:text-blue-400 dark:hover:bg-[#3C65F5] dark:hover:text-white"
+            >
+              {skill}
             </span>
-          ) : (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-2xs font-medium text-slate-600">
-              Candidate Member
-            </span>
-          )}
+          ))}
         </div>
-
-        {/* Member since */}
-        {candidate.createdAt && (
-          <p className="mt-2 text-2xs text-slate-400">
-            Joined {formatRelativeDate(candidate.createdAt)}
-          </p>
-        )}
       </div>
 
-      {/* View Profile Button */}
-      <div className="mt-6 border-t border-slate-100 pt-4">
-        <Link
-          to={`/candidates/${candidate._id}`}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white transition-all duration-200 hover:bg-[#3C65F5] hover:shadow-md hover:shadow-blue-500/20"
-        >
-          <span>View Profile</span>
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+      {/* Bottom Section */}
+      <div className="mt-4 w-full">
+        <div className="border-t border-[#E0E6F7] pt-4 dark:border-slate-800">
+          <div className="flex items-center justify-between text-[12px] text-[#66789C] dark:text-slate-400">
+            {/* Location */}
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-[#A0ABB8] shrink-0" />
+              <span className="line-clamp-1">{location}</span>
+            </div>
+
+            {/* Hourly Rate */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Clock className="h-3.5 w-3.5 text-[#A0ABB8] shrink-0" />
+              <span className="font-bold text-[#05264E] dark:text-slate-200">
+                ${rate}
+                <span className="font-normal text-[#66789C] dark:text-slate-400"> / hour</span>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

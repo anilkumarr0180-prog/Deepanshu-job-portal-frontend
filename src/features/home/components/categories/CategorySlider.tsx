@@ -18,52 +18,52 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   const swiperRef = useRef<SwiperClass | null>(null);
 
   return (
-    <div className="relative flex items-center gap-4">
+    <div className="relative w-full">
       {/* Custom Navigation - Left Arrow */}
       <button
         type="button"
         aria-label="Previous categories"
         onClick={() => swiperRef.current?.slidePrev()}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F2F6FD] dark:bg-[#1B2639] text-[#9FB2CE] dark:text-slate-400 transition-all duration-200 hover:bg-[#3C65F5] hover:text-white active:scale-95 disabled:opacity-40"
+        className="absolute -left-3 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12 items-center justify-center rounded-full bg-[#F2F6FD] dark:bg-[#1B2639] text-[#05264E] dark:text-[#F1F5F9] shadow-sm hover:bg-[#3C65F5] hover:text-white dark:hover:bg-[#3C65F5] dark:hover:text-white transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-40"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
 
       {/* Swiper Container */}
-      <div className="min-w-0 flex-1 overflow-hidden py-4">
+      <div className="w-full overflow-hidden">
         <Swiper
           modules={[Navigation]}
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
           }}
-          spaceBetween={16}
+          spaceBetween={30}
           slidesPerView={5}
-          className="items-center"
+          className="w-full py-1"
           breakpoints={{
             320: {
-              slidesPerView: 1.2,
-              spaceBetween: 12,
+              slidesPerView: 1.3,
+              spaceBetween: 16,
             },
             480: {
               slidesPerView: 2,
-              spaceBetween: 14,
+              spaceBetween: 16,
             },
             640: {
               slidesPerView: 3,
-              spaceBetween: 16,
+              spaceBetween: 20,
             },
             1024: {
               slidesPerView: 4,
-              spaceBetween: 16,
+              spaceBetween: 24,
             },
             1200: {
               slidesPerView: 5,
-              spaceBetween: 16,
+              spaceBetween: 30,
             },
           }}
         >
           {categories.map((category) => (
-            <SwiperSlide key={category.id} className="!h-auto flex items-center">
+            <SwiperSlide key={category.id} className="!h-auto">
               <CategoryCard category={category} />
             </SwiperSlide>
           ))}
@@ -75,10 +75,10 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
         type="button"
         aria-label="Next categories"
         onClick={() => swiperRef.current?.slideNext()}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F2F6FD] dark:bg-[#1B2639] text-[#9FB2CE] dark:text-slate-400 transition-all duration-200 hover:bg-[#3C65F5] hover:text-white active:scale-95 disabled:opacity-40"
+        className="absolute -right-3 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12 items-center justify-center rounded-full bg-[#F2F6FD] dark:bg-[#1B2639] text-[#05264E] dark:text-[#F1F5F9] shadow-sm hover:bg-[#3C65F5] hover:text-white dark:hover:bg-[#3C65F5] dark:hover:text-white transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-40"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
     </div>
   );
-}
+}

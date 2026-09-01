@@ -5,6 +5,9 @@ import { JobsOfDay } from "../components/jobs-of-day";
 import { MillionsOfJobs } from "../components/millions-of-jobs";
 import { Statistics } from "../components/statistics";
 import { TopRecruiters } from "../components/top-recruiters";
+import { JobsByLocation } from "../components/jobs-by-location";
+import { NewsAndBlog } from "../components/news-and-blog";
+import { NewsletterSection } from "../components/newsletter";
 import type { SearchFilterState } from "@/shared/components/UniversalSearchBar";
 import { useJobs } from "@/features/jobs/hooks/useJobs";
 import PublicJobCard from "@/features/jobs/components/PublicJobCard";
@@ -87,6 +90,9 @@ const HomePage = () => {
       <MillionsOfJobs />
       <Statistics />
       <TopRecruiters />
+      <JobsByLocation />
+      <NewsAndBlog />
+      <NewsletterSection />
     </div>
   );
 };

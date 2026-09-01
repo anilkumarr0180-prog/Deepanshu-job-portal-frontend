@@ -1,34 +1,43 @@
 import { NavLink } from "react-router-dom";
-
 import useAuth from "@/features/auth/hooks/useAuth";
 import { NAV_MENU } from "./nav-menu";
 
 export default function NavMenu() {
   const { isAuthenticated } = useAuth();
 
-  // Authenticated users already have a "Dashboard" button in NavActions.
-  // Showing "Home" for them is redundant — RootRedirector just bounces them
-  // back to their dashboard anyway, which is confusing UX.
   const visibleItems = isAuthenticated
     ? NAV_MENU.filter((item) => item.label !== "Home")
     : NAV_MENU;
 
   return (
-    <nav className="flex items-center">
-      <ul className="flex items-center gap-6 lg:gap-8">
+    <nav className="nav-main-menu h-[44px] flex items-center">
+      <ul className="main-menu flex items-center">
         {visibleItems.map((item) => (
-          <li key={item.label}>
+          <li
+            key={item.label}
+            className={`${
+              item.hasDropdown ? "has-children" : ""
+            } group relative shrink-0 px-[11px] lg:px-[13px] xl:px-[15px] py-[10px] h-[38px] flex items-center`}
+          >
             <NavLink
               to={item.path}
               className={({ isActive }) =>
-                `text-[15px] font-medium leading-none transition-colors duration-200 ${
+                `inline-flex items-center text-[14px] font-semibold leading-[18px] whitespace-nowrap transition-colors duration-200 ${
                   isActive
-                    ? "text-[#3C65F5] font-semibold"
+                    ? "text-[#3C65F5]"
                     : "text-[#05264E] hover:text-[#3C65F5] dark:text-slate-200 dark:hover:text-[#5E81FF]"
                 }`
               }
             >
-              {item.label}
+              <span className="whitespace-nowrap">{item.label}</span>
+              {item.hasDropdown && (
+                <svg
+                  className="ml-1.5 w-2 h-1.5 fill-[#A0ABB8] group-hover:fill-[#3C65F5] transition-transform duration-200 group-hover:rotate-180 dark:fill-slate-500 dark:group-hover:fill-[#5E81FF] shrink-0"
+                  viewBox="0 0 10 6"
+                >
+                  <path d="M5 6L0 0H10L5 6Z" />
+                </svg>
+              )}
             </NavLink>
           </li>
         ))}
