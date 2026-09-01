@@ -32,6 +32,7 @@ const PricingPage = withSuspense(lazy(() => import("@/features/subscription/page
 const BillingSettingsPage = withSuspense(lazy(() => import("@/features/subscription/pages/BillingSettingsPage")));
 const PostsPage = withSuspense(lazy(() => import("@/features/posts/pages/PostsPage")));
 const PostDetailsPage = withSuspense(lazy(() => import("@/features/posts/pages/PostDetailsPage")));
+const BlogPage = withSuspense(lazy(() => import("@/features/blog/pages/BlogPage")));
 const NetworkingPage = withSuspense(lazy(() => import("@/features/posts/pages/NetworkingPage")));
 
 // Admin Pages
@@ -125,6 +126,10 @@ export const routes: RouteObject[] = [
       {
         path: "posts/:id",
         element: <PostDetailsPage />,
+      },
+      {
+        path: "blog",
+        element: <BlogPage />,
       },
       {
         path: "login",

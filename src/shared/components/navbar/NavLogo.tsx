@@ -4,11 +4,13 @@ export default function NavLogo() {
   return (
     <Link
       to="/"
-      className="flex items-center transition-opacity duration-200 hover:opacity-90"
+      className="flex items-center transition-opacity duration-200 hover:opacity-90 shrink-0"
       aria-label="JobBox Home"
     >
       <svg
-        className="h-[32px] sm:h-[34px] lg:h-[36px] w-auto"
+        className="w-[139px] h-[36px] block"
+        width="139"
+        height="36"
         viewBox="0 0 139 36"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

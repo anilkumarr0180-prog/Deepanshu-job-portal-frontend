@@ -42,14 +42,14 @@ export default function JobsOfDay() {
 
   return (
     <section className="bg-white dark:bg-[#0B132B] pt-12 pb-8 sm:pt-16 sm:pb-12">
-      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center">
           <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-3xl font-extrabold tracking-tight text-[#05264E] dark:text-[#F1F5F9] sm:text-4xl lg:text-[40px]">
             Jobs of the day
           </h2>
 
-          <p className="mt-2.5 font-['Inter',sans-serif] text-[15px] sm:text-[16px] font-normal text-[#66789C] dark:text-slate-400">
+          <p className="mt-2.5 font-['Plus_Jakarta_Sans',sans-serif] text-[15px] sm:text-[16px] font-normal text-[#66789C] dark:text-slate-400">
             Search and connect with the right candidates faster.
           </p>
         </div>
@@ -100,7 +100,7 @@ export default function JobsOfDay() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredJobs.map((job) => (
               <JobDayCard key={job._id} job={job} />
             ))}

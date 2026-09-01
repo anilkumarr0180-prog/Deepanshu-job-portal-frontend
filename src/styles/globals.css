@@ -50,31 +50,53 @@ body.dark,
   }
 }
 
-/* Hero Floating Image Animations */
-@keyframes heroFloatSlow {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px);
+/* Hero Floating Image Animations (JobBox Original) */
+@keyframes hero-thumb-animation {
+  0% {
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(-8px) translateX(3px);
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
   }
 }
 
-@keyframes heroFloatReverse {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px);
+@keyframes hero-thumb-sm-animation {
+  0% {
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(8px) translateX(-3px);
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0);
   }
 }
 
-.animate-hero-float-1 {
-  animation: heroFloatSlow 6s ease-in-out infinite;
+@keyframes hero-thumb-sm-2-animation {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
-.animate-hero-float-2 {
-  animation: heroFloatReverse 7s ease-in-out infinite;
+.shape-1 {
+  animation: hero-thumb-animation 5s linear infinite alternate;
+}
+
+.shape-2 {
+  animation: hero-thumb-sm-animation 4s linear infinite alternate;
+}
+
+.shape-3 {
+  animation: hero-thumb-sm-2-animation 4s linear infinite alternate;
 }
 
 /* ==========================================================================

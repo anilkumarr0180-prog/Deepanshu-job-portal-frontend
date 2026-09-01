@@ -1,38 +1,44 @@
 import heroTop from "@/assets/images/hero/hero-top.png";
 import heroBottom from "@/assets/images/hero/hero-bottom.png";
+import iconTopBanner from "@/assets/images/hero/icon-top-banner.png";
+import iconBottomBanner from "@/assets/images/hero/icon-bottom-banner.png";
 
 export default function HeroImages() {
   return (
-    <div className="relative w-[480px] h-[450px]">
-      {/* Top Right Dot Matrix Pattern */}
-      <div className="absolute right-[20px] -top-[12px] z-0 grid grid-cols-6 gap-[8px] opacity-75 dark:opacity-40 pointer-events-none">
-        {Array.from({ length: 48 }).map((_, i) => (
-          <span key={i} className="h-[3.5px] w-[3.5px] rounded-full bg-[#8CA0BF] dark:bg-[#5E81FF]" />
-        ))}
-      </div>
-
-      {/* Top Image (Floating animation) */}
-      <div className="animate-hero-float-1 absolute left-0 top-0 z-10 w-[390px]">
+    <div className="banner-imgs relative w-[480px] h-[600px]">
+      {/* Block 1: Top Image (shape-1) */}
+      <div className="block-1 shape-1 absolute left-0 top-0 z-10 w-[365px]">
         <img
           src={heroTop}
-          alt="Job seekers finding career opportunities"
-          className="w-full h-auto object-contain select-none"
+          alt="JobBox"
+          className="img-responsive w-full h-auto object-contain select-none"
         />
       </div>
 
-      {/* Bottom Left Dot Matrix Pattern */}
-      <div className="absolute left-[15px] top-[215px] z-0 grid grid-cols-11 gap-[7px] opacity-75 dark:opacity-40 pointer-events-none">
-        {Array.from({ length: 44 }).map((_, i) => (
-          <span key={i} className="h-[3.5px] w-[3.5px] rounded-full bg-[#8CA0BF] dark:bg-[#5E81FF]" />
-        ))}
+      {/* Block 3: Top Banner Icon Overlay (shape-3) */}
+      <div className="block-3 shape-3 absolute left-[210px] top-[25px] z-20 w-[95px] pointer-events-none select-none">
+        <img
+          src={iconTopBanner}
+          alt="JobBox"
+          className="img-responsive w-full h-auto select-none"
+        />
       </div>
 
-      {/* Bottom Image (Overlaps lower-right of top image) */}
-      <div className="animate-hero-float-2 absolute left-[105px] top-[210px] z-20 w-[355px]">
+      {/* Block 4: Bottom Banner Icon (shape-3) */}
+      <div className="block-4 shape-3 absolute left-[0px] top-[420px] z-10 w-[95px] pointer-events-none select-none opacity-80 dark:opacity-40">
+        <img
+          src={iconBottomBanner}
+          alt="JobBox"
+          className="img-responsive w-full h-auto select-none"
+        />
+      </div>
+
+      {/* Block 2: Bottom Image (shape-2) */}
+      <div className="block-2 shape-2 absolute left-[110px] top-[360px] z-20 w-[345px]">
         <img
           src={heroBottom}
-          alt="Professionals shaking hands after successful job placement"
-          className="w-full h-auto object-contain select-none"
+          alt="JobBox"
+          className="img-responsive w-full h-auto object-contain select-none"
         />
       </div>
     </div>

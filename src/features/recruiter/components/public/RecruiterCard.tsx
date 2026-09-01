@@ -67,23 +67,29 @@ export default function RecruiterCard({ company }: RecruiterCardProps) {
       to={`/recruiters/${encodeURIComponent(company.id)}`}
       className="group block h-full select-none"
     >
-      <div className="flex h-full flex-col justify-between rounded-2xl border border-[#E0E6F7] bg-white p-4.5 sm:p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5] hover:shadow-[0_8px_20px_rgba(60,101,245,0.08)] dark:border-[#1E293B] dark:bg-[#131D2E] dark:hover:border-[#3C65F5]/70 dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
-        {/* Top: Logo + Name & Rating */}
-        <div className="flex items-start gap-3.5">
-          {/* Company Logo or Fallback initials */}
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 border border-slate-100 dark:border-slate-800/80 dark:bg-[#1B2639]">
+      {/* 
+        Pixel-perfect Centered Recruiter Card:
+        White background, rounded-2xl, subtle light-blue border, hover shadow
+      */}
+      <div className="flex h-full min-h-[290px] flex-col items-center justify-between rounded-2xl border border-[#E0E6F7] bg-white p-6 text-center transition-all duration-200 hover:border-[#B0C4F8] hover:shadow-[0_4px_20px_rgba(60,101,245,0.08)] dark:border-[#1E293B] dark:bg-[#131D2E] dark:hover:border-[#3C65F5]/60">
+        
+        {/* Top & Middle Information */}
+        <div className="flex w-full flex-col items-center">
+          
+          {/* Centered Logo — 56×56px rounded-xl */}
+          <div className="mb-3.5 flex h-[56px] w-[56px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 dark:border-slate-800/80 dark:bg-[#1B2639]">
             {company.logo ? (
               <img
                 src={company.logo}
                 alt={company.name}
-                className="h-full w-full object-contain p-1.5 rounded-xl"
+                className="h-full w-full rounded-xl object-contain p-1.5"
                 onError={(e) => {
                   (e.currentTarget as HTMLElement).style.display = "none";
                 }}
               />
             ) : (
               <div
-                className={`flex h-full w-full items-center justify-center text-sm font-bold text-white ${getAvatarBg(
+                className={`flex h-full w-full items-center justify-center rounded-xl text-base font-bold text-white ${getAvatarBg(
                   company.name
                 )}`}
               >
@@ -92,47 +98,47 @@ export default function RecruiterCard({ company }: RecruiterCardProps) {
             )}
           </div>
 
-          {/* Company Name & Rating */}
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate text-[15px] font-bold leading-snug text-[#05264E] transition-colors group-hover:text-[#3C65F5] dark:text-[#F1F5F9] dark:group-hover:text-[#5E81FF]">
-              {company.name}
-            </h3>
+          {/* Centered Company Name */}
+          <h3 className="w-full truncate text-[17px] font-bold leading-snug text-[#05264E] transition-colors group-hover:text-[#3C65F5] dark:text-[#F1F5F9] dark:group-hover:text-[#5E81FF]">
+            {company.name}
+          </h3>
 
-            {/* Rating Stars */}
-            <div className="mt-1 flex items-center gap-1">
-              <div className="flex items-center text-[#FFC107]">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-3 w-3 ${
-                      i < Math.floor(rating)
-                        ? "fill-[#FFC107] text-[#FFC107]"
-                        : "fill-slate-200 text-slate-200 dark:fill-slate-700 dark:text-slate-700"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="ml-1 text-xs font-normal text-slate-400 dark:text-slate-400">
-                ({reviewCount})
-              </span>
+          {/* Centered Rating Stars & Review Count */}
+          <div className="mt-1.5 flex items-center justify-center gap-1">
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-3.5 w-3.5 ${
+                    i < Math.floor(rating)
+                      ? "fill-[#FFC107] text-[#FFC107]"
+                      : "fill-slate-200 text-slate-200 dark:fill-slate-700 dark:text-slate-700"
+                  }`}
+                />
+              ))}
             </div>
+            <span className="text-[12px] text-slate-400 dark:text-slate-400">
+              ({reviewCount})
+            </span>
           </div>
-        </div>
 
-        {/* Bottom: Location + Open Jobs Count */}
-        <div className="mt-4 flex items-center justify-between gap-2 text-xs text-[#66789C] dark:text-slate-400">
-          <div className="flex min-w-0 items-center gap-1.5">
+          {/* Centered Location with MapPin Icon */}
+          <div className="mt-2.5 flex max-w-full items-center justify-center gap-1.5 text-[13px] text-[#66789C] dark:text-slate-400">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-400" />
             <span className="truncate">{locationText}</span>
           </div>
 
-          <span className="shrink-0 font-medium whitespace-nowrap">
+        </div>
+
+        {/* Bottom: Open Jobs Button / Pill */}
+        <div className="mt-5 w-full">
+          <span className="block w-full rounded-lg bg-[#EFF4FD] py-2.5 px-4 text-center text-[13px] font-semibold text-[#3C65F5] transition-colors duration-200 group-hover:bg-[#3C65F5] group-hover:text-white dark:bg-[#1B2639] dark:text-[#5E81FF] dark:group-hover:bg-[#3C65F5] dark:group-hover:text-white">
             {company.activeJobsCount}{" "}
-            {company.activeJobsCount === 1 ? "Open Job" : "Open Jobs"}
+            {company.activeJobsCount === 1 ? "Job Open" : "Jobs Open"}
           </span>
         </div>
+
       </div>
     </Link>
   );
 }
-

@@ -21,7 +21,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Marketing & Sale",
     searchKey: "Marketing",
     icon: Megaphone,
-    variant: "vertical" as const,
     keywords: ["marketing", "sale", "sales", "seo", "media", "growth"],
   },
   {
@@ -29,7 +28,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Customer Help",
     searchKey: "Customer",
     icon: Headset,
-    variant: "vertical" as const,
     keywords: ["customer", "support", "help", "service", "client"],
   },
   {
@@ -37,7 +35,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Finance",
     searchKey: "Finance",
     icon: Landmark,
-    variant: "horizontal" as const,
     keywords: ["finance", "bank", "accountant", "accounting", "audit"],
   },
   {
@@ -45,7 +42,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Software",
     searchKey: "Software",
     icon: Lightbulb,
-    variant: "horizontal" as const,
     keywords: ["software", "developer", "engineer", "react", "frontend", "backend", "fullstack", "node"],
   },
   {
@@ -53,7 +49,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Human Resource",
     searchKey: "Human Resource",
     icon: UserRound,
-    variant: "vertical" as const,
     keywords: ["human resource", "hr", "recruiter", "talent", "people"],
   },
   {
@@ -61,7 +56,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Management",
     searchKey: "Management",
     icon: BriefcaseBusiness,
-    variant: "vertical" as const,
     keywords: ["management", "manager", "lead", "director", "head"],
   },
   {
@@ -69,7 +63,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Design",
     searchKey: "Design",
     icon: Palette,
-    variant: "horizontal" as const,
     keywords: ["design", "ui", "ux", "graphic", "figma", "designer"],
   },
   {
@@ -77,7 +70,6 @@ const CATEGORY_DEFINITIONS = [
     title: "Technology",
     searchKey: "Technology",
     icon: MonitorSmartphone,
-    variant: "horizontal" as const,
     keywords: ["technology", "tech", "data", "cloud", "devops", "security"],
   },
 ];
@@ -103,7 +95,6 @@ export default function Categories() {
         searchKey: def.searchKey,
         jobs: count,
         icon: def.icon,
-        variant: def.variant,
       };
     });
   }, [jobs]);
@@ -112,25 +103,27 @@ export default function Categories() {
   const subtitleCount = totalJobsCount > 0 ? `${totalJobsCount}+` : "800+";
 
   return (
-    <section className="bg-white dark:bg-[#0B1220] pt-14 pb-8 sm:pt-20 sm:pb-12">
-      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
+    <section className="section-box mt-[80px] bg-white dark:bg-[#0B1220]">
+      <div className="container mx-auto max-w-[1140px] px-[12px]">
         {/* Top Heading */}
-        <div className="mb-10 text-center sm:mb-12">
-          <h2 className="text-3xl font-extrabold tracking-tight text-[#05264E] dark:text-[#F1F5F9] sm:text-4xl lg:text-[42px]">
+        <div className="text-center">
+          <h2 className="section-title text-[36px] font-bold tracking-[-0.015em] text-[#05264E] dark:text-[#F1F5F9] leading-[45px] mb-[10px] font-['Plus_Jakarta_Sans',sans-serif]">
             Browse by category
           </h2>
 
-          <p className="mt-3 text-base text-[#66789C] dark:text-slate-400 sm:text-lg">
+          <p className="font-lg text-[18px] font-normal leading-[26px] text-[#66789C] dark:text-slate-400 font-['Plus_Jakarta_Sans',sans-serif]">
             Find the job that's perfect for you. about {subtitleCount} new jobs everyday
           </p>
         </div>
 
         {/* Category Carousel Slider */}
-        <CategorySlider categories={dynamicCategories} />
+        <div className="box-swiper mt-[50px]">
+          <CategorySlider categories={dynamicCategories} />
+        </div>
 
         {/* Bottom Hiring Banner */}
         <HiringBanner />
       </div>
     </section>
   );
-}
+}

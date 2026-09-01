@@ -1,4 +1,4 @@
-import { Briefcase, Clock, MapPin, Zap } from "lucide-react";
+import { Briefcase, Clock, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { BackendJobDetails } from "@/features/jobs/utils/jobMapper";
@@ -6,6 +6,39 @@ import { formatRelativeDate, formatSalary } from "@/features/jobs/utils/jobMappe
 
 interface JobDayCardProps {
   job: BackendJobDetails;
+}
+
+function formatCardSalary(min: number, max: number, fallback = "$500"): string {
+  const val = min > 0 ? min : max > 0 ? max : 0;
+  if (!val) return fallback;
+  
+  if (val >= 100000) {
+    const formatted = (val / 100000).toFixed(val % 100000 === 0 ? 0 : 1);
+    return `₹${formatted}L`;
+  }
+  if (val >= 1000) {
+    const formatted = (val / 1000).toFixed(0);
+    return `₹${formatted}k`;
+  }
+  return `$${val}`;
+}
+
+function JobBoxFlashBadge() {
+  return (
+    <svg
+      width="12"
+      height="16"
+      viewBox="0 0 12 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0"
+    >
+      <path
+        d="M7 0L0 9.5H5.5L4.5 16L12 6.5H6.5L7 0Z"
+        fill="#52D3A2"
+      />
+    </svg>
+  );
 }
 
 export default function JobDayCard({ job }: JobDayCardProps) {
@@ -20,108 +53,135 @@ export default function JobDayCard({ job }: JobDayCardProps) {
     ? job.description.split("\n\n")[0]
     : "";
 
-  const salaryDisplay =
+  const defaultSalaryDisplay =
     job.salaryMin > 0 || job.salaryMax > 0
       ? formatSalary(job.salaryMin, job.salaryMax)
       : "Negotiable";
 
+  const salaryDisplay = formatCardSalary(job.salaryMin, job.salaryMax, defaultSalaryDisplay);
+
   const visibleSkills = job.skills?.slice(0, 3) ?? [];
 
+  const logoUrl =
+    job.companyLogo ||
+    job.companyId?.logo ||
+    job.recruiterId?.profilePicture;
+
+  const isFeaturedCard = Boolean(job.isFeatured);
+
   return (
-    <div className="group flex h-full flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#3C65F5]/40 hover:shadow-xl hover:shadow-blue-500/5">
-      <div>
-        {/* Top Header: Logo + Company Name + Location + Lightning Icon */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {(() => {
-              const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
-              return (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-gradient-to-br from-[#3C65F5] to-[#2545CB] text-base font-extrabold text-white shadow-xs shadow-blue-500/10">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt={job.company}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    initials || "JB"
-                  )}
-                </div>
-              );
-            })()}
-            <div className="min-w-0 flex-1">
-              <h4 className="truncate text-sm font-bold text-[#05264E]">
-                {job.company}
-              </h4>
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
-                <span className="truncate">{job.location}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-            <Zap className="h-4 w-4" />
-          </div>
-        </div>
-
-        {/* Job Title */}
-        <Link to={`/jobs/${job._id}`} className="block">
-          <h3 className="mt-3.5 line-clamp-1 text-base font-bold text-[#05264E] transition-colors group-hover:text-[#3C65F5]">
-            {job.title}
-          </h3>
-        </Link>
-
-        {/* Employment Type & Posted Date */}
-        <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
-          <span className="inline-flex items-center gap-1">
-            <Briefcase className="h-3.5 w-3.5 text-slate-400" />
-            <span>{job.employmentType}</span>
-          </span>
-          <span className="h-1 w-1 rounded-full bg-slate-300" />
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5 text-slate-400" />
-            <span>{formatRelativeDate(job.createdAt)}</span>
-          </span>
-        </div>
-
-        {/* Description preview */}
-        {descriptionPreview && (
-          <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-500">
-            {descriptionPreview}
-          </p>
-        )}
-
-        {/* Skill Pills */}
-        {visibleSkills.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {visibleSkills.map((skill, idx) => (
-              <span
-                key={`${skill}-${idx}`}
-                className="rounded-md bg-slate-100 px-2.5 py-1 text-2xs font-medium text-slate-600 transition-colors group-hover:bg-[#EEF3FF] group-hover:text-[#3C65F5]"
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        )}
+    <div
+      className={`group relative flex h-[394.25px] w-full flex-col justify-between rounded-[8px] bg-white font-['Plus_Jakarta_Sans',sans-serif] transition-all duration-200 hover:-translate-y-1 hover:border-[#3C65F5]/40 hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] dark:bg-[#151F32] ${
+        isFeaturedCard
+          ? "border border-[#3C65F5] dark:border-[#3C65F5]"
+          : "border border-[#E0E6F7] dark:border-[#2A3850]"
+      }`}
+    >
+      {/* Top-Right Two-Tone Flash Badge (Positioned upward at top: 22px, right: 20px) */}
+      <div className="absolute top-[22px] right-[20px]">
+        <JobBoxFlashBadge />
       </div>
 
-      {/* Card Footer: Salary + Apply Now Button */}
-      <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+      {/* 1. Header Block: 52px logo, company name, location */}
+      <div className="flex items-center px-[20px] pt-[26px] pb-[6px]">
+        <div className="flex min-w-0 flex-1 items-center gap-[14px] pr-6">
+          {/* Company Logo: 52px x 52px */}
+          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-[#EEF2F6] dark:bg-[#1B2639]">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={job.company}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#3C65F5] to-[#1E40AF] text-[18px] font-extrabold text-white">
+                {initials || "JB"}
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate text-[15px] font-bold leading-[20px] text-[#05264E] transition-colors group-hover:text-[#3C65F5] dark:text-[#F1F5F9]">
+              {job.company}
+            </h4>
+            <p className="mt-[3px] flex items-center gap-1 text-[12px] leading-[16px] text-[#A0ABB8] dark:text-slate-400">
+              <MapPin className="h-[12px] w-[12px] shrink-0 text-[#A0ABB8]" />
+              <span className="truncate">{job.location || "New York, US"}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Content Block: Unified 20px padding */}
+      <div className="flex flex-1 flex-col justify-between px-[20px] pb-[20px]">
         <div>
-          <span className="text-base font-extrabold text-[#3C65F5]">
-            {salaryDisplay}
-          </span>
-          <span className="text-2xs font-medium text-slate-400">/Year</span>
+          {/* Job Title: 18px bold */}
+          <Link to={`/jobs/${job._id}`} className="block mt-[12px]">
+            <h3 className="truncate text-[18px] font-bold leading-[24px] text-[#05264E] transition-colors group-hover:text-[#3C65F5] dark:text-[#F1F5F9]">
+              {job.title}
+            </h3>
+          </Link>
+
+          {/* Job Metadata: Employment Type & Posted Date */}
+          <div className="mt-[8px] flex items-center gap-[15px] text-[12px] font-normal text-[#A0ABB8] dark:text-slate-400">
+            <span className="inline-flex items-center gap-1.5">
+              <Briefcase className="h-[13px] w-[13px] text-[#A0ABB8]" />
+              <span>{job.employmentType || "Fulltime"}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Clock className="h-[13px] w-[13px] text-[#A0ABB8]" />
+              <span>{formatRelativeDate(job.createdAt)}</span>
+            </span>
+          </div>
+
+          {/* Job Description: 14px, #4F5E64, 66px 3-line clamping */}
+          <p className="mt-[15px] h-[66px] overflow-hidden text-ellipsis text-[14px] leading-[22px] text-[#4F5E64] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] dark:text-slate-300">
+            {descriptionPreview && descriptionPreview.length > 50
+              ? descriptionPreview
+              : "We are looking for a skilled professional to join our fast-growing team and contribute to building modern web applications."}
+          </p>
+
+          {/* Skill Tags */}
+          <div className="mt-[18px] flex h-[28px] flex-wrap items-center gap-[6px] overflow-hidden">
+            {visibleSkills.length > 0 ? (
+              visibleSkills.map((skill, idx) => (
+                <span
+                  key={`${skill}-${idx}`}
+                  className="inline-flex items-center rounded-[4px] bg-[#EFF1F5] px-[10px] py-[4px] text-[12px] font-medium leading-[14px] text-[#4F5E64] transition-colors hover:bg-[#E0E6F7] hover:text-[#3C65F5] dark:bg-[#1E293B] dark:text-slate-300"
+                >
+                  {skill}
+                </span>
+              ))
+            ) : (
+              <span className="inline-flex items-center rounded-[4px] bg-[#EFF1F5] px-[10px] py-[4px] text-[12px] font-medium leading-[14px] text-[#4F5E64] dark:bg-[#1E293B] dark:text-slate-300">
+                General
+              </span>
+            )}
+          </div>
         </div>
 
-        <Link
-          to={`/jobs/${job._id}`}
-          className="inline-flex items-center justify-center rounded-xl bg-[#EEF3FF] px-4 py-2 text-xs font-bold text-[#3C65F5] transition-all duration-200 hover:bg-[#3C65F5] hover:text-white hover:shadow-md hover:shadow-blue-500/20"
-        >
-          Apply Now
-        </Link>
+        {/* 3. Footer: Salary + Apply Now Button (Exact original JobBox styling) */}
+        <div className="mt-auto flex items-center justify-between pt-[10px]">
+          <div className="flex items-baseline">
+            <span className="text-[20px] font-extrabold leading-none text-[#3C65F5]">
+              {salaryDisplay}
+            </span>
+            <span className="text-[12px] font-normal text-[#858585] dark:text-slate-400">
+              /Hour
+            </span>
+          </div>
+
+          <Link
+            to={`/jobs/${job._id}`}
+            className={`inline-flex h-[36px] w-[92px] shrink-0 items-center justify-center rounded-[4px] text-[12px] font-bold transition-all duration-200 ${
+              isFeaturedCard
+                ? "bg-[#3C65F5] text-white shadow-xs"
+                : "bg-[#E0E6F7] text-[#3C65F5] group-hover:bg-[#3C65F5] group-hover:text-white dark:bg-[#1E2B4D] dark:text-[#5E81FF] dark:group-hover:bg-[#3C65F5] dark:group-hover:text-white"
+            }`}
+          >
+            Apply Now
+          </Link>
+        </div>
       </div>
     </div>
   );
