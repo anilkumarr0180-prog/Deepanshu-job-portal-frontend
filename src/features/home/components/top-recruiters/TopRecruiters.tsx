@@ -53,31 +53,31 @@ export default function TopRecruiters() {
   }, [data]);
 
   return (
-    <section className="bg-white dark:bg-[#0B1220] py-8 sm:py-10">
-      <div className="mx-auto max-w-[1160px] px-4 sm:px-6 lg:px-8">
+    <section className="section-box pt-[25px] pb-0 lg:pt-[30px] lg:pb-0 bg-white dark:bg-[#0B132B]">
+      <div className="mx-auto max-w-[1140px] px-[12px]">
         {/* Section Header */}
-        <div className="mb-6 text-center">
-          <h2 className="text-[32px] font-extrabold tracking-tight text-[#05264E] dark:text-[#F1F5F9]">
+        <div className="text-center">
+          <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-[32px] sm:text-[36px] font-bold leading-[45px] text-[#05264E] dark:text-[#F1F5F9]">
             Top Recruiters
           </h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="font-['Plus_Jakarta_Sans',sans-serif] mt-2 text-[15px] sm:text-[18px] text-[#66789C] leading-[26px] dark:text-slate-400">
             Discover your next career move, freelance gig, or internship
           </p>
         </div>
 
-        {/* Static Responsive Grid — no carousel */}
+        {/* Responsive Recruiter Card Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="mt-[40px] lg:mt-[50px] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-[15px]">
             {Array.from({ length: 10 }).map((_, i) => (
               <RecruiterCardSkeleton key={i} />
             ))}
           </div>
         ) : companies.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+          <div className="py-12 text-center text-[15px] text-[#66789C] dark:text-slate-400">
             No recruiters available at the moment.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="mt-[40px] lg:mt-[50px] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-[15px]">
             {companies.map((comp) => (
               <RecruiterCard key={comp.id} company={comp} />
             ))}
