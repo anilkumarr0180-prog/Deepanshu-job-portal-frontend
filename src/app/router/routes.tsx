@@ -33,12 +33,16 @@ const BillingSettingsPage = withSuspense(lazy(() => import("@/features/subscript
 const PostsPage = withSuspense(lazy(() => import("@/features/posts/pages/PostsPage")));
 const PostDetailsPage = withSuspense(lazy(() => import("@/features/posts/pages/PostDetailsPage")));
 const BlogPage = withSuspense(lazy(() => import("@/features/blog/pages/BlogPage")));
+const BlogDetailsPage = withSuspense(lazy(() => import("@/features/blog/pages/BlogDetailsPage")));
 const NetworkingPage = withSuspense(lazy(() => import("@/features/posts/pages/NetworkingPage")));
 
 // Admin Pages
 const AdminDashboardPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminDashboardPage")));
 const AdminFinancePage = withSuspense(lazy(() => import("@/features/admin/pages/AdminFinancePage")));
 const AdminJobsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminJobsPage")));
+const AdminBlogsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminBlogsPage")));
+const AdminCreateBlogPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminCreateBlogPage")));
+const AdminEditBlogPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminEditBlogPage")));
 const AdminMembershipsPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminMembershipsPage")));
 const AdminProfilePage = withSuspense(lazy(() => import("@/features/admin/pages/AdminProfilePage")));
 const AdminRecruitersPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminRecruitersPage")));
@@ -132,6 +136,10 @@ export const routes: RouteObject[] = [
         element: <BlogPage />,
       },
       {
+        path: "blog/:slug",
+        element: <BlogDetailsPage />,
+      },
+      {
         path: "login",
         element: (
           <GuestRoute>
@@ -184,6 +192,18 @@ export const routes: RouteObject[] = [
       {
         path: "jobs",
         element: <AdminJobsPage />,
+      },
+      {
+        path: "blogs",
+        element: <AdminBlogsPage />,
+      },
+      {
+        path: "blogs/create",
+        element: <AdminCreateBlogPage />,
+      },
+      {
+        path: "blogs/:id/edit",
+        element: <AdminEditBlogPage />,
       },
       {
         path: "finance",

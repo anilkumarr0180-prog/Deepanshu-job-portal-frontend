@@ -46,7 +46,7 @@ export function useCloudinaryUpload() {
     (file: File, type: CloudinaryUploadType): boolean => {
       setError(null);
 
-      if (type === "post") {
+      if (type === "post" || type === "blog") {
         if (!ALLOWED_POST_IMAGE_TYPES.includes(file.type.toLowerCase())) {
           const msg =
             "Invalid file format. Only JPG, PNG, WebP, and GIF images are allowed.";

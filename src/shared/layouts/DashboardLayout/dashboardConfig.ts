@@ -1,6 +1,7 @@
 import {
   BellRing,
   Bookmark,
+  BookOpen,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
@@ -76,6 +77,7 @@ export const dashboardConfig = {
       { label: "Users", to: "/admin/users", icon: Users },
       { label: "Recruiters", to: "/admin/recruiters", icon: Building2 },
       { label: "Jobs", to: "/admin/jobs", icon: BriefcaseBusiness },
+      { label: "Blogs", to: "/admin/blogs", icon: BookOpen },
       { label: "Membership Plans", to: "/admin/memberships", icon: Zap },
       { label: "Finance & Billing", to: "/admin/finance", icon: CreditCard },
       { label: "Profile", to: "/admin/profile", icon: UserRound },

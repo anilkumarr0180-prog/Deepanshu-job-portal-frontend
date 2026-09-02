@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Image as ImageIcon } from "lucide-react";
-import type { PublicBlogItem } from "@/features/blog/types/blog.types";
+import { Sparkles, Flame, Image as ImageIcon } from "lucide-react";
+import type { PublicBlogItem } from "../types/blog.types";
 
-interface BlogCardProps {
+interface PublicBlogCardProps {
   post: PublicBlogItem;
 }
 
@@ -30,13 +30,13 @@ function getInitials(name?: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export default function BlogCard({ post }: BlogCardProps) {
+export default function PublicBlogCard({ post }: PublicBlogCardProps) {
   const [imgError, setImgError] = useState(false);
 
   const categoryName =
     typeof post.categoryId === "object" && post.categoryId !== null
       ? post.categoryId.name
-      : "News";
+      : "Articles";
 
   const authorName =
     typeof post.authorId === "object" && post.authorId !== null
@@ -48,23 +48,21 @@ export default function BlogCard({ post }: BlogCardProps) {
       ? post.authorId.profilePicture
       : undefined;
 
-  const dateStr =
+  const dateFormatted =
     formatDate(post.publishedAt) || formatDate(post.createdAt);
 
   const readTimeStr = post.readingTime
     ? `${post.readingTime} min read`
     : "3 min read";
 
+  // Public target link: /blog/:slug (or fallback /blog/:id)
   const blogLink = `/blog/${post.slug || post._id}`;
 
   return (
-    <Link
-      to={blogLink}
-      className="card-grid-3 hover-up group flex h-full flex-col overflow-hidden rounded-[16px] border border-[rgba(6,18,36,0.1)] bg-white transition-all duration-300 hover:border-[#3C65F5] hover:shadow-[0_10px_25px_rgba(6,18,36,0.06)] hover:-translate-y-1 dark:border-[#1E293B] dark:bg-[#131D2E] select-none"
-    >
+    <article className="card-grid-3 hover-up group flex h-full flex-col overflow-hidden rounded-[16px] border border-[rgba(6,18,36,0.1)] bg-white transition-all duration-300 hover:border-[#3C65F5] hover:shadow-[0_10px_25px_rgba(6,18,36,0.06)] hover:-translate-y-1 dark:border-[#1E293B] dark:bg-[#131D2E] select-none">
       {/* Image Container with 10px outer padding matching JobBox card-grid-3-image */}
-      <div className="card-grid-3-image w-full p-[10px]">
-        <figure className="relative h-[210px] w-full overflow-hidden rounded-[12px] bg-slate-100 dark:bg-slate-800">
+      <div className="card-grid-3-image relative w-full p-[10px]">
+        <Link to={blogLink} className="block relative h-[210px] w-full overflow-hidden rounded-[12px] bg-slate-100 dark:bg-slate-800">
           {post.coverImageUrl && !imgError ? (
             <img
               src={post.coverImageUrl}
@@ -79,7 +77,23 @@ export default function BlogCard({ post }: BlogCardProps) {
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">JobBox Blog</span>
             </div>
           )}
-        </figure>
+        </Link>
+
+        {/* Featured / Trending Overlay Badges */}
+        <div className="absolute left-[20px] top-[20px] flex flex-col gap-1 z-10 pointer-events-none">
+          {post.isFeatured && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs backdrop-blur-xs">
+              <Sparkles className="h-3 w-3" />
+              Featured
+            </span>
+          )}
+          {post.isTrending && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/90 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs backdrop-blur-xs">
+              <Flame className="h-3 w-3" />
+              Trending
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Card Body Info */}
@@ -92,11 +106,13 @@ export default function BlogCard({ post }: BlogCardProps) {
         </div>
 
         {/* Blog Title: 20px font-bold */}
-        <h5 className="font-['Plus_Jakarta_Sans',sans-serif] text-[20px] font-bold leading-[28px] text-[#05264E] transition-colors group-hover:text-[#3C65F5] dark:text-[#F1F5F9] dark:group-hover:text-[#5E81FF] line-clamp-2 min-h-[56px]">
-          {post.title}
-        </h5>
+        <h3 className="font-['Plus_Jakarta_Sans',sans-serif] text-[20px] font-bold leading-[28px] text-[#05264E] transition-colors group-hover:text-[#3C65F5] dark:text-[#F1F5F9] dark:group-hover:text-[#5E81FF] line-clamp-2 min-h-[56px]">
+          <Link to={blogLink} title={post.title}>
+            {post.title}
+          </Link>
+        </h3>
 
-        {/* Blog Description */}
+        {/* Blog Excerpt */}
         <p className="mt-[10px] mb-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[14px] leading-[22px] text-[#4F5E64] dark:text-slate-400 line-clamp-3 flex-1">
           {post.excerpt}
         </p>
@@ -117,11 +133,11 @@ export default function BlogCard({ post }: BlogCardProps) {
               </div>
             )}
             <div className="flex flex-col min-w-0">
-              <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[13px] font-bold leading-[18px] text-[#05264E] dark:text-[#F1F5F9] truncate max-w-[120px]">
+              <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[13px] font-bold leading-[18px] text-[#05264E] dark:text-[#F1F5F9] truncate max-w-[120px] sm:max-w-[140px]">
                 {authorName}
               </span>
               <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[11px] leading-[16px] text-[#A0ABB8] dark:text-slate-400">
-                {dateStr}
+                {dateFormatted}
               </span>
             </div>
           </div>
@@ -132,6 +148,6 @@ export default function BlogCard({ post }: BlogCardProps) {
           </span>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
