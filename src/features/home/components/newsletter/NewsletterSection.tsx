@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Mail, CheckCircle2 } from "lucide-react";
 
-// ── Real newsletter collage images (215×276 left, 200×221 right) ──
-import newsletterLeft  from "@/assets/images/newsletter/newsletter-left.png";
+// ── Newsletter Collage Images (215×276 left, 200×221 right) ──
+import newsletterLeft from "@/assets/images/newsletter/newsletter-left.png";
 import newsletterRight from "@/assets/images/newsletter/newsletter-right.png";
 
 export default function NewsletterSection() {
@@ -10,176 +9,108 @@ export default function NewsletterSection() {
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    // UI-only — no newsletter backend implemented.
     setEmail("");
   };
 
   return (
-    <section className="bg-white dark:bg-[#0B1220] py-8 sm:py-10">
-      <div className="mx-auto max-w-[1160px] px-4 sm:px-6 lg:px-8">
-
+    <section className="section-box mt-[50px] mb-[20px] bg-white dark:bg-[#0B132B]">
+      <div className="container mx-auto max-w-[1140px] px-[12px]">
         {/*
-          ── Blue Newsletter Container ──
-          min-h: 435px to match reference desktop height.
-          position: relative so all absolute children are anchored here.
-          overflow-hidden clips images and decorative shapes at rounded corners.
+          ── Box Newsletter Container ──
+          Exact dimensions: 1116px width inside 1140px container, min-h: 435px.
+          Padding: 57px top, 96px bottom matching JobBox DevTools.
         */}
-        <div
-          className="relative overflow-hidden rounded-[20px] bg-[#3C65F5]"
-          style={{ minHeight: 435 }}
-        >
-
-          {/* ──────────────────────────────────────────
-              DECORATIVE BACKGROUND SHAPES  (z-0)
-              Translucent white ovals — partially clipped
-              at the bottom edge of the container.
-          ────────────────────────────────────────── */}
-
-          {/* Large oval — bottom-center */}
+        <div className="box-newsletter relative overflow-hidden rounded-[16px] bg-[#3C65F5] pt-[57px] pb-[96px] px-4 sm:px-6">
+          {/* Decorative background subtle curves */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute z-0"
-            style={{
-              bottom: -100,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 380,
-              height: 260,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.10)",
-            }}
+            className="pointer-events-none absolute -bottom-[100px] left-1/2 -translate-x-1/2 h-[260px] w-[380px] rounded-full bg-white/10"
           />
-
-          {/* Smaller oval — slightly right of center-bottom */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute z-0"
-            style={{
-              bottom: -80,
-              left: "56%",
-              transform: "translateX(-50%)",
-              width: 290,
-              height: 200,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.07)",
-            }}
+            className="pointer-events-none absolute -bottom-[80px] left-[56%] -translate-x-1/2 h-[200px] w-[290px] rounded-full bg-white/[0.07]"
           />
 
-          {/* ──────────────────────────────────────────
-              FLOATING IMAGES  (z-10)
-              Composite PNG collages positioned on each
-              side. Hidden on small screens via md:block.
-              Natural image size scaled to fit container.
-          ────────────────────────────────────────── */}
-
-          {/* Left collage (215×276 px source) */}
-          <img
-            src={newsletterLeft}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            className="pointer-events-none absolute z-10 hidden select-none md:block"
-            style={{
-              top: "50%",
-              left: 30,
-              transform: "translateY(-50%)",
-              width: 215,
-              height: "auto",
-              maxHeight: 390,
-              objectFit: "cover",
-            }}
-          />
-
-          {/* Right collage (200×221 px source) */}
-          <img
-            src={newsletterRight}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            className="pointer-events-none absolute z-10 hidden select-none md:block"
-            style={{
-              top: "50%",
-              right: 30,
-              transform: "translateY(-50%)",
-              width: 200,
-              height: "auto",
-              maxHeight: 350,
-              objectFit: "cover",
-            }}
-          />
-
-          {/* ──────────────────────────────────────────
-              MAIN CONTENT  (z-20)
-              Heading + form, always centered and above
-              all decorative elements.
-          ────────────────────────────────────────── */}
-          <div
-            className="relative z-20 flex flex-col items-center justify-center"
-            style={{ minHeight: 435, padding: "40px 16px" }}
-          >
-
-            {/*
-              Heading: max-w-[500px] at text-[40px] forces the correct
-              2-line break → "New Things Will Always / Update Regularly"
-            */}
-            <h2
-              className="mb-8 text-center font-bold text-white"
-              style={{
-                fontSize: 40,
-                lineHeight: 1.22,
-                maxWidth: 500,
-              }}
-            >
-              New Things Will Always Update Regularly
-            </h2>
-
-            {/*
-              Subscription form:
-              - Target width ≈ 547px, height ≈ 80px
-              - White rounded pill container
-              - [Mail icon] [input] [Subscribe button]
-            */}
-            <form
-              onSubmit={handleSubscribe}
-              className="flex w-full items-center rounded-full bg-white"
-              style={{
-                maxWidth: 547,
-                padding: "10px 10px 10px 20px",
-              }}
-            >
-              {/* Mail icon — left of input */}
-              <Mail
-                className="shrink-0 text-[#66789C]"
-                style={{ width: 20, height: 20, marginRight: 10 }}
+          <div className="relative z-10 grid grid-cols-1 items-center xl:grid-cols-12 gap-4">
+            {/* Left Collage Column (xl:col-span-3) */}
+            <div className="hidden xl:flex xl:col-span-3 justify-center items-center">
+              <img
+                src={newsletterLeft}
+                alt="joxBox"
+                className="w-[215px] h-[276px] object-contain select-none pointer-events-none drop-shadow-sm"
+                loading="lazy"
               />
+            </div>
 
-              {/* Email input */}
-              <input
-                id="newsletter-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email here"
-                autoComplete="email"
-                className="min-w-0 flex-1 bg-transparent text-slate-700 outline-none placeholder:text-slate-400"
-                style={{ fontSize: 14 }}
+            {/* Center Content Column (xl:col-span-6) */}
+            <div className="col-span-1 xl:col-span-6 w-full max-w-[540px] mx-auto text-center px-2">
+              {/* Heading: 36px font-bold leading-[45px] */}
+              <h2 className="text-md-newsletter font-['Plus_Jakarta_Sans',sans-serif] text-[28px] sm:text-[36px] font-bold leading-[38px] sm:leading-[45px] text-white">
+                New Things Will Always<br className="hidden sm:inline" /> Update Regularly
+              </h2>
+
+              {/* Form container: max-w-[510px] matching reference */}
+              <div className="box-form-newsletter mt-[35px] sm:mt-[40px]">
+                <form
+                  onSubmit={handleSubscribe}
+                  className="form-newsletter relative flex items-center rounded-[12px] bg-white p-[8px] shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
+                >
+                  {/* Left Solid Envelope Icon matching JobBox template icon */}
+                  <svg
+                    className="absolute left-[20px] top-1/2 -translate-y-1/2 h-[18px] w-[24px] text-[#5F7696] pointer-events-none"
+                    viewBox="0 0 24 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="0.5" y="0.5" width="23" height="17" rx="2" fill="#5F7696" stroke="#5F7696" />
+                    <path d="M1 2L12 10.5L23 2" stroke="white" strokeWidth="1.5" />
+                    <path d="M1 16L9.5 9" stroke="white" strokeWidth="1.5" />
+                    <path d="M23 16L14.5 9" stroke="white" strokeWidth="1.5" />
+                  </svg>
+
+                  {/* Input with left padding for envelope icon */}
+                  <input
+                    id="newsletter-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email here"
+                    autoComplete="email"
+                    className="input-newsletter h-[52px] w-full rounded-[10px] bg-transparent pl-[58px] pr-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[15px] text-[#05264E] placeholder:text-[#94A3B8] outline-none"
+                  />
+
+                  {/* Subscribe Button with Checkmark icon matching Screenshot 2 */}
+                  <button
+                    type="submit"
+                    className="btn btn-default font-heading icon-send-letter inline-flex h-[52px] shrink-0 items-center justify-center gap-2.5 rounded-[10px] bg-[#3C65F5] px-7 font-['Plus_Jakarta_Sans',sans-serif] text-[15px] font-bold text-white transition-all duration-200 hover:bg-[#254CD9] hover:shadow-md"
+                  >
+                    <svg
+                      className="h-[18px] w-[18px] text-white shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <span>Subscribe</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Right Collage Column (xl:col-span-3) */}
+            <div className="hidden xl:flex xl:col-span-3 justify-center items-center">
+              <img
+                src={newsletterRight}
+                alt="joxBox"
+                className="w-[200px] h-[221px] object-contain select-none pointer-events-none drop-shadow-sm"
+                loading="lazy"
               />
-
-              {/* Subscribe button — blue pill inside white form */}
-              <button
-                type="submit"
-                className="ml-3 flex shrink-0 items-center gap-2 rounded-full bg-[#3C65F5] font-semibold text-white transition-colors duration-200 hover:bg-[#2a4fd6] active:bg-[#2244c4]"
-                style={{
-                  padding: "14px 24px",
-                  fontSize: 14,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <CheckCircle2 style={{ width: 16, height: 16 }} />
-                Subscribe
-              </button>
-            </form>
-
+            </div>
           </div>
         </div>
       </div>
