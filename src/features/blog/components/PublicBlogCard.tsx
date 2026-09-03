@@ -5,6 +5,7 @@ import type { PublicBlogItem } from "../types/blog.types";
 
 interface PublicBlogCardProps {
   post: PublicBlogItem;
+  variant?: "standard" | "cover";
 }
 
 function formatDate(dateStr?: string): string {
@@ -14,8 +15,8 @@ function formatDate(dateStr?: string): string {
     return isNaN(d.getTime())
       ? ""
       : d.toLocaleDateString("en-US", {
-          day: "2-digit",
-          month: "short",
+          day: "numeric",
+          month: "long",
           year: "numeric",
         });
   } catch {
@@ -30,13 +31,16 @@ function getInitials(name?: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export default function PublicBlogCard({ post }: PublicBlogCardProps) {
+export default function PublicBlogCard({
+  post,
+  variant = "standard",
+}: PublicBlogCardProps) {
   const [imgError, setImgError] = useState(false);
 
   const categoryName =
     typeof post.categoryId === "object" && post.categoryId !== null
       ? post.categoryId.name
-      : "Articles";
+      : "News";
 
   const authorName =
     typeof post.authorId === "object" && post.authorId !== null
@@ -52,17 +56,93 @@ export default function PublicBlogCard({ post }: PublicBlogCardProps) {
     formatDate(post.publishedAt) || formatDate(post.createdAt);
 
   const readTimeStr = post.readingTime
-    ? `${post.readingTime} min read`
-    : "3 min read";
+    ? `${post.readingTime} mins to read`
+    : "8 mins to read";
 
-  // Public target link: /blog/:slug (or fallback /blog/:id)
   const blogLink = `/blog/${post.slug || post._id}`;
 
+  if (variant === "cover") {
+    return (
+      <div className="card-grid-5 hover-up group relative flex h-[520px] md:h-[575px] w-full flex-col justify-end overflow-hidden rounded-[16px] bg-[#0B132B] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_15px_30px_rgba(0,0,0,0.15)] select-none">
+        {/* Background Cover Image */}
+        {post.coverImageUrl && !imgError ? (
+          <img
+            src={post.coverImageUrl}
+            alt={post.coverImageAlt || post.title}
+            onError={() => setImgError(true)}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 text-slate-400">
+            <ImageIcon className="mb-2 h-10 w-10 opacity-40" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              JobBox Blog
+            </span>
+          </div>
+        )}
+
+        {/* Dark overlay for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+
+        {/* Top badges if featured / trending */}
+        <div className="absolute left-[20px] top-[20px] z-10 flex flex-col gap-1.5 pointer-events-none">
+          {post.isFeatured && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 px-3 py-0.5 text-xs font-bold text-white shadow-xs backdrop-blur-xs">
+              <Sparkles className="h-3.5 w-3.5" />
+              Featured
+            </span>
+          )}
+          {post.isTrending && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/90 px-3 py-0.5 text-xs font-bold text-white shadow-xs backdrop-blur-xs">
+              <Flame className="h-3.5 w-3.5" />
+              Trending
+            </span>
+          )}
+        </div>
+
+        {/* Bottom Content Area */}
+        <div className="relative z-10 p-[24px] sm:p-[28px] md:p-[32px]">
+          <Link to={blogLink} className="block focus:outline-none">
+            <h3 className="mb-[20px] font-['Plus_Jakarta_Sans',sans-serif] text-[22px] sm:text-[24px] md:text-[28px] font-bold leading-[30px] sm:leading-[34px] md:leading-[36px] text-white transition-colors duration-200 group-hover:text-blue-100 line-clamp-3">
+              {post.title}
+            </h3>
+          </Link>
+
+          {/* Author & Date Bar */}
+          <div className="flex items-center gap-3">
+            {authorAvatar ? (
+              <img
+                src={authorAvatar}
+                alt={authorName}
+                className="h-8 w-8 rounded-full object-cover border border-white/40"
+              />
+            ) : (
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-['Plus_Jakarta_Sans',sans-serif] text-xs font-bold text-white shadow-xs">
+                {getInitials(authorName)}
+              </div>
+            )}
+            <span className="font-['Plus_Jakarta_Sans',sans-serif] text-sm font-semibold text-white">
+              {authorName}
+            </span>
+            <span className="font-['Plus_Jakarta_Sans',sans-serif] text-sm text-slate-200/90">
+              {dateFormatted}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Standard card-grid-3 layout for Latest Posts
   return (
     <article className="card-grid-3 hover-up group flex h-full flex-col overflow-hidden rounded-[16px] border border-[rgba(6,18,36,0.1)] bg-white transition-all duration-300 hover:border-[#3C65F5] hover:shadow-[0_10px_25px_rgba(6,18,36,0.06)] hover:-translate-y-1 dark:border-[#1E293B] dark:bg-[#131D2E] select-none">
       {/* Image Container with 10px outer padding matching JobBox card-grid-3-image */}
       <div className="card-grid-3-image relative w-full p-[10px]">
-        <Link to={blogLink} className="block relative h-[210px] w-full overflow-hidden rounded-[12px] bg-slate-100 dark:bg-slate-800">
+        <Link
+          to={blogLink}
+          className="block relative h-[210px] w-full overflow-hidden rounded-[12px] bg-slate-100 dark:bg-slate-800"
+        >
           {post.coverImageUrl && !imgError ? (
             <img
               src={post.coverImageUrl}
@@ -72,9 +152,11 @@ export default function PublicBlogCard({ post }: PublicBlogCardProps) {
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-br from-slate-100 to-slate-200 p-4 text-center text-slate-400 dark:from-slate-800 dark:to-slate-900 dark:text-slate-600">
+            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4 text-center text-slate-400 dark:from-slate-800 dark:to-slate-900 dark:text-slate-600">
               <ImageIcon className="h-8 w-8 mb-1 opacity-50" />
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">JobBox Blog</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                JobBox Blog
+              </span>
             </div>
           )}
         </Link>
