@@ -61,6 +61,9 @@ const CandidateResumePage = withSuspense(lazy(() => import("@/features/candidate
 const CandidateSettingsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateSettingsPage")));
 const CandidateNotificationsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateNotificationsPage")));
 const CandidateMessagesPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateMessagesPage")));
+const CandidateBlogsPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateBlogsPage")));
+const CandidateCreateBlogPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateCreateBlogPage")));
+const CandidateEditBlogPage = withSuspense(lazy(() => import("@/features/candidate/pages/CandidateEditBlogPage")));
 
 // Recruiter Pages
 const RecruiterDashboardPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterDashboardPage")));
@@ -77,6 +80,9 @@ const RecruiterSettingsPage = withSuspense(lazy(() => import("@/features/recruit
 const RecruiterNotificationsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterNotificationsPage")));
 const RecruiterInterviewsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterInterviewsPage")));
 const RecruiterMessagesPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterMessagesPage")));
+const RecruiterBlogsPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterBlogsPage")));
+const RecruiterCreateBlogPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterCreateBlogPage")));
+const RecruiterEditBlogPage = withSuspense(lazy(() => import("@/features/recruiter/pages/RecruiterEditBlogPage")));
 
 // Fallback & Error Pages
 const NotFoundPage = withSuspense(lazy(() => import("@/pages/NotFoundPage")));
@@ -293,6 +299,18 @@ export const routes: RouteObject[] = [
         path: "messages",
         element: <CandidateMessagesPage />,
       },
+      {
+        path: "blogs",
+        element: <CandidateBlogsPage />,
+      },
+      {
+        path: "blogs/create",
+        element: <CandidateCreateBlogPage />,
+      },
+      {
+        path: "blogs/:id/edit",
+        element: <CandidateEditBlogPage />,
+      },
     ],
   },
 
@@ -377,6 +395,18 @@ export const routes: RouteObject[] = [
       {
         path: "messages",
         element: <RecruiterMessagesPage />,
+      },
+      {
+        path: "blogs",
+        element: <RecruiterBlogsPage />,
+      },
+      {
+        path: "blogs/create",
+        element: <RecruiterCreateBlogPage />,
+      },
+      {
+        path: "blogs/:id/edit",
+        element: <RecruiterEditBlogPage />,
       },
     ],
   },

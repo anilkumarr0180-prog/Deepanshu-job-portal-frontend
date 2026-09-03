@@ -1,17 +1,19 @@
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import AdminBlogForm from "../components/AdminBlogForm";
-import { useCreateBlog } from "../hooks/useAdminBlogs";
-import type { CreateBlogPayload } from "../types/admin-blog.types";
+import RecruiterBlogForm from "../components/RecruiterBlogForm";
+import { useCreateRecruiterBlog } from "../hooks/useRecruiterBlogs";
+import type { CreateRecruiterBlogPayload, UpdateRecruiterBlogPayload } from "../types/recruiter-blog.types";
 
-export default function AdminCreateBlogPage() {
+export default function RecruiterCreateBlogPage() {
   const navigate = useNavigate();
-  const createMutation = useCreateBlog();
+  const createMutation = useCreateRecruiterBlog();
 
-  const handleSubmit = (payload: unknown) => {
-    createMutation.mutate(payload as CreateBlogPayload, {
+  const handleSubmit = (
+    payload: CreateRecruiterBlogPayload | UpdateRecruiterBlogPayload
+  ) => {
+    createMutation.mutate(payload as CreateRecruiterBlogPayload, {
       onSuccess: () => {
-        void navigate("/admin/blogs");
+        void navigate("/recruiter/blogs");
       },
     });
   };
@@ -23,40 +25,39 @@ export default function AdminCreateBlogPage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
             <Link
-              to="/admin/blogs"
+              to="/recruiter/blogs"
               className="flex items-center gap-1 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
-              Blogs
+              My Blogs
             </Link>
             <span>/</span>
             <span className="text-slate-800 dark:text-slate-200">Create</span>
           </div>
           <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
-            Create New Blog Post
+            Write New Blog Post
           </h1>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Write and publish a new article for candidate guides, recruiter tips, or platform announcements.
+            Publish recruiting strategies, hiring benchmarks, or engineering culture articles to JobBox.
           </p>
         </div>
 
         <Link
-          to="/admin/blogs"
+          to="/recruiter/blogs"
           className="inline-flex items-center gap-1.5 self-start rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Back to Blogs
+          Back to My Blogs
         </Link>
       </div>
 
-      {/* Form Container */}
-      <AdminBlogForm
+      {/* Form Card */}
+      <RecruiterBlogForm
         isEdit={false}
-        mode="admin"
         isSubmitting={createMutation.isPending}
         onSubmit={handleSubmit}
         onCancel={() => {
-          void navigate("/admin/blogs");
+          void navigate("/recruiter/blogs");
         }}
       />
     </div>

@@ -24,6 +24,12 @@ import type {
   CreateBlogPayload,
   UpdateBlogPayload,
 } from "../types/admin-blog.types";
+import type {
+  CandidateBlogItem,
+  CandidateBlogStatus,
+  CreateCandidateBlogPayload,
+  UpdateCandidateBlogPayload,
+} from "@/features/candidate/types/candidate-blog.types";
 
 export interface AdminBlogFormValues {
   title: string;
@@ -43,17 +49,18 @@ export interface AdminBlogFormValues {
   canonicalUrl: string;
 }
 
-interface AdminBlogFormProps {
-  initialData?: AdminBlogItem;
+export interface AdminBlogFormProps {
+  initialData?: AdminBlogItem | CandidateBlogItem;
   isEdit?: boolean;
   isSubmitting?: boolean;
   onSubmit: (
-    payload: CreateBlogPayload | UpdateBlogPayload,
-    targetStatus?: BlogStatus
+    payload: CreateBlogPayload | UpdateBlogPayload | CreateCandidateBlogPayload | UpdateCandidateBlogPayload,
+    targetStatus?: BlogStatus | CandidateBlogStatus
   ) => void;
   onCancel?: () => void;
   onUnpublish?: () => void;
   onArchive?: () => void;
+  mode?: "admin" | "candidate";
 }
 
 function slugify(text: string): string {
@@ -81,8 +88,11 @@ export default function AdminBlogForm({
   onCancel,
   onUnpublish,
   onArchive,
+  mode = "admin",
 }: AdminBlogFormProps) {
   const formId = useId();
+  const isCandidate = mode === "candidate";
+
   const {
     data: categories,
     isLoading: isLoadingCategories,
@@ -113,8 +123,8 @@ export default function AdminBlogForm({
       coverImagePublicId: initialData?.coverImagePublicId ?? "",
       coverImageAlt: initialData?.coverImageAlt ?? "",
       tags: initialData?.tags ?? [],
-      isFeatured: initialData?.isFeatured ?? false,
-      isTrending: initialData?.isTrending ?? false,
+      isFeatured: !isCandidate && "isFeatured" in (initialData || {}) ? Boolean(initialData?.isFeatured) : false,
+      isTrending: !isCandidate && "isTrending" in (initialData || {}) ? Boolean(initialData?.isTrending) : false,
       metaTitle: initialData?.seo?.metaTitle ?? "",
       metaDescription: initialData?.seo?.metaDescription ?? "",
       keywords: initialData?.seo?.keywords ?? [],
@@ -148,8 +158,8 @@ export default function AdminBlogForm({
         coverImagePublicId: initialData.coverImagePublicId ?? "",
         coverImageAlt: initialData.coverImageAlt ?? "",
         tags: initialData.tags ?? [],
-        isFeatured: initialData.isFeatured ?? false,
-        isTrending: initialData.isTrending ?? false,
+        isFeatured: !isCandidate && "isFeatured" in initialData ? Boolean(initialData.isFeatured) : false,
+        isTrending: !isCandidate && "isTrending" in initialData ? Boolean(initialData.isTrending) : false,
         metaTitle: initialData.seo?.metaTitle ?? "",
         metaDescription: initialData.seo?.metaDescription ?? "",
         keywords: initialData.seo?.keywords ?? [],
@@ -157,7 +167,7 @@ export default function AdminBlogForm({
       });
       setIsSlugManual(true);
     }
-  }, [initialData]);
+  }, [initialData, isCandidate]);
 
   const updateField = <K extends keyof AdminBlogFormValues>(
     field: K,
@@ -294,7 +304,35 @@ export default function AdminBlogForm({
     return true;
   };
 
-  const buildPayload = (statusOverride?: BlogStatus): CreateBlogPayload => {
+  const buildPayload = (statusOverride?: BlogStatus | CandidateBlogStatus): CreateBlogPayload | CreateCandidateBlogPayload => {
+    const readingTime = estimateReadingTime(form.content);
+
+    if (isCandidate) {
+      const candidatePayload: CreateCandidateBlogPayload = {
+        title: form.title.trim(),
+        slug: form.slug.trim() || undefined,
+        excerpt: form.excerpt.trim(),
+        content: form.content.trim(),
+        categoryId: form.categoryId,
+        coverImageUrl: form.coverImageUrl.trim() || undefined,
+        coverImagePublicId: form.coverImagePublicId.trim() || undefined,
+        coverImageAlt: form.coverImageAlt.trim() || undefined,
+        tags: form.tags,
+        readingTime,
+        seo: {
+          metaTitle: form.metaTitle.trim() || undefined,
+          metaDescription: form.metaDescription.trim() || undefined,
+          keywords: form.keywords.length > 0 ? form.keywords : undefined,
+          canonicalUrl: form.canonicalUrl.trim() || undefined,
+        },
+      };
+
+      if (statusOverride) {
+        candidatePayload.status = statusOverride as CandidateBlogStatus;
+      }
+      return candidatePayload;
+    }
+
     const payload: CreateBlogPayload = {
       title: form.title.trim(),
       slug: form.slug.trim() || undefined,
@@ -305,6 +343,7 @@ export default function AdminBlogForm({
       coverImagePublicId: form.coverImagePublicId.trim() || undefined,
       coverImageAlt: form.coverImageAlt.trim() || undefined,
       tags: form.tags,
+      readingTime,
       isFeatured: form.isFeatured,
       isTrending: form.isTrending,
       seo: {
@@ -316,20 +355,21 @@ export default function AdminBlogForm({
     };
 
     if (statusOverride) {
-      payload.status = statusOverride;
+      payload.status = statusOverride as BlogStatus;
     }
 
     return payload;
   };
 
-  const handleAction = (statusOverride?: BlogStatus) => {
+  const handleAction = (statusOverride?: BlogStatus | CandidateBlogStatus) => {
     if (!validateForm()) return;
     const payload = buildPayload(statusOverride);
     onSubmit(payload, statusOverride);
   };
 
-  const currentStatus = initialData?.status ?? "DRAFT";
+  const currentStatus = String(initialData?.status ?? "draft").toLowerCase();
   const readingTimeEst = estimateReadingTime(form.content);
+  const cancelLink = isCandidate ? "/candidate/blogs" : "/admin/blogs";
 
   return (
     <form
@@ -580,14 +620,14 @@ export default function AdminBlogForm({
         </div>
       </section>
 
-      {/* 3. Classification & Flags */}
+      {/* 3. Classification & Visibility */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-[#0B1220] sm:p-8">
         <div className="border-b border-slate-200 pb-5 dark:border-slate-800">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             Category, Tags & Visibility
           </h3>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Organize the article into categories, assign keywords, and set promotional highlights.
+            Organize the article into categories and assign tags.
           </p>
         </div>
 
@@ -695,57 +735,62 @@ export default function AdminBlogForm({
             </div>
           </div>
 
-          {/* Featured Toggle */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-                <Sparkles className="h-5 w-5" />
+          {/* Admin-only Flags (Featured & Trending) */}
+          {!isCandidate && (
+            <>
+              {/* Featured Toggle */}
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      Featured Post
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Display prominently on top banners & home page.
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    checked={form.isFeatured}
+                    onChange={(e) => updateField("isFeatured", e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-focus:outline-none dark:bg-slate-700" />
+                </label>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  Featured Post
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Display prominently on top banners & home page.
-                </p>
-              </div>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                checked={form.isFeatured}
-                onChange={(e) => updateField("isFeatured", e.target.checked)}
-                className="peer sr-only"
-              />
-              <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-focus:outline-none dark:bg-slate-700" />
-            </label>
-          </div>
 
-          {/* Trending Toggle */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-                <Flame className="h-5 w-5" />
+              {/* Trending Toggle */}
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+                    <Flame className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      Trending Post
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Pin to trending feeds and recommended reading sidebar.
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    checked={form.isTrending}
+                    onChange={(e) => updateField("isTrending", e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-rose-500 peer-checked:after:translate-x-full peer-focus:outline-none dark:bg-slate-700" />
+                </label>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  Trending Post
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Pin to trending feeds and recommended reading sidebar.
-                </p>
-              </div>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                checked={form.isTrending}
-                onChange={(e) => updateField("isTrending", e.target.checked)}
-                className="peer sr-only"
-              />
-              <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-rose-500 peer-checked:after:translate-x-full peer-focus:outline-none dark:bg-slate-700" />
-            </label>
-          </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -900,7 +945,7 @@ export default function AdminBlogForm({
             </button>
           ) : (
             <Link
-              to="/admin/blogs"
+              to={cancelLink}
               className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Cancel
@@ -910,24 +955,28 @@ export default function AdminBlogForm({
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Edit Mode specific lifecycle transitions */}
-          {isEdit && currentStatus === "PUBLISHED" && (
+          {isEdit && currentStatus === "published" && (
             <>
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={onUnpublish}
-                className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-              >
-                Unpublish to Draft
-              </button>
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={onArchive}
-                className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-2.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-              >
-                Archive Post
-              </button>
+              {onUnpublish && (
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={onUnpublish}
+                  className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                >
+                  Unpublish to Draft
+                </button>
+              )}
+              {!isCandidate && onArchive && (
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={onArchive}
+                  className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-2.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                >
+                  Archive Post
+                </button>
+              )}
             </>
           )}
 
@@ -935,7 +984,7 @@ export default function AdminBlogForm({
           <button
             type="button"
             disabled={isSubmitting || isUploading}
-            onClick={() => handleAction("DRAFT")}
+            onClick={() => handleAction("draft")}
             className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-800 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             {isSubmitting ? (
@@ -955,7 +1004,7 @@ export default function AdminBlogForm({
             <button
               type="button"
               disabled={isSubmitting || isUploading}
-              onClick={() => handleAction(currentStatus === "PUBLISHED" ? undefined : "PUBLISHED")}
+              onClick={() => handleAction(currentStatus === "published" ? undefined : "published")}
               className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
             >
               {isSubmitting ? (
@@ -963,7 +1012,7 @@ export default function AdminBlogForm({
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Saving...
                 </>
-              ) : currentStatus === "PUBLISHED" ? (
+              ) : currentStatus === "published" ? (
                 "Update Article"
               ) : (
                 "Publish Now"
@@ -973,7 +1022,7 @@ export default function AdminBlogForm({
             <button
               type="button"
               disabled={isSubmitting || isUploading}
-              onClick={() => handleAction("PUBLISHED")}
+              onClick={() => handleAction("published")}
               className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
             >
               {isSubmitting ? (
