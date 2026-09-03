@@ -15,6 +15,7 @@ import {
   Heart,
   Crown,
   Calendar,
+  BookOpen,
 } from "lucide-react";
 import { useNotifications } from "@/shared/context/NotificationContext";
 import type { NotificationType } from "@/shared/types/notification";
@@ -36,6 +37,8 @@ const getNotificationIcon = (type: NotificationType, title?: string) => {
   }
 
   switch (type) {
+    case "BLOG_PUBLISHED":
+      return <BookOpen className="h-5 w-5 text-emerald-600" />;
     case "CONNECTION_REQUEST":
       return <UserPlus className="h-5 w-5 text-[#3C65F5]" />;
     case "CONNECTION_ACCEPTED":

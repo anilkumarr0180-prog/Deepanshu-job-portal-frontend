@@ -212,6 +212,10 @@ export const routes: RouteObject[] = [
         element: <AdminEditBlogPage />,
       },
       {
+        path: "blog/:slug",
+        element: <BlogDetailsPage />,
+      },
+      {
         path: "finance",
         element: <AdminFinancePage />,
       },
@@ -311,6 +315,10 @@ export const routes: RouteObject[] = [
         path: "blogs/:id/edit",
         element: <CandidateEditBlogPage />,
       },
+      {
+        path: "blog/:slug",
+        element: <BlogDetailsPage />,
+      },
     ],
   },
 
@@ -407,6 +415,10 @@ export const routes: RouteObject[] = [
       {
         path: "blogs/:id/edit",
         element: <RecruiterEditBlogPage />,
+      },
+      {
+        path: "blog/:slug",
+        element: <BlogDetailsPage />,
       },
     ],
   },

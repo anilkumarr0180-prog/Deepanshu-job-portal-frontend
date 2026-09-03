@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
@@ -13,6 +13,7 @@ import {
   BookOpen,
   Sparkles,
   Flame,
+  ChevronLeft,
   Image as ImageIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -47,6 +48,20 @@ function getInitials(name?: string): string {
 export default function BlogDetailsPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isDashboard =
+    location.pathname.startsWith("/candidate") ||
+    location.pathname.startsWith("/recruiter") ||
+    location.pathname.startsWith("/admin");
+
+  const dashboardRole = location.pathname.startsWith("/admin")
+    ? "admin"
+    : location.pathname.startsWith("/recruiter")
+    ? "recruiter"
+    : "candidate";
+
+  const dashboardBlogsUrl = `/${dashboardRole}/blogs`;
 
   const [copied, setCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -249,47 +264,76 @@ export default function BlogDetailsPage() {
     : "3 min read";
 
   return (
-    <div className="min-h-screen bg-[#F8FAFD] dark:bg-[#080E1A] pb-24">
+    <div className={isDashboard ? "space-y-6 animate-fadeIn pb-12" : "min-h-screen bg-[#F8FAFD] dark:bg-[#080E1A] pb-24"}>
       {/* ── Top Header / Breadcrumbs Bar ── */}
-      <div className="border-b border-[#E0E6F7] bg-white py-4 dark:border-[#1E293B] dark:bg-[#0B132B]">
-        <div className="container mx-auto max-w-4xl px-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Breadcrumbs */}
-            <nav className="flex items-center gap-2 text-xs font-medium text-[#66789C] dark:text-slate-400">
-              <Link to="/" className="hover:text-[#3C65F5] transition">
-                Home
+      {isDashboard ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <Link
+                to={dashboardBlogsUrl}
+                className="flex items-center gap-1 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                My Blogs
               </Link>
               <span>/</span>
-              <Link to="/blog" className="hover:text-[#3C65F5] transition">
-                Blog
-              </Link>
-              {categorySlugVal && (
-                <>
-                  <span>/</span>
-                  <Link
-                    to={`/blog?category=${categorySlugVal}`}
-                    className="hover:text-[#3C65F5] transition"
-                  >
-                    {categoryName}
-                  </Link>
-                </>
-              )}
-            </nav>
+              <span className="text-slate-800 dark:text-slate-200">{categoryName}</span>
+            </div>
+            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
+              {blog.title}
+            </h1>
+          </div>
 
-            <button
-              type="button"
-              onClick={() => (window.history.length > 2 ? navigate(-1) : navigate("/blog"))}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#3C65F5] hover:underline"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Articles</span>
-            </button>
+          <Link
+            to={dashboardBlogsUrl}
+            className="inline-flex items-center gap-1.5 self-start rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Back to My Blogs
+          </Link>
+        </div>
+      ) : (
+        <div className="border-b border-[#E0E6F7] bg-white py-4 dark:border-[#1E293B] dark:bg-[#0B132B]">
+          <div className="container mx-auto max-w-4xl px-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {/* Breadcrumbs */}
+              <nav className="flex items-center gap-2 text-xs font-medium text-[#66789C] dark:text-slate-400">
+                <Link to="/" className="hover:text-[#3C65F5] transition">
+                  Home
+                </Link>
+                <span>/</span>
+                <Link to="/blog" className="hover:text-[#3C65F5] transition">
+                  Blog
+                </Link>
+                {categorySlugVal && (
+                  <>
+                    <span>/</span>
+                    <Link
+                      to={`/blog?category=${categorySlugVal}`}
+                      className="hover:text-[#3C65F5] transition"
+                    >
+                      {categoryName}
+                    </Link>
+                  </>
+                )}
+              </nav>
+
+              <button
+                type="button"
+                onClick={() => (window.history.length > 2 ? navigate(-1) : navigate("/blog"))}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#3C65F5] hover:underline"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Articles</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── Main Article Container ── */}
-      <article className="container mx-auto max-w-4xl px-4 pt-8">
+      <article className={isDashboard ? "mx-auto max-w-4xl pt-2" : "container mx-auto max-w-4xl px-4 pt-8"}>
         {/* Category Pill + Badges */}
         <div className="flex flex-wrap items-center gap-2">
           {categorySlugVal ? (

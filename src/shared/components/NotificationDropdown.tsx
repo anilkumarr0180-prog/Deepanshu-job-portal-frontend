@@ -14,6 +14,7 @@ import {
   UserCheck,
   Repeat,
   Heart,
+  BookOpen,
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import type { NotificationType } from "../types/notification";
@@ -33,6 +34,8 @@ const getNotificationIcon = (type: NotificationType, title?: string) => {
   }
 
   switch (type) {
+    case "BLOG_PUBLISHED":
+      return <BookOpen className="w-4 h-4 text-emerald-600" />;
     case "CONNECTION_REQUEST":
       return <UserPlus className="w-4 h-4 text-[#3C65F5]" />;
     case "CONNECTION_ACCEPTED":
