@@ -22,7 +22,7 @@ export interface BlogSeo {
   canonicalUrl?: string;
 }
 
-export type BlogStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type BlogStatus = "draft" | "published" | "archived" | "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export interface PublicBlogItem {
   _id: string;

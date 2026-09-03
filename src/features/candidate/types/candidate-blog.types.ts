@@ -1,4 +1,4 @@
-export type BlogStatus = "draft" | "published" | "archived" | "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type CandidateBlogStatus = "draft" | "published" | "DRAFT" | "PUBLISHED";
 
 export interface BlogCategorySummary {
   _id: string;
@@ -24,7 +24,7 @@ export interface BlogSeo {
   canonicalUrl?: string;
 }
 
-export interface AdminBlogItem {
+export interface CandidateBlogItem {
   _id: string;
   title: string;
   slug: string;
@@ -37,7 +37,7 @@ export interface AdminBlogItem {
   coverImageAlt?: string;
   tags: string[];
   readingTime: number;
-  status: BlogStatus;
+  status: CandidateBlogStatus;
   isFeatured: boolean;
   isTrending: boolean;
   publishedAt?: string;
@@ -47,7 +47,7 @@ export interface AdminBlogItem {
   updatedAt: string;
 }
 
-export interface AdminBlogsPagination {
+export interface CandidateBlogsPagination {
   page: number;
   limit: number;
   totalItems: number;
@@ -56,19 +56,19 @@ export interface AdminBlogsPagination {
   hasPrevPage: boolean;
 }
 
-export interface AdminBlogsResponse {
+export interface CandidateBlogsResponse {
   success: boolean;
   message: string;
   data: {
-    items: AdminBlogItem[];
-    pagination: AdminBlogsPagination;
+    items: CandidateBlogItem[];
+    pagination: CandidateBlogsPagination;
   };
 }
 
-export interface AdminBlogDetailResponse {
+export interface CandidateBlogDetailResponse {
   success: boolean;
   message: string;
-  data: AdminBlogItem;
+  data: CandidateBlogItem;
 }
 
 export interface BlogCategoriesResponse {
@@ -77,18 +77,16 @@ export interface BlogCategoriesResponse {
   data: BlogCategorySummary[];
 }
 
-export interface AdminBlogQueryParams {
+export interface CandidateBlogQueryParams {
   page?: number | string;
   limit?: number | string;
-  status?: BlogStatus | "all";
+  status?: CandidateBlogStatus | "all";
   category?: string;
   search?: string;
-  isFeatured?: "true" | "false";
-  isTrending?: "true" | "false";
   sort?: "newest" | "oldest" | "views" | "title";
 }
 
-export interface CreateBlogPayload {
+export interface CreateCandidateBlogPayload {
   title: string;
   slug?: string;
   excerpt: string;
@@ -99,14 +97,12 @@ export interface CreateBlogPayload {
   coverImageAlt?: string;
   tags?: string[];
   readingTime?: number;
-  status?: BlogStatus;
-  isFeatured?: boolean;
-  isTrending?: boolean;
+  status?: CandidateBlogStatus;
   publishedAt?: string;
   seo?: BlogSeo;
 }
 
-export interface UpdateBlogPayload {
+export interface UpdateCandidateBlogPayload {
   title?: string;
   slug?: string;
   excerpt?: string;
@@ -117,9 +113,7 @@ export interface UpdateBlogPayload {
   coverImageAlt?: string;
   tags?: string[];
   readingTime?: number;
-  status?: BlogStatus;
-  isFeatured?: boolean;
-  isTrending?: boolean;
+  status?: CandidateBlogStatus;
   publishedAt?: string | null;
   seo?: BlogSeo;
 }

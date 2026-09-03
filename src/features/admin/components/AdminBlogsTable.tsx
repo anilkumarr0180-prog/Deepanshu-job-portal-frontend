@@ -11,19 +11,22 @@ import {
   Flame,
   Calendar,
   User,
+  Eye,
+  ExternalLink,
   Image as ImageIcon,
 } from "lucide-react";
 
 import StatusBadge from "./StatusBadge";
 import type { AdminBlogItem } from "../types/admin-blog.types";
 
-interface AdminBlogsTableProps {
+export interface AdminBlogsTableProps {
   blogs: AdminBlogItem[];
   onDelete: (blog: AdminBlogItem) => void;
   onPublish: (blog: AdminBlogItem) => void;
   onUnpublish: (blog: AdminBlogItem) => void;
-  onArchive: (blog: AdminBlogItem) => void;
+  onArchive?: (blog: AdminBlogItem) => void;
   isActionLoading?: boolean;
+  mode?: "admin" | "candidate";
 }
 
 function formatDate(dateStr?: string): string {
@@ -49,9 +52,11 @@ export default function AdminBlogsTable({
   onUnpublish,
   onArchive,
   isActionLoading = false,
+  mode = "admin",
 }: AdminBlogsTableProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const isCandidate = mode === "candidate";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -79,15 +84,23 @@ export default function AdminBlogsTable({
               <th scope="col" className="px-3 py-4">
                 Category
               </th>
-              <th scope="col" className="px-3 py-4">
-                Author
-              </th>
+              {!isCandidate ? (
+                <th scope="col" className="px-3 py-4">
+                  Author
+                </th>
+              ) : (
+                <th scope="col" className="px-3 py-4">
+                  Views
+                </th>
+              )}
               <th scope="col" className="px-3 py-4 text-center">
                 Status
               </th>
-              <th scope="col" className="px-3 py-4 text-center">
-                Flags
-              </th>
+              {!isCandidate && (
+                <th scope="col" className="px-3 py-4 text-center">
+                  Flags
+                </th>
+              )}
               <th scope="col" className="px-3 py-4">
                 Published
               </th>
@@ -119,10 +132,12 @@ export default function AdminBlogsTable({
                   ? blog.authorId.profilePicture
                   : undefined;
 
-              const isDraft = blog.status === "DRAFT";
-              const isPublished = blog.status === "PUBLISHED";
-
+              const isDraft = String(blog.status).toLowerCase() === "draft";
+              const isPublished = String(blog.status).toLowerCase() === "published";
               const isMenuOpen = activeMenuId === blog._id;
+              const editUrl = isCandidate
+                ? `/candidate/blogs/${blog._id}/edit`
+                : `/admin/blogs/${blog._id}/edit`;
 
               return (
                 <tr
@@ -149,7 +164,7 @@ export default function AdminBlogsTable({
 
                       <div className="min-w-0 max-w-xs sm:max-w-sm">
                         <Link
-                          to={`/admin/blogs/${blog._id}/edit`}
+                          to={editUrl}
                           className="font-medium text-slate-900 line-clamp-1 transition-colors hover:text-emerald-600 dark:text-slate-100 dark:hover:text-emerald-400"
                           title={blog.title}
                         >
@@ -169,64 +184,75 @@ export default function AdminBlogsTable({
                     </span>
                   </td>
 
-                  {/* Author */}
-                  <td className="px-3 py-4">
-                    <div className="flex items-center gap-2">
-                      {authorAvatar ? (
-                        <img
-                          src={authorAvatar}
-                          alt={authorName}
-                          className="h-7 w-7 shrink-0 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                          <User className="h-3.5 w-3.5" />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
-                          {authorName}
-                        </p>
-                        {authorEmail && (
-                          <p className="truncate text-[11px] text-slate-400">
-                            {authorEmail}
-                          </p>
+                  {/* Author / Views */}
+                  {!isCandidate ? (
+                    <td className="px-3 py-4">
+                      <div className="flex items-center gap-2">
+                        {authorAvatar ? (
+                          <img
+                            src={authorAvatar}
+                            alt={authorName}
+                            className="h-7 w-7 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                            <User className="h-3.5 w-3.5" />
+                          </div>
                         )}
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
+                            {authorName}
+                          </p>
+                          {authorEmail && (
+                            <p className="truncate text-[11px] text-slate-400">
+                              {authorEmail}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
+                  ) : (
+                    <td className="px-3 py-4 text-xs text-slate-600 dark:text-slate-400">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Eye className="h-3.5 w-3.5 text-slate-400" />
+                        {blog.viewsCount || 0}
+                      </div>
+                    </td>
+                  )}
 
                   {/* Status */}
                   <td className="px-3 py-4 text-center">
                     <StatusBadge status={blog.status} />
                   </td>
 
-                  {/* Flags (Featured / Trending) */}
-                  <td className="px-3 py-4 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      {blog.isFeatured && (
-                        <span
-                          title="Featured Post"
-                          className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 border border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
-                        >
-                          <Sparkles className="h-3 w-3 text-amber-500" />
-                          Featured
-                        </span>
-                      )}
-                      {blog.isTrending && (
-                        <span
-                          title="Trending Post"
-                          className="inline-flex items-center gap-0.5 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 border border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
-                        >
-                          <Flame className="h-3 w-3 text-rose-500" />
-                          Trending
-                        </span>
-                      )}
-                      {!blog.isFeatured && !blog.isTrending && (
-                        <span className="text-xs text-slate-400">—</span>
-                      )}
-                    </div>
-                  </td>
+                  {/* Flags (Featured / Trending - Admin only) */}
+                  {!isCandidate && (
+                    <td className="px-3 py-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {blog.isFeatured && (
+                          <span
+                            title="Featured Post"
+                            className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 border border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
+                          >
+                            <Sparkles className="h-3 w-3 text-amber-500" />
+                            Featured
+                          </span>
+                        )}
+                        {blog.isTrending && (
+                          <span
+                            title="Trending Post"
+                            className="inline-flex items-center gap-0.5 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 border border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
+                          >
+                            <Flame className="h-3 w-3 text-rose-500" />
+                            Trending
+                          </span>
+                        )}
+                        {!blog.isFeatured && !blog.isTrending && (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </div>
+                    </td>
+                  )}
 
                   {/* Published Date */}
                   <td className="px-3 py-4 text-xs text-slate-600 dark:text-slate-400">
@@ -245,7 +271,7 @@ export default function AdminBlogsTable({
                     <div className="relative inline-flex items-center justify-end gap-1">
                       {/* Primary Edit Link */}
                       <Link
-                        to={`/admin/blogs/${blog._id}/edit`}
+                        to={editUrl}
                         className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                       >
                         <Edit className="h-3.5 w-3.5" />
@@ -272,6 +298,20 @@ export default function AdminBlogsTable({
                           ref={menuRef}
                           className="absolute right-0 top-full z-20 mt-1.5 w-44 origin-top-right rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-800 dark:bg-slate-900"
                         >
+                          {/* View Live (Published - available for Candidate & Admin) */}
+                          {isPublished && (
+                            <Link
+                              to={`/blog/${blog.slug}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={() => setActiveMenuId(null)}
+                              className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              View Live
+                            </Link>
+                          )}
+
                           {/* Publish (allowed for Draft) */}
                           {isDraft && (
                             <button
@@ -302,8 +342,8 @@ export default function AdminBlogsTable({
                             </button>
                           )}
 
-                          {/* Archive (allowed for Published) */}
-                          {isPublished && (
+                          {/* Archive (allowed for Published - Admin only) */}
+                          {!isCandidate && isPublished && onArchive && (
                             <button
                               type="button"
                               onClick={() => {

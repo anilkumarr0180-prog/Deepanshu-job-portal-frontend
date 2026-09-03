@@ -1,6 +1,6 @@
-export type BlogStatus = "draft" | "published" | "archived" | "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type RecruiterBlogStatus = "draft" | "published" | "DRAFT" | "PUBLISHED";
 
-export interface BlogCategorySummary {
+export interface RecruiterBlogCategorySummary {
   _id: string;
   name: string;
   slug: string;
@@ -9,7 +9,7 @@ export interface BlogCategorySummary {
   postCount?: number;
 }
 
-export interface BlogAuthorSummary {
+export interface RecruiterBlogAuthorSummary {
   _id: string;
   name: string;
   email: string;
@@ -17,37 +17,37 @@ export interface BlogAuthorSummary {
   role: string;
 }
 
-export interface BlogSeo {
+export interface RecruiterBlogSeo {
   metaTitle?: string;
   metaDescription?: string;
   keywords?: string[];
   canonicalUrl?: string;
 }
 
-export interface AdminBlogItem {
+export interface RecruiterBlogItem {
   _id: string;
   title: string;
   slug: string;
   excerpt: string;
   content: string;
-  categoryId: BlogCategorySummary | string;
-  authorId: BlogAuthorSummary | string;
+  categoryId: RecruiterBlogCategorySummary | string;
+  authorId: RecruiterBlogAuthorSummary | string;
   coverImageUrl?: string;
   coverImagePublicId?: string;
   coverImageAlt?: string;
   tags: string[];
   readingTime: number;
-  status: BlogStatus;
+  status: RecruiterBlogStatus;
   isFeatured: boolean;
   isTrending: boolean;
   publishedAt?: string;
-  seo?: BlogSeo;
+  seo?: RecruiterBlogSeo;
   viewsCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface AdminBlogsPagination {
+export interface RecruiterBlogsPagination {
   page: number;
   limit: number;
   totalItems: number;
@@ -56,39 +56,37 @@ export interface AdminBlogsPagination {
   hasPrevPage: boolean;
 }
 
-export interface AdminBlogsResponse {
+export interface RecruiterBlogsResponse {
   success: boolean;
   message: string;
   data: {
-    items: AdminBlogItem[];
-    pagination: AdminBlogsPagination;
+    items: RecruiterBlogItem[];
+    pagination: RecruiterBlogsPagination;
   };
 }
 
-export interface AdminBlogDetailResponse {
+export interface RecruiterBlogDetailResponse {
   success: boolean;
   message: string;
-  data: AdminBlogItem;
+  data: RecruiterBlogItem;
 }
 
-export interface BlogCategoriesResponse {
+export interface RecruiterBlogCategoriesResponse {
   success: boolean;
   message: string;
-  data: BlogCategorySummary[];
+  data: RecruiterBlogCategorySummary[];
 }
 
-export interface AdminBlogQueryParams {
+export interface RecruiterBlogQueryParams {
   page?: number | string;
   limit?: number | string;
-  status?: BlogStatus | "all";
+  status?: RecruiterBlogStatus | "all";
   category?: string;
   search?: string;
-  isFeatured?: "true" | "false";
-  isTrending?: "true" | "false";
   sort?: "newest" | "oldest" | "views" | "title";
 }
 
-export interface CreateBlogPayload {
+export interface CreateRecruiterBlogPayload {
   title: string;
   slug?: string;
   excerpt: string;
@@ -99,14 +97,12 @@ export interface CreateBlogPayload {
   coverImageAlt?: string;
   tags?: string[];
   readingTime?: number;
-  status?: BlogStatus;
-  isFeatured?: boolean;
-  isTrending?: boolean;
+  status?: RecruiterBlogStatus;
   publishedAt?: string;
-  seo?: BlogSeo;
+  seo?: RecruiterBlogSeo;
 }
 
-export interface UpdateBlogPayload {
+export interface UpdateRecruiterBlogPayload {
   title?: string;
   slug?: string;
   excerpt?: string;
@@ -117,9 +113,7 @@ export interface UpdateBlogPayload {
   coverImageAlt?: string;
   tags?: string[];
   readingTime?: number;
-  status?: BlogStatus;
-  isFeatured?: boolean;
-  isTrending?: boolean;
+  status?: RecruiterBlogStatus;
   publishedAt?: string | null;
-  seo?: BlogSeo;
+  seo?: RecruiterBlogSeo;
 }

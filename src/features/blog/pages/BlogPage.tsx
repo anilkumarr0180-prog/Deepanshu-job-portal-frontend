@@ -104,9 +104,19 @@ export default function BlogPage() {
   const blogsList = data?.items ?? [];
   const pagination = data?.pagination;
 
-  // Top 3 cover blogs: use featured blogs or fallback to first 3 blogs
-  const topCoverBlogs =
-    featuredBlogs.length > 0 ? featuredBlogs.slice(0, 3) : blogsList.slice(0, 3);
+  // Top 3 cover blogs: prioritize featured blogs, then backfill remaining slots with latest published blogs
+  const topCoverBlogs = useMemo(() => {
+    const combined = [...featuredBlogs];
+    const seenIds = new Set(combined.map((b) => b._id));
+    for (const blog of blogsList) {
+      if (!seenIds.has(blog._id)) {
+        combined.push(blog);
+        seenIds.add(blog._id);
+      }
+      if (combined.length >= 3) break;
+    }
+    return combined.slice(0, 3);
+  }, [featuredBlogs, blogsList]);
 
   const hasActiveFilters = Boolean(
     (categoryParam && categoryParam !== "all") || searchParam.trim()
