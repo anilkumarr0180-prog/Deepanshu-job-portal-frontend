@@ -7,7 +7,18 @@ export const normalizeNotificationLink = (
   userRole?: string,
   type?: string
 ): string | null => {
-  const role = userRole?.toLowerCase() === "recruiter" ? "recruiter" : "candidate";
+  const role = userRole?.toLowerCase() === "recruiter" ? "recruiter" : userRole?.toLowerCase() === "admin" ? "admin" : "candidate";
+
+  // Blog published notifications -> direct to role dashboard blog detail
+  if (type === "BLOG_PUBLISHED") {
+    if (link) {
+      const slugMatch = link.match(/^\/?blog\/([a-z0-9-]+)/i);
+      if (slugMatch && slugMatch[1]) {
+        return `/${role}/blog/${slugMatch[1]}`;
+      }
+    }
+    return `/${role}/blogs`;
+  }
 
   // Type-first normalization for high-fidelity routing
   if (type === "CONNECTION_REQUEST") {
@@ -34,6 +45,12 @@ export const normalizeNotificationLink = (
   if (!link || link.trim() === "") return null;
 
   const cleanLink = link.trim();
+
+  // Blog slug links when authenticated inside dashboard
+  const blogMatch = cleanLink.match(/^\/?blog\/([a-z0-9-]+)/i);
+  if (blogMatch && blogMatch[1]) {
+    return `/${role}/blog/${blogMatch[1]}`;
+  }
 
   // Post detail deep links (e.g., /posts#post-123 or /posts/123)
   const postMatch = cleanLink.match(/^\/?posts(?:#post-|\/)([a-f0-9]{24}|\w+)/i);
@@ -75,4 +92,3 @@ export const normalizeNotificationLink = (
 
   return cleanLink;
 };
-

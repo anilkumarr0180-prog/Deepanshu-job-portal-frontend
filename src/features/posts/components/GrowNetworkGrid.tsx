@@ -126,7 +126,7 @@ export default function GrowNetworkGrid() {
             <div key={i} className="h-80 rounded-2xl bg-white border border-slate-200 overflow-hidden">
               <div className="h-20 bg-slate-200" />
               <div className="p-4 space-y-3 flex flex-col items-center">
-                <div className="h-16 w-16 -mt-10 rounded-full bg-slate-300 ring-4 ring-white" />
+                <div className="h-16 w-16 -mt-10 rounded-full bg-slate-300 shadow-md" />
                 <div className="h-4 w-28 bg-slate-200 rounded" />
                 <div className="h-3 w-36 bg-slate-100 rounded" />
                 <div className="h-8 w-full bg-slate-100 rounded-xl mt-4" />
@@ -182,13 +182,12 @@ export default function GrowNetworkGrid() {
                       className="relative -mt-10 mb-2 cursor-pointer transition-transform group-hover:scale-105"
                       title={`View ${person.name}'s profile`}
                     >
-                      <div className="ring-4 ring-white rounded-full shadow-md bg-white">
-                        <UserAvatar
-                          src={person.profilePicture}
-                          name={person.name}
-                          size="lg"
-                        />
-                      </div>
+                      <UserAvatar
+                        src={person.profilePicture}
+                        name={person.name}
+                        size="lg"
+                        className="shadow-md"
+                      />
                     </button>
 
                     <button

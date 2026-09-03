@@ -8,7 +8,8 @@ export type NotificationType =
   | "COMMENT_REPLIED"
   | "CONNECTION_REQUEST"
   | "CONNECTION_ACCEPTED"
-  | "POST_REPOSTED";
+  | "POST_REPOSTED"
+  | "BLOG_PUBLISHED";
 
 export interface NotificationItem {
   id: string;
