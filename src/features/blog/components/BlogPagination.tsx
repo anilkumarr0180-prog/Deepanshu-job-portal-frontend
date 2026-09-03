@@ -14,7 +14,7 @@ export default function BlogPagination({
 
   if (totalPages <= 1) return null;
 
-  const maxVisible = 5;
+  const maxVisible = 7;
   const startPage = Math.max(1, page - Math.floor(maxVisible / 2));
   const endPage = Math.min(totalPages, startPage + maxVisible - 1);
   const pages = Array.from(
@@ -23,45 +23,62 @@ export default function BlogPagination({
   );
 
   return (
-    <div className="mt-12 flex items-center justify-center gap-2">
-      <button
-        type="button"
-        onClick={() => onPageChange(page - 1)}
-        disabled={!hasPrevPage}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#E0E6F7] bg-white text-sm font-semibold text-[#05264E] transition-all duration-200 hover:border-[#3C65F5] hover:bg-[#EFF3FC] hover:text-[#3C65F5] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E293B] dark:bg-[#131D2E] dark:text-[#F1F5F9] dark:hover:bg-[#1E293B]"
-        aria-label="Previous page"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </button>
+    <div className="paginations mt-10">
+      <ul className="pager flex h-[48px] items-center">
+        {/* Previous Button (48x48, mr-15) */}
+        <li>
+          <button
+            type="button"
+            onClick={() => onPageChange(page - 1)}
+            disabled={!hasPrevPage}
+            className="pager-prev mr-[15px] inline-flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#F2F6FD] text-[#05264E] transition-colors duration-200 hover:bg-[#3C65F5] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#131D2E] dark:text-[#F1F5F9] dark:hover:bg-[#3C65F5]"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        </li>
 
-      {pages.map((p) => (
-        <button
-          key={p}
-          type="button"
-          onClick={() => onPageChange(p)}
-          className={`inline-flex h-10 min-w-[40px] px-3 items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 ${
-            p === page
-              ? "border border-[#3C65F5] bg-[#3C65F5] text-white shadow-[0_4px_12px_rgba(60,101,245,0.3)]"
-              : "border border-[#E0E6F7] bg-white text-[#05264E] hover:border-[#3C65F5] hover:bg-[#EFF3FC] hover:text-[#3C65F5] dark:border-[#1E293B] dark:bg-[#131D2E] dark:text-[#F1F5F9] dark:hover:bg-[#1E293B]"
-          }`}
-        >
-          {p}
-        </button>
-      ))}
+        {/* Page Numbers */}
+        {pages.map((p) => {
+          const isActive = p === page;
+          return (
+            <li key={p}>
+              <button
+                type="button"
+                onClick={() => onPageChange(p)}
+                className={`pager-number inline-flex h-[48px] min-w-[36px] sm:min-w-[40px] px-2 items-center justify-center font-['Plus_Jakarta_Sans',sans-serif] text-[14px] font-bold transition-colors duration-200 ${
+                  isActive
+                    ? "text-[#3C65F5] dark:text-[#5E81FF]"
+                    : "text-[#A0ABB8] hover:text-[#05264E] dark:text-slate-400 dark:hover:text-[#F1F5F9]"
+                }`}
+              >
+                {p}
+              </button>
+            </li>
+          );
+        })}
 
-      {totalPages > maxVisible && endPage < totalPages && (
-        <span className="px-1 text-sm font-bold text-slate-400">...</span>
-      )}
+        {totalPages > maxVisible && endPage < totalPages && (
+          <li>
+            <span className="inline-flex h-[48px] items-center px-1 text-[14px] font-bold text-[#A0ABB8]">
+              ...
+            </span>
+          </li>
+        )}
 
-      <button
-        type="button"
-        onClick={() => onPageChange(page + 1)}
-        disabled={!hasNextPage}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#E0E6F7] bg-white text-sm font-semibold text-[#05264E] transition-all duration-200 hover:border-[#3C65F5] hover:bg-[#EFF3FC] hover:text-[#3C65F5] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#1E293B] dark:bg-[#131D2E] dark:text-[#F1F5F9] dark:hover:bg-[#1E293B]"
-        aria-label="Next page"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </button>
+        {/* Next Button (48x48, ml-15) */}
+        <li>
+          <button
+            type="button"
+            onClick={() => onPageChange(page + 1)}
+            disabled={!hasNextPage}
+            className="pager-next ml-[15px] inline-flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#F2F6FD] text-[#05264E] transition-colors duration-200 hover:bg-[#3C65F5] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#131D2E] dark:text-[#F1F5F9] dark:hover:bg-[#3C65F5]"
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </li>
+      </ul>
     </div>
   );
 }
