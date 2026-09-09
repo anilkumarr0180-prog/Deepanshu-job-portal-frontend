@@ -35,6 +35,7 @@ const PostDetailsPage = withSuspense(lazy(() => import("@/features/posts/pages/P
 const BlogPage = withSuspense(lazy(() => import("@/features/blog/pages/BlogPage")));
 const BlogDetailsPage = withSuspense(lazy(() => import("@/features/blog/pages/BlogDetailsPage")));
 const NetworkingPage = withSuspense(lazy(() => import("@/features/posts/pages/NetworkingPage")));
+const ContactPage = withSuspense(lazy(() => import("@/features/contact/pages/ContactPage")));
 
 // Admin Pages
 const AdminDashboardPage = withSuspense(lazy(() => import("@/features/admin/pages/AdminDashboardPage")));
@@ -144,6 +145,10 @@ export const routes: RouteObject[] = [
       {
         path: "blog/:slug",
         element: <BlogDetailsPage />,
+      },
+      {
+        path: "contact",
+        element: <ContactPage />,
       },
       {
         path: "login",
