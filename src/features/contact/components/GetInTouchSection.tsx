@@ -115,10 +115,10 @@ export default function GetInTouchSection() {
                     placeholder="Enter your name"
                     disabled={isSubmitting}
                     {...register("name")}
-                    className={`h-[50px] w-full rounded-[8px] border bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60 ${
+                    className={`h-[50px] w-full rounded-[10px] border bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60 ${
                       errors.name
                         ? "border-red-500 focus:border-red-500"
-                        : "border-[#E0E6F7] dark:border-slate-800"
+                        : "border-[#E0E6F6] dark:border-slate-800"
                     }`}
                   />
                   {errors.name && (
@@ -132,7 +132,7 @@ export default function GetInTouchSection() {
                     placeholder="Comapy (optioanl)"
                     disabled={isSubmitting}
                     {...register("company")}
-                    className="h-[50px] w-full rounded-[8px] border border-[#E0E6F7] bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:border-slate-800 dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60"
+                    className="h-[50px] w-full rounded-[10px] border border-[#E0E6F6] bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:border-slate-800 dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60"
                   />
                   {errors.company && (
                     <p className="mt-1 text-xs text-red-500">{errors.company.message}</p>
@@ -148,10 +148,10 @@ export default function GetInTouchSection() {
                     placeholder="Your email"
                     disabled={isSubmitting}
                     {...register("email")}
-                    className={`h-[50px] w-full rounded-[8px] border bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60 ${
+                    className={`h-[50px] w-full rounded-[10px] border bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60 ${
                       errors.email
                         ? "border-red-500 focus:border-red-500"
-                        : "border-[#E0E6F7] dark:border-slate-800"
+                        : "border-[#E0E6F6] dark:border-slate-800"
                     }`}
                   />
                   {errors.email && (
@@ -165,7 +165,7 @@ export default function GetInTouchSection() {
                     placeholder="Phone number"
                     disabled={isSubmitting}
                     {...register("phone")}
-                    className="h-[50px] w-full rounded-[8px] border border-[#E0E6F7] bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:border-slate-800 dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60"
+                    className="h-[50px] w-full rounded-[10px] border border-[#E0E6F6] bg-white px-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:border-slate-800 dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60"
                   />
                   {errors.phone && (
                     <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>
@@ -173,17 +173,16 @@ export default function GetInTouchSection() {
                 </div>
               </div>
 
-              {/* Row 3: Message Textarea */}
-              <div>
+              {/* Row 3: Message Textarea (876x250, padding: 10px 10px 10px 20px, radius: 10px) */}
+              <div className="mb-[30px]">
                 <textarea
-                  rows={8}
                   placeholder="Tell us about yourself"
                   disabled={isSubmitting}
                   {...register("message")}
-                  className={`w-full h-[150px] resize-none rounded-[8px] border bg-white p-[20px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60 ${
+                  className={`w-full h-[250px] rounded-[10px] border bg-white py-[10px] pl-[20px] pr-[10px] text-[14px] text-[#05264E] placeholder:text-[#A0ABB8] focus:border-[#3C65F5] focus:outline-none dark:bg-[#111A2B] dark:text-slate-200 transition-colors disabled:opacity-60 ${
                     errors.message
                       ? "border-red-500 focus:border-red-500"
-                      : "border-[#E0E6F7] dark:border-slate-800"
+                      : "border-[#E0E6F6] dark:border-slate-800"
                   }`}
                 />
                 {errors.message && (
@@ -192,15 +191,15 @@ export default function GetInTouchSection() {
               </div>
 
               {/* Row 4: Submit Button & Policy Checkbox */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center pt-[10px]">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex h-[50px] items-center justify-center gap-2 rounded-[8px] bg-[#3C65F5] px-[28px] text-[14px] font-bold text-white shadow-xs transition-all hover:bg-[#05264E] dark:hover:bg-[#2B4FC7] shrink-0 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
+                  className="inline-flex h-[56px] items-center justify-center gap-[10px] rounded-[8px] bg-[#3C65F5] px-[28px] py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-bold text-white shadow-xs transition-all hover:bg-[#05264E] dark:hover:bg-[#2B4FC7] shrink-0 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
                 >
-                  {isSubmitting && (
+                  {isSubmitting ? (
                     <svg
-                      className="h-4 w-4 animate-spin text-white"
+                      className="h-5 w-5 animate-spin text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -219,22 +218,35 @@ export default function GetInTouchSection() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
+                  ) : (
+                    <svg
+                      className="w-[18px] h-[18px] shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect width="20" height="16" x="2" y="4" rx="2" />
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
                   )}
                   <span>{isSubmitting ? "Sending message..." : "Send message"}</span>
                 </button>
 
-                <div className="flex flex-col">
-                  <label className="flex items-center gap-2.5 text-[13px] text-[#66789C] dark:text-slate-400 cursor-pointer select-none">
+                <div className="flex flex-col mt-4 sm:mt-0 sm:ml-[20px] mb-[5px]">
+                  <label className="flex items-center gap-[10px] font-['Plus_Jakarta_Sans',sans-serif] text-[14px] text-[#05264E] dark:text-slate-300 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       disabled={isSubmitting}
                       {...register("agreeTerms")}
-                      className="h-4 w-4 rounded border-[#E0E6F7] text-[#3C65F5] focus:ring-0 cursor-pointer accent-[#3C65F5] disabled:opacity-60"
+                      className="h-4 w-4 rounded border-[#E0E6F6] text-[#3C65F5] focus:ring-0 cursor-pointer accent-[#3C65F5] disabled:opacity-60 shrink-0"
                     />
                     <span>By clicking contact us button, you agree our terms and policy.</span>
                   </label>
                   {errors.agreeTerms && (
-                    <p className="mt-1 text-xs text-red-500">{errors.agreeTerms.message}</p>
+                    <p className="mt-1 text-xs text-red-500 ml-[26px]">{errors.agreeTerms.message}</p>
                   )}
                 </div>
               </div>
