@@ -112,8 +112,8 @@ export default function Categories() {
   const subtitleCount = totalJobsCount > 0 ? `${totalJobsCount}+` : "800+";
 
   return (
-    <section className="section-box mt-[70px] lg:mt-[80px] bg-white dark:bg-[#0B1220]">
-      <div className="container mx-auto max-w-[1140px] px-[12px]">
+    <section className="section-box mt-[70px] lg:mt-[80px] bg-white dark:bg-[#0B1220] overflow-visible">
+      <div className="container mx-auto max-w-[1140px] px-[12px] overflow-visible">
         {/* Top Heading */}
         <div className="text-center">
           <h2 className="section-title text-[36px] font-bold tracking-[-0.015em] text-[#05264E] dark:text-[#F1F5F9] leading-[45px] mb-[10px] font-['Plus_Jakarta_Sans',sans-serif]">
@@ -126,7 +126,7 @@ export default function Categories() {
         </div>
 
         {/* Category Carousel Slider */}
-        <div className="box-swiper mt-[40px] md:mt-[45px]">
+        <div className="box-swiper mt-[40px] md:mt-[45px] overflow-visible">
           <CategorySlider categories={dynamicCategories} />
         </div>
 

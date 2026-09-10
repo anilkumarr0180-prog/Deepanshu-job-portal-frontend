@@ -26,7 +26,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
             handleClick();
           }
         }}
-        className="item-logo group flex h-[94px] w-full cursor-pointer flex-row items-center gap-[14px] rounded-[8px] border border-[#E0E6F7] dark:border-[#2A3850] bg-white dark:bg-[#151F32] px-[18px] py-[22px] transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5] hover:shadow-[0_10px_25px_rgba(0,0,0,0.06)] dark:hover:shadow-blue-500/10 select-none"
+        className="item-logo group flex h-[94px] w-full cursor-pointer flex-row items-center gap-[10px] rounded-[8px] border border-[#E0E6F7] dark:border-[#2A3850] bg-white dark:bg-[#151F32] p-[22px_16px] transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5] hover:shadow-[0_10px_25px_rgba(0,0,0,0.06)] dark:hover:shadow-blue-500/10 select-none"
       >
         {/* Left Icon */}
         <div className="flex h-8 w-8 shrink-0 items-center justify-center">
@@ -35,10 +35,10 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
         {/* Right Text Info */}
         <div className="min-w-0 flex-1 flex flex-col justify-center text-left">
-          <h4 className="font-['Plus_Jakarta_Sans',sans-serif] text-[15px] sm:text-[16px] font-bold text-[#05264E] dark:text-[#F1F5F9] transition-colors duration-200 group-hover:text-[#3C65F5] leading-[20px] sm:leading-[22px] truncate">
+          <h4 className="font-['Plus_Jakarta_Sans',sans-serif] text-[15px] font-bold text-[#05264E] dark:text-[#F1F5F9] transition-colors duration-200 group-hover:text-[#3C65F5] leading-[20px] whitespace-nowrap">
             {category.title}
           </h4>
-          <p className="mt-[2px] font-['Plus_Jakarta_Sans',sans-serif] text-[12px] sm:text-[13px] font-normal text-[#66789C] dark:text-[#94A3B8] leading-[16px] sm:leading-[18px] truncate">
+          <p className="mt-[2px] font-['Plus_Jakarta_Sans',sans-serif] text-[12px] font-normal text-[#66789C] dark:text-[#94A3B8] leading-[16px] whitespace-nowrap">
             {category.jobs} {category.jobs === 1 ? "Job Available" : "Jobs Available"}
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
           handleClick();
         }
       }}
-      className="item-logo group flex h-[141px] w-full cursor-pointer flex-col justify-between rounded-[8px] border border-[#E0E6F7] dark:border-[#2A3850] bg-white dark:bg-[#151F32] px-[18px] py-[22px] transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5] hover:shadow-[0_10px_25px_rgba(0,0,0,0.06)] dark:hover:shadow-blue-500/10 select-none text-left"
+      className="item-logo group flex h-[141px] w-full cursor-pointer flex-col justify-between rounded-[8px] border border-[#E0E6F7] dark:border-[#2A3850] bg-white dark:bg-[#151F32] p-[22px_18px] transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5] hover:shadow-[0_10px_25px_rgba(0,0,0,0.06)] dark:hover:shadow-blue-500/10 select-none text-left"
     >
       {/* Top Icon */}
       <div className="flex h-8 w-8 items-center justify-start">
