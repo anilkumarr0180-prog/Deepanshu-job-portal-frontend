@@ -55,23 +55,23 @@ export default function GetInTouchSection() {
   };
 
   return (
-    <section className="section-box mt-[50px] lg:mt-[70px] mb-[60px] lg:mb-[80px]">
+    <section className="section-box mt-[70px] mb-[60px] lg:mb-[80px]">
       <div className="container mx-auto max-w-[1140px] px-[12px]">
         <div className="flex flex-wrap -mx-[12px] items-start">
           
           {/* Left Column: Form (8 cols / 66.666% width) */}
           <div className="w-full lg:w-8/12 px-[12px] mb-[40px]">
-            {/* Tagline */}
-            <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-bold text-[#3C65F5] dark:text-[#5E81FF] inline-block mb-[6px]">
+            {/* Tagline — 16px Plus Jakarta Sans, #3C65F5, mt-20, inline-block */}
+            <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-bold text-[#3C65F5] dark:text-[#5E81FF] inline-block mt-[20px]">
               Contact us
             </span>
 
-            {/* Heading */}
-            <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-[36px] font-bold leading-[45px] text-[#05264E] dark:text-[#F1F5F9] mb-[10px]">
+            {/* Heading — 36px Plus Jakarta Sans, #05264E, mt-5, mb-10 */}
+            <h2 className="font-['Plus_Jakarta_Sans',sans-serif] text-[36px] font-bold leading-[45px] text-[#05264E] dark:text-[#F1F5F9] mt-[5px] mb-[10px]">
               Get in touch
             </h2>
 
-            {/* Description */}
+            {/* Description — 16px Plus Jakarta Sans, #66789C, mb-30 */}
             <p className="font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-normal leading-[26px] text-[#66789C] dark:text-slate-400 mb-[30px] max-w-[680px]">
               The right move at the right time saves your investment. live the dream of expanding your business.
             </p>
