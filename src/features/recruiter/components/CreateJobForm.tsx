@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { Sparkles } from "lucide-react";
 
 import type { CreateJobPayload } from "@/features/jobs/api/jobs.api";
+import AiJobGeneratorModal from "@/features/ai/components/AiJobGeneratorModel";
 
 import FormActions from "./FormActions";
 import JobBasicInformation from "./JobBasicInformation";
@@ -84,9 +86,28 @@ export default function CreateJobForm({
     [initialValues]
   );
   const [form, setForm] = useState<CreateJobFormState>(initialFormState);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const updateField = <K extends keyof CreateJobFormState>(field: K, value: CreateJobFormState[K]) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleApplyAiJob = (aiData: {
+    title: string;
+    description: string;
+    skills: string[];
+    experienceLevel: string;
+    employmentType: string;
+  }) => {
+    setForm((prev) => ({
+      ...prev,
+      title: aiData.title || prev.title,
+      description: aiData.description || prev.description,
+      skills: Array.from(new Set([...prev.skills, ...aiData.skills])),
+      experienceLevel: aiData.experienceLevel || prev.experienceLevel,
+      employmentType: aiData.employmentType || prev.employmentType,
+    }));
+    toast.success("AI generated details applied to form!");
   };
 
   const handleAddSkill = () => {
@@ -141,6 +162,27 @@ export default function CreateJobForm({
 
   return (
     <div className="space-y-6">
+      {/* ✨ AI Job Copilot Banner */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-100 p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-md">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-slate-900">Want to speed up job posting?</h4>
+            <p className="text-xs text-slate-500">Let Gemini AI auto-generate description, requirements & skills in seconds.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsAiModalOpen(true)}
+          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition shrink-0 cursor-pointer"
+        >
+          <Sparkles className="h-4 w-4" />
+          Auto-Fill with AI
+        </button>
+      </div>
+
       <JobBasicInformation
         title={form.title}
         company={form.company}
@@ -219,6 +261,13 @@ export default function CreateJobForm({
         draftLabel={draftLabel}
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
+      />
+
+      {/* AI Copilot Modal */}
+      <AiJobGeneratorModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onApply={handleApplyAiJob}
       />
     </div>
   );

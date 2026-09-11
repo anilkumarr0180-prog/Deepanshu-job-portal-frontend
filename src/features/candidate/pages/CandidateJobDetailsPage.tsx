@@ -10,17 +10,19 @@ import {
   Send,
   Bookmark,
   MessageSquare,
+  Zap,
 } from "lucide-react";
 
 import { useJobDetails } from "@/features/jobs/hooks/useJobDetails";
+import { useProfile } from "../hooks/useProfile";
 import { useMyApplications } from "../hooks/useMyApplications";
 import { useQuickApplyJob } from "../hooks/useQuickApplyJob";
-import { Zap } from "lucide-react";
 import { useCheckJobSavedStatus } from "../hooks/useSavedJobs";
 import { useToggleSaveJob } from "../hooks/useToggleSaveJob";
 import { formatSalary, formatRelativeDate } from "../utils/jobMapper";
 import JobDetailsSkeleton from "../components/JobDetailsSkeleton";
 import ApplyJobModal from "../components/ApplyJobModal";
+import AiMatchScoreCard from "@/features/ai/components/AiMatchScoreCard";
 
 export default function CandidateJobDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +36,7 @@ export default function CandidateJobDetailsPage() {
     refetch,
   } = useJobDetails(id ?? "");
 
+  const { data: profile } = useProfile();
   const { data: myApplications } = useMyApplications();
 
   const { data: isSaved = false } = useCheckJobSavedStatus(id ?? "");
@@ -208,7 +211,10 @@ export default function CandidateJobDetailsPage() {
             )}
           </div>
 
-          <div>
+          <div className="space-y-6">
+            {/* ✨ Real-Time AI ATS Match Score Widget */}
+            <AiMatchScoreCard job={job} candidateProfile={profile} />
+
             <div className="sticky top-24 rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
