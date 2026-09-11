@@ -34,91 +34,102 @@ export default function PublicJobCard({ job }: PublicJobCardProps) {
   return (
     <Link
       to={`/jobs/${job._id}`}
-      className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5]/30 hover:shadow-xl"
+      className="group flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#3C65F5]/30 hover:shadow-xl"
     >
-      {/* Logo + Title + Company + Location */}
-      <div className="flex items-start gap-4">
-        {(() => {
-          const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
-          return (
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-[#EEF3FF] text-sm font-bold text-[#3C65F5]">
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={companyName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                initials
-              )}
-            </div>
-          );
-        })()}
+      <div>
+        {/* Top Row: Company Logo & Featured Badge */}
+        <div className="flex items-center justify-between gap-3">
+          {(() => {
+            const logoUrl = job.companyLogo || job.companyId?.logo || job.recruiterId?.profilePicture;
+            return (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-[#EEF3FF] text-sm font-bold text-[#3C65F5]">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={companyName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
+            );
+          })()}
 
-        <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-1 text-lg font-semibold text-[#05264E] transition-colors group-hover:text-[#3C65F5]">
-            {job.title || "Untitled Position"}
-          </h3>
-          <p className="mt-1 line-clamp-1 text-sm font-medium text-slate-600">
-            {companyName}
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="line-clamp-1">{job.location || "Remote"}</span>
-          </p>
+          {job.isFeatured && (
+            <div className="shrink-0">
+              <FeaturedJobBadge />
+            </div>
+          )}
         </div>
 
-        {job.isFeatured && (
-          <div className="shrink-0">
-            <FeaturedJobBadge />
+        {/* Job Title: Full width with 2-line clamp */}
+        <div className="mt-4">
+          <h3
+            className="line-clamp-2 text-base sm:text-lg font-bold text-[#05264E] leading-snug transition-colors group-hover:text-[#3C65F5]"
+            title={job.title || "Untitled Position"}
+          >
+            {job.title || "Untitled Position"}
+          </h3>
+        </div>
+
+        {/* Company Name & Location: Full width */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span className="font-semibold text-slate-700">
+            {companyName}
+          </span>
+          <span className="text-slate-300">•</span>
+          <span className="flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span>{job.location || "Remote"}</span>
+          </span>
+        </div>
+
+        {/* Badges + Posted time */}
+        <div className="mt-3.5 flex flex-wrap items-center gap-2">
+          <span className="rounded-md bg-[#EEF3FF] px-2.5 py-1 text-xs font-semibold text-[#3C65F5]">
+            {job.employmentType || "Full-time"}
+          </span>
+          <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+            {job.experienceLevel || "Mid Level"}
+          </span>
+          <span className="ml-auto flex items-center gap-1 text-xs text-slate-400">
+            <Clock className="h-3.5 w-3.5" />
+            {formatRelativeDate(job.createdAt)}
+          </span>
+        </div>
+
+        {/* Salary */}
+        <div className="mt-4">
+          <p className="text-lg font-bold text-[#05264E]">{salaryText}</p>
+        </div>
+
+        {/* Description */}
+        {descriptionPreview && (
+          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">
+            {descriptionPreview}
+          </p>
+        )}
+
+        {/* Skill tags */}
+        {visibleSkills.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {visibleSkills.map((skill) => (
+              <span
+                key={skill}
+                className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 transition-colors hover:border-[#3C65F5] hover:text-[#3C65F5]"
+              >
+                {skill}
+              </span>
+            ))}
+            {extraSkills > 0 && (
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-400">
+                +{extraSkills}
+              </span>
+            )}
           </div>
         )}
       </div>
-
-      {/* Badges + Posted time */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <span className="rounded-md bg-[#EEF3FF] px-2.5 py-1 text-xs font-semibold text-[#3C65F5]">
-          {job.employmentType || "Full-time"}
-        </span>
-        <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-          {job.experienceLevel || "Mid Level"}
-        </span>
-        <span className="ml-auto flex items-center gap-1 text-xs text-slate-400">
-          <Clock className="h-3.5 w-3.5" />
-          {formatRelativeDate(job.createdAt)}
-        </span>
-      </div>
-
-      {/* Salary */}
-      <div className="mt-4">
-        <p className="text-lg font-bold text-[#05264E]">{salaryText}</p>
-      </div>
-
-      {/* Description */}
-      {descriptionPreview && (
-        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">
-          {descriptionPreview}
-        </p>
-      )}
-
-      {/* Skill tags */}
-      {visibleSkills.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {visibleSkills.map((skill) => (
-            <span
-              key={skill}
-              className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 transition-colors hover:border-[#3C65F5] hover:text-[#3C65F5]"
-            >
-              {skill}
-            </span>
-          ))}
-          {extraSkills > 0 && (
-            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-400">
-              +{extraSkills}
-            </span>
-          )}
-        </div>
-      )}
 
       {/* Footer CTA */}
       <footer className="mt-5 flex items-stretch gap-3 border-t border-slate-100 pt-4">
