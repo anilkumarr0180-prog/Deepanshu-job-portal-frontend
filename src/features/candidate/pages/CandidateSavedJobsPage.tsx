@@ -124,34 +124,23 @@ export default function CandidateSavedJobsPage() {
               >
                 <div>
                   {/* Top Bar: Company Badge & Remove Action */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3.5">
-                      {(() => {
-                        const logoUrl = (job as any).companyLogo || (job as any).companyId?.logo || (job as any).recruiterId?.profilePicture;
-                        return (
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-blue-50 to-indigo-100 font-bold text-[#3C65F5] shadow-xs group-hover:scale-105 transition-transform">
-                            {logoUrl ? (
-                              <img
-                                src={logoUrl}
-                                alt={job.company || job.title}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              job.company?.[0]?.toUpperCase() || <Building2 className="h-6 w-6" />
-                            )}
-                          </div>
-                        );
-                      })()}
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900 group-hover:text-[#3C65F5] transition-colors line-clamp-1">
-                          {job.title}
-                        </h3>
-                        <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{job.company}</span>
-                        </p>
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-between gap-3">
+                    {(() => {
+                      const logoUrl = (job as any).companyLogo || (job as any).companyId?.logo || (job as any).recruiterId?.profilePicture;
+                      return (
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-blue-50 to-indigo-100 font-bold text-[#3C65F5] shadow-xs group-hover:scale-105 transition-transform">
+                          {logoUrl ? (
+                            <img
+                              src={logoUrl}
+                              alt={job.company || job.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            job.company?.[0]?.toUpperCase() || <Building2 className="h-5 w-5" />
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Bookmark / Remove Action Button */}
                     <button
@@ -164,6 +153,24 @@ export default function CandidateSavedJobsPage() {
                       <Bookmark className="h-4 w-4 fill-[#3C65F5] group-hover/btn:hidden" />
                       <Trash2 className="h-4 w-4 hidden group-hover/btn:block text-rose-600" />
                     </button>
+                  </div>
+
+                  {/* Job Title */}
+                  <div className="mt-3.5">
+                    <h3
+                      className="text-base font-bold text-slate-900 group-hover:text-[#3C65F5] transition-colors line-clamp-2 leading-snug"
+                      title={job.title}
+                    >
+                      {job.title}
+                    </h3>
+                  </div>
+
+                  {/* Company Name */}
+                  <div className="mt-1.5">
+                    <p className="text-xs font-semibold text-slate-600 flex items-center gap-1.5 line-clamp-1">
+                      <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <span>{job.company}</span>
+                    </p>
                   </div>
 
                   {/* Metadata Chips */}
