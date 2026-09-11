@@ -8,6 +8,7 @@ import {
   Upload,
   X,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -15,11 +16,14 @@ import { useProfile } from "../hooks/useProfile";
 import { useUpdateProfile } from "../hooks/useUpdateProfile";
 import { useCloudinaryUpload } from "@/shared/hooks/useCloudinaryUpload";
 import { getAuthenticatedResumeUrl } from "@/shared/api/upload.api";
+import { useAiResumeParser } from "@/features/ai/hooks/useAiResumeParser";
+import AiResumeParserModal from "@/features/ai/components/AiResumeParserModal";
 
 export default function CandidateResumePage() {
   const { data: profile, isLoading, isError, refetch } = useProfile();
   const updateProfileMutation = useUpdateProfile();
   const { uploadFile, isUploading, progress } = useCloudinaryUpload();
+  const { parseResume, parsedData, isParsing, reset: resetAiParser } = useAiResumeParser();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -27,6 +31,7 @@ export default function CandidateResumePage() {
   const [manualUrl, setManualUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   const [isFetchingViewUrl, setIsFetchingViewUrl] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const validateUrl = (value: string): boolean => {
     if (!value.trim()) {
@@ -66,6 +71,17 @@ export default function CandidateResumePage() {
     }
   };
 
+  const handleParseWithAi = async () => {
+    if (!profile?.resumeUrl) {
+      toast.error("Please upload or provide a resume URL first.");
+      return;
+    }
+    const result = await parseResume(profile.resumeUrl);
+    if (result) {
+      setIsAiModalOpen(true);
+    }
+  };
+
   const handleRemoveResume = () => {
     if (window.confirm("Are you sure you want to remove your uploaded resume?")) {
       updateProfileMutation.mutate(
@@ -99,7 +115,7 @@ export default function CandidateResumePage() {
         } else {
           window.open(profile.resumeUrl, "_blank", "noopener,noreferrer");
         }
-      } catch (err) {
+      } catch {
         // Fallback to direct resumeUrl if signed URL call fails
         window.open(profile.resumeUrl, "_blank", "noopener,noreferrer");
       } finally {
@@ -157,6 +173,41 @@ export default function CandidateResumePage() {
 
   return (
     <div className="space-y-6">
+      {/* ✨ AI Resume Parser Banner */}
+      {resumeUrl && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-100 p-5 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-md">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900">Auto-fill your Candidate Profile with AI</h4>
+              <p className="text-xs text-slate-500">
+                Extract your skills, work experience, and education from your resume with 1-click.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleParseWithAi}
+            disabled={isParsing}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:from-indigo-700 hover:to-violet-700 transition shrink-0 disabled:opacity-50 cursor-pointer"
+          >
+            {isParsing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Parsing Resume...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Auto-Fill Profile with AI
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
@@ -208,6 +259,20 @@ export default function CandidateResumePage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleParseWithAi}
+                  disabled={isParsing}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-2 text-xs font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                >
+                  {isParsing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  AI Parse
+                </button>
+
                 <button
                   type="button"
                   onClick={handleOpenAuthenticatedResume}
@@ -385,6 +450,19 @@ export default function CandidateResumePage() {
           </div>
         )}
       </section>
+
+      {/* AI Resume Review Modal */}
+      <AiResumeParserModal
+        isOpen={isAiModalOpen}
+        onClose={() => {
+          setIsAiModalOpen(false);
+          resetAiParser();
+        }}
+        parsedData={parsedData}
+        onSuccess={() => {
+          void refetch();
+        }}
+      />
     </div>
   );
 }
